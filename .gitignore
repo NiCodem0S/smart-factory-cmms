@@ -1,0 +1,55 @@
+# =========================
+# Backend: C# / .NET
+# =========================
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Osobiste ustawienia i sekrety (User Secrets)
+appsettings.Development.json
+appsettings.Local.json
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.v3.crunch/
+_ReSharper*/
+
+# =========================
+# Frontend: React / Node.js
+# =========================
+# Zależności
+node_modules/
+.pnp
+.pnp.js
+
+# Build i cache
+dist/
+dist-ssr/
+build/
+.vite/
+.swc/
+
+# Logi
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Środowisko lokalne
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# OS Files (Systemowe)
+# =========================
+.DS_Store
+Thumbs.db

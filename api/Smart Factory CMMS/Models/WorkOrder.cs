@@ -1,5 +1,9 @@
-﻿namespace Smart_Factory_CMMS.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Smart_Factory_CMMS.Models
 {
+    [Index(nameof(TicketNumber), IsUnique = true)] //UNIQUE in SQL
     public class WorkOrder
     {
         public Guid Id { get; set; } = Guid.NewGuid();

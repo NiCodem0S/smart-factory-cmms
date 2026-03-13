@@ -1,5 +1,9 @@
-﻿namespace Smart_Factory_CMMS.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Smart_Factory_CMMS.Models
 {
+    [Index(nameof(Email), IsUnique = true)]
     public class User
     {
         public Guid Id { get; set; } = Guid.NewGuid();

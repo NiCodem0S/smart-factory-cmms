@@ -1,4 +1,7 @@
-﻿namespace Smart_Factory_CMMS.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Smart_Factory_CMMS.Models
 {
     public class ProductionLog
     {
@@ -8,7 +11,9 @@
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public int GoodParts { get; set; } = 0;
         public int DefectiveParts { get; set; } = 0;
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? AverageCycleTimeSeconds { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? IdealCycleTimeSeconds { get; set; }
         public int ActiveOperatingSeconds { get; set; } = 0;
 

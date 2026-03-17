@@ -34,5 +34,26 @@ namespace Smart_Factory_CMMS.Controllers
             }
             return Ok(machine);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<Machine>> CreateMachine([FromBody] Machine machine)
+        {
+            machine.Id = Guid.NewGuid();
+            machine.InstallationDate = DateTime.UtcNow;
+
+            _context.Machines.Add(machine);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetMachineById), new {id = machine.Id}, machine); //using annonymous new object because CreatedAtAction method accepts a type object   and then looks for requested data as the objects properties
+        }
+      /*  [HttpPut("{id}")]
+        public async Task<ActionResult<Machine>> UpdateMachine([FromRoute] Guid id,[FromBody] Machine machine)
+        {
+            if (id != machine.Id)
+            {
+                return BadRequest("Error: Body/Route ID mismatch");
+            }
+
+       } */ 
     }
 }

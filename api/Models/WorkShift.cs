@@ -1,4 +1,4 @@
-﻿namespace SmartFactoryCMMS.Models
+﻿namespace SmartFactoryCMMS.Api.Models
 {
     public class WorkShift
     {

@@ -1,4 +1,4 @@
-﻿namespace SmartFactoryCMMS.DTOs
+﻿namespace SmartFactoryCMMS.Api.DTOs
 {
     public class UpdateMachineDto
     {

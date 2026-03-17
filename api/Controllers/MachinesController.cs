@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SmartFactoryCMMS.Data;
-using SmartFactoryCMMS.Models;
+using SmartFactoryCMMS.Api.Data;
+using SmartFactoryCMMS.Api.Models;
 using AutoMapper;
-using SmartFactoryCMMS.DTOs;
+using SmartFactoryCMMS.Api.DTOs;
 
-namespace SmartFactoryCMMS.Controllers
+namespace SmartFactoryCMMS.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

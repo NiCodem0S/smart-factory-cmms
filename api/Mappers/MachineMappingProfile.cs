@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using SmartFactoryCMMS.DTOs;
-using SmartFactoryCMMS.Models;
+using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Models;
 
-namespace SmartFactoryCMMS.Mappers
+namespace SmartFactoryCMMS.Api.Mappers
 {
     public class MachineMappingProfile : Profile
     {

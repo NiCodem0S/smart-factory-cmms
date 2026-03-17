@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using SmartFactoryCMMS.Data;
+using SmartFactoryCMMS.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

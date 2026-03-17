@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SmartFactoryCMMS.Models
+namespace SmartFactoryCMMS.Api.Models
 {
     public class SystemSettings
     {

@@ -1,6 +1,0 @@
-@SmartFactoryCMMS_HostAddress = http://localhost:5231
-
-GET {{SmartFactoryCMMS_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SmartFactoryCMMS.Data;
+using SmartFactoryCMMS.Api.Data;
 
 #nullable disable
 
-namespace SmartFactoryCMMS.Migrations
+namespace SmartFactoryCMMS.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -22,7 +22,7 @@ namespace SmartFactoryCMMS.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.AlertThreshold", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.AlertThreshold", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -48,7 +48,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("AlertThresholds");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.Incident", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.Incident", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -79,7 +79,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("Incidents");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.Machine", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.Machine", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -114,7 +114,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("Machines");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.MachinePrediction", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.MachinePrediction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -142,7 +142,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("MachinePredictions");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.ProductionLog", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.ProductionLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -181,7 +181,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("ProductionLogs");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.SystemSettings", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SystemSettings", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -216,7 +216,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("SystemSettings");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.TelemetryRead", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.TelemetryRead", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -250,7 +250,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("TelemetryRead");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.User", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +283,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.WorkOrder", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.WorkOrder", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -335,7 +335,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("WorkOrders");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.WorkShift", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.WorkShift", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -356,9 +356,9 @@ namespace SmartFactoryCMMS.Migrations
                     b.ToTable("WorkShifts");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.AlertThreshold", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.AlertThreshold", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany()
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -367,9 +367,9 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Machine");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.Incident", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.Incident", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany("Incidents")
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -378,9 +378,9 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Machine");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.MachinePrediction", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.MachinePrediction", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany()
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -389,15 +389,15 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Machine");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.ProductionLog", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.ProductionLog", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany()
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SmartFactoryCMMS.Models.WorkShift", "Shift")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.WorkShift", "Shift")
                         .WithMany("ProductionLogs")
                         .HasForeignKey("ShiftId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -408,9 +408,9 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Shift");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.TelemetryRead", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.TelemetryRead", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany("TelemetryReads")
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -419,13 +419,13 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Machine");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.WorkOrder", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.WorkOrder", b =>
                 {
-                    b.HasOne("SmartFactoryCMMS.Models.User", "AssignedUser")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.User", "AssignedUser")
                         .WithMany("AssignedWorkOrders")
                         .HasForeignKey("AssignedUserId");
 
-                    b.HasOne("SmartFactoryCMMS.Models.Machine", "Machine")
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
                         .WithMany("WorkOrders")
                         .HasForeignKey("MachineId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -436,7 +436,7 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("Machine");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.Machine", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.Machine", b =>
                 {
                     b.Navigation("Incidents");
 
@@ -445,12 +445,12 @@ namespace SmartFactoryCMMS.Migrations
                     b.Navigation("WorkOrders");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.User", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.User", b =>
                 {
                     b.Navigation("AssignedWorkOrders");
                 });
 
-            modelBuilder.Entity("SmartFactoryCMMS.Models.WorkShift", b =>
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.WorkShift", b =>
                 {
                     b.Navigation("ProductionLogs");
                 });

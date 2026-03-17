@@ -1,5 +1,5 @@
 # 🏭 Smart Factory CMMS 
-(Computerized Maintenance Management System)
+# (Computerized Maintenance Management System)
 
 > 🚧 **Status: In Progress** > This project is currently under active development.
 

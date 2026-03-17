@@ -1,4 +1,4 @@
-namespace Smart_Factory_CMMS
+namespace SmartFactoryCMMS
 {
     public class WeatherForecast
     {

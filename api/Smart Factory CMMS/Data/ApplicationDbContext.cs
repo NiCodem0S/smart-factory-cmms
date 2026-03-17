@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
-using Smart_Factory_CMMS.Models;
+using SmartFactoryCMMS.Models;
 
-namespace Smart_Factory_CMMS.Data
+namespace SmartFactoryCMMS.Data
 {
     public class ApplicationDbContext : DbContext
     {

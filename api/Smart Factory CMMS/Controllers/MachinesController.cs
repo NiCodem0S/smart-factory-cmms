@@ -1,19 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Smart_Factory_CMMS.Data;
-using Smart_Factory_CMMS.Models;
+using SmartFactoryCMMS.Data;
+using SmartFactoryCMMS.Models;
+using AutoMapper;
+using SmartFactoryCMMS.DTOs;
 
-namespace Smart_Factory_CMMS.Controllers
+namespace SmartFactoryCMMS.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class MachinesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public MachinesController(ApplicationDbContext context)
+        public MachinesController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -46,14 +50,21 @@ namespace Smart_Factory_CMMS.Controllers
 
             return CreatedAtAction(nameof(GetMachineById), new {id = machine.Id}, machine); //using annonymous new object because CreatedAtAction method accepts a type object   and then looks for requested data as the objects properties
         }
-      /*  [HttpPut("{id}")]
-        public async Task<ActionResult<Machine>> UpdateMachine([FromRoute] Guid id,[FromBody] Machine machine)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Machine>> UpdateMachine([FromRoute] Guid id,[FromBody] UpdateMachineDto dto)
         {
-            if (id != machine.Id)
+            var machine = await _context.Machines.FindAsync(id);
+
+            if (machine == null)
             {
-                return BadRequest("Error: Body/Route ID mismatch");
+                return NotFound($"Machine {id} was not found.");
             }
 
-       } */ 
+            _mapper.Map(dto, machine);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Smart_Factory_CMMS.Models
+﻿namespace SmartFactoryCMMS.Models
 {
     public class Incident
     {

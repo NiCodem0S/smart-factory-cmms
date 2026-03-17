@@ -1,6 +1,6 @@
-﻿using Smart_Factory_CMMS.Models;
+﻿using SmartFactoryCMMS.Models;
 
-namespace Smart_Factory_CMMS.Data
+namespace SmartFactoryCMMS.Data
 {
     public static class DatabaseSeeder
     {

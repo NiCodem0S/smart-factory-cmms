@@ -25,7 +25,7 @@
 ## 📖 About The Project
 Smart Factory CMMS is a full-stack web application designed to manage manufacturing equipment, track real-time machine telemetry, and organize maintenance workflows. It bridges the gap between hardware monitoring (simulated IoT data) and human maintenance teams through an intuitive, interactive dashboard.
 
-The system is built with a strongly decoupled architecture: a robust **RESTful API** on the backend and a fast, responsive **Single Page Application (SPA)** on the frontend.
+The system is built with a strongly decoupled architecture: a high-performance **RESTful API** on the backend and a fast, responsive **Single Page Application (SPA)** on the frontend.
 
 ## 🛠️ Tech Stack
 **Backend (Web API):**
@@ -47,13 +47,12 @@ The system is built with a strongly decoupled architecture: a robust **RESTful A
 - **Data Seeding:** Automated population of initial test data (Facilities, Work Shifts, Admin Users, and Machine fleets).
 - **Machine Management API:** CRUD operations for industrial machines (GET, POST, PUT, DELETE) with Soft-Delete implementation.
 - **CORS Configuration:** Secure cross-origin resource sharing configured between the .NET backend and Vite development server.
-- **Frontend Foundation:** React app connected to the API, displaying a responsive grid of machines fetched directly from the database.
-
 ### ⏳ Work In Progress / Upcoming:
 - **Work Order Kanban Board:** Drag-and-drop interface for managing maintenance tickets and incidents.
 - **Real-time Telemetry (SignalR):** Background workers simulating live machine data (temperature, vibration) pushed to the frontend via WebSockets.
 - **Dashboard Analytics:** Interactive charts (e.g., Recharts/Chart.js) displaying OEE (Overall Equipment Effectiveness) and energy consumption.
 - **Predictive Maintenance:** Simple logic to trigger automatic alerts based on predefined metric thresholds.
+- **Frontend Foundation:** React app connected to the API, displaying a responsive grid of machines fetched directly from the database.
 
 ## 🚀 How to Run Locally
 

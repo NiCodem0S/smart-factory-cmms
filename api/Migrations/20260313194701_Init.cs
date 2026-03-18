@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Smart_Factory_CMMS.Migrations
+namespace SmartFactoryCMMS.Api.Migrations
 {
     /// <inheritdoc />
     public partial class Init : Migration

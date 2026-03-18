@@ -4,10 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Smart_Factory_CMMS</RootNamespace>
+    <RootNamespace>SmartFactoryCMMS.Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.25" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.25">
       <PrivateAssets>all</PrivateAssets>

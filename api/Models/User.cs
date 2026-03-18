@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Smart_Factory_CMMS.Models
+namespace SmartFactoryCMMS.Api.Models
 {
     [Index(nameof(Email), IsUnique = true)]
     public class User

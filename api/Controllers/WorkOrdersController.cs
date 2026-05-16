@@ -1,44 +1,38 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.DTOs;
-using SmartFactoryCMMS.Api.Models;
+using SmartFactoryCMMS.Api.Repositories.Abstract;
 
-namespace SmartFactory.Api.Controllers
+namespace SmartFactoryCMMS.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class WorkOrdersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IWorkOrderRepository _workOrderRepository;
 
-        public WorkOrdersController(ApplicationDbContext context, IMapper mapper)
+        public WorkOrdersController(IWorkOrderRepository workOrderRepository)
         {
-            _context = context;
-            _mapper = mapper;
+            _workOrderRepository = workOrderRepository;
         }
 
         // GET: api/workorders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<WorkOrder>>> GetWorkOrders()
+        public async Task<ActionResult<PagedResult<WorkOrderListDto>>> GetWorkOrders(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null,
+            [FromQuery] string? type = null)
         {
-            var workOrders = await _context.WorkOrders
-                .Include(w => w.Machine)
-                .OrderByDescending(w => w.CreatedAt)
-                .ToListAsync();
-
-            return Ok(workOrders);
+            var result = await _workOrderRepository.GetWorkOrdersAsync(page, pageSize, status, type);
+            return Ok(result);
         }
 
         // GET: api/workorders/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<WorkOrder>> GetWorkOrder(Guid id)
+        public async Task<ActionResult<WorkOrderDetailDto>> GetWorkOrder(Guid id)
         {
-            var workOrder = await _context.WorkOrders
-                .Include(w => w.Machine)
-                .FirstOrDefaultAsync(w => w.Id == id);
+            var workOrder = await _workOrderRepository.GetWorkOrderDetailsAsync(id);
 
             if (workOrder == null)
             {
@@ -50,56 +44,47 @@ namespace SmartFactory.Api.Controllers
 
         // POST: api/workorders
         [HttpPost]
-        public async Task<ActionResult<WorkOrder>> CreateWorkOrder([FromBody] CreateWorkOrderDto dto)
+        public async Task<ActionResult<WorkOrderDetailDto>> CreateWorkOrder([FromBody] CreateWorkOrderDto dto)
         {
-            var machineExists = await _context.Machines.AnyAsync(m => m.Id == dto.MachineId);
-            if (!machineExists)
+            try
             {
-                return BadRequest(new { message = $"Machine with ID {dto.MachineId} does not exist." });
+                var createdWorkOrder = await _workOrderRepository.CreateWorkOrderAsync(dto);
+                return CreatedAtAction(nameof(GetWorkOrder), new { id = createdWorkOrder.Id }, createdWorkOrder);
             }
-
-            var workOrder = _mapper.Map<WorkOrder>(dto);
-            workOrder.Id = Guid.NewGuid();
-            workOrder.CreatedAt = DateTime.UtcNow;
-            workOrder.Status = "To Do";
-
-            _context.WorkOrders.Add(workOrder);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetWorkOrder), new { id = workOrder.Id }, workOrder);
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         // PUT: api/workorders/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateWorkOrder(Guid id, [FromBody] UpdateWorkOrderDto dto)
         {
-            var workOrder = await _context.WorkOrders.FindAsync(id);
-
-            if (workOrder == null)
+            try
             {
-                return NotFound(new { message = $"Work order with ID {id} was not found." });
+                await _workOrderRepository.UpdateWorkOrderAsync(id, dto);
+                return NoContent();
             }
-            _mapper.Map(dto, workOrder);
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         // DELETE: api/workorders/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWorkOrder(Guid id)
         {
-            var workOrder = await _context.WorkOrders.FindAsync(id);
-            if (workOrder == null)
+            try
             {
-                return NotFound(new { message = $"Work order with ID {id} was not found." });
+                await _workOrderRepository.DeleteWorkOrderAsync(id);
+                return NoContent();
             }
-
-            _context.WorkOrders.Remove(workOrder);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
     }
 }

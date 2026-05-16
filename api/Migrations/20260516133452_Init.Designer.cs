@@ -12,7 +12,7 @@ using SmartFactoryCMMS.Api.Data;
 namespace SmartFactoryCMMS.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260313194701_Init")]
+    [Migration("20260516133452_Init")]
     partial class Init
     {
         /// <inheritdoc />

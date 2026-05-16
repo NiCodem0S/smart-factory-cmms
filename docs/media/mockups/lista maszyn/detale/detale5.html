@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .live-indicator { animation: pulse-ring 2s infinite; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-xl font-bold text-white tracking-wider">🏭 Smart<span class="text-blue-500">Factory</span></span>
+        </div>
+		<nav class="flex-1 py-6 space-y-1">
+					<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<span class="mr-3">📊</span> Live Dashboard
+					</a>
+					<a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500">
+						<span class="mr-3">⚙️</span> Machine Fleet
+					</a>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<span class="mr-3">⚠️</span> Incident History
+					</a>
+
+					<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">Planning & Analysis</div>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<div class="flex items-center"><span class="mr-3">🛠️</span> Maintenance</div>
+					</a>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<span class="mr-3">📈</span> Analytics & Reports
+					</a>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<span class="mr-3">⚡</span> Energy Hub
+					</a>
+
+					<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">System</div>
+					<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+						<span class="mr-3">🔧</span> Settings
+					</a>
+				</nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <header class="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+            <div class="flex items-center">
+                <button class="mr-4 text-slate-400 hover:text-blue-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </button>
+                <div>
+                    <div class="text-xs text-slate-400 font-medium mb-0.5">Machine Fleet / Details</div>
+                    <div class="flex items-center">
+                        <h1 class="text-xl font-bold text-slate-800 mr-3">Robotic Arm A1</h1>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 live-indicator"></span> Running
+                        </span>
+                        <span class="ml-3 text-sm font-mono text-slate-400">ID: 8F2A-991C</span>
+                    </div>
+                </div>
+            </div>
+            <button class="flex items-center px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+                <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Export PDF
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            
+            <div class="grid grid-cols-4 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Current Temp</div>
+                    <div class="text-3xl font-bold text-slate-800" id="live-temp">45.2 <span class="text-base text-slate-400">°C</span></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Vibration</div>
+                    <div class="text-3xl font-bold text-slate-800" id="live-vib">1.2 <span class="text-base text-slate-400">mm/s</span></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Energy Load</div>
+                    <div class="text-3xl font-bold text-yellow-600" id="live-power">15.4 <span class="text-base text-yellow-500">kW</span></div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Network Ping</div>
+                    <div class="text-3xl font-bold text-blue-600" id="live-ping">32 <span class="text-base text-blue-400">ms</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                
+                <div class="xl:col-span-2 space-y-6">
+                    
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">Telemetry History</h2>
+                                <p class="text-xs text-slate-500">Live data stream (last 60 seconds)</p>
+                            </div>
+                            <div class="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+                                <button class="px-3 py-1 text-xs font-bold bg-white text-slate-800 rounded shadow-sm">Live</button>
+                                <button class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-800">1H</button>
+                                <button class="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-800">24H</button>
+                            </div>
+                        </div>
+                        <div class="h-[300px] w-full relative">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Predictive Analytics</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                            
+                            <div class="flex flex-col items-center justify-center md:col-span-1 pt-2">
+                                <div class="relative w-[180px] h-[90px] overflow-hidden">
+                                    <div id="health-gauge-arc" class="absolute top-0 left-0 w-[180px] h-[180px] rounded-full transition-all duration-700 ease-out"></div>
+                                    <div class="absolute top-[15px] left-[15px] w-[150px] h-[150px] bg-white rounded-full"></div>
+                                    <div class="absolute bottom-0 w-full text-center leading-none">
+                                        <span class="text-[40px] font-black transition-colors duration-500" id="health-score-value">88<span class="text-xl">%</span></span>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mt-3">Machine Health</div>
+                            </div>
+
+                            <div class="md:col-span-2 md:border-l border-slate-100 md:pl-8 space-y-4">
+                                <div>
+                                    <h4 class="text-xs font-bold text-green-600 uppercase tracking-wider mb-1" id="health-status-text">Status: Optimal</h4>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Component wear is currently within normal operational limits. Vibration analysis shows minimal degradation on primary bearings.</p>
+                                </div>
+                                <div class="pt-4 border-t border-slate-100">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Est. Remaining Useful Life</div>
+                                            <div class="text-3xl font-bold text-slate-800">412 <span class="text-base text-slate-400 font-medium">hours</span></div>
+                                            <p class="text-xs text-slate-500 mt-1 flex items-center">
+                                                <span class="w-2 h-2 rounded-full bg-yellow-400 mr-1.5"></span> Next predicted failure: Main Servo
+                                            </p>
+                                        </div>
+                                        
+                                        <button class="mt-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition-colors flex items-center border border-blue-200 shadow-sm">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            Schedule Maintenance
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-6 border-b border-slate-100">
+                            <h2 class="text-lg font-bold text-slate-800">Recent Incidents</h2>
+                        </div>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3">Time</th>
+                                    <th class="px-6 py-3">Event</th>
+                                    <th class="px-6 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-slate-500 text-xs">Today, 08:14</td>
+                                    <td class="px-6 py-4 text-slate-700">Network connection lost for 12 seconds.</td>
+                                    <td class="px-6 py-4"><span class="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded">Resolved</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-mono text-slate-500 text-xs">Yesterday, 14:30</td>
+                                    <td class="px-6 py-4 text-slate-700">Vibration spike (warning threshold reached).</td>
+                                    <td class="px-6 py-4"><span class="text-slate-500 font-bold text-xs bg-slate-100 px-2 py-1 rounded">Archived</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Production KPIs</h2>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-slate-600">Cycle Time</span>
+                                <span class="text-sm font-bold text-slate-800 font-mono">4.2s</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-slate-600">MTBF <span class="text-[10px] text-slate-400 font-normal ml-1">(Mean Time Btw Failures)</span></span>
+                                <span class="text-sm font-bold text-slate-800 font-mono">45d 12h</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-slate-600">Scrap Rate</span>
+                                <span class="text-sm font-bold text-red-500 font-mono">1.2%</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-50">
+                                <span class="text-sm font-medium text-slate-600">Total Produced (24h)</span>
+                                <span class="text-sm font-bold text-indigo-600 font-mono">3,450</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-900 rounded-xl shadow-sm p-6 text-slate-300">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+                            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center">
+                                <span class="mr-2">⚡</span> Specific Properties
+                            </h2>
+                            <span class="text-[10px] font-mono bg-slate-800 px-2 py-1 rounded text-slate-400">JSON</span>
+                        </div>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-400">Joint Angle</span>
+                                <span class="font-mono font-bold text-white text-base">112°</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-400">Current Task</span>
+                                <span class="font-mono font-bold text-blue-400">WELDING_SEQ_4</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-400">Firmware Ver.</span>
+                                <span class="font-mono font-bold text-white">v2.4.1</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-400">Operating Hours</span>
+                                <span class="font-mono font-bold text-white">4,250 h</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-slate-400">Last Calibration</span>
+                                <span class="font-mono font-bold text-white">12 Oct 2023</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Threshold Config</h2>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <div class="text-xs font-bold text-slate-700 mb-2">Temperature Limit (°C)</div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-yellow-600 uppercase mb-1">Warning</label>
+                                        <input type="number" value="70" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Critical</label>
+                                        <input type="number" value="85" class="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-xs font-bold text-slate-700 mb-2">Vibration Limit (mm/s)</div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-yellow-600 uppercase mb-1">Warning</label>
+                                        <input type="number" value="2.0" step="0.1" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Critical</label>
+                                        <input type="number" value="3.5" step="0.1" class="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded transition-colors mt-2">
+                                Save Thresholds
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- LOGIKA WSKAŹNIKA ZDROWIA (Conic Gradient) ---
+        function setHealthGauge(score) {
+            const arc = document.getElementById('health-gauge-arc');
+            const text = document.getElementById('health-score-value');
+            const statusText = document.getElementById('health-status-text');
+            
+            // 180 stopni to pełne półkole (od lewej do prawej)
+            const degrees = (score / 100) * 180;
+            let color = '#22c55e'; // Domyślnie zielony (green-500)
+
+            if (score < 50) {
+                color = '#ef4444'; // red-500
+                text.style.color = '#ef4444'; 
+                statusText.innerText = "Status: Critical";
+                statusText.className = "text-xs font-bold text-red-600 uppercase tracking-wider mb-1";
+            } else if (score < 80) {
+                color = '#f59e0b'; // amber-500
+                text.style.color = '#f59e0b';
+                statusText.innerText = "Status: Warning";
+                statusText.className = "text-xs font-bold text-yellow-600 uppercase tracking-wider mb-1";
+            } else {
+                text.style.color = '#22c55e';
+                statusText.innerText = "Status: Optimal";
+                statusText.className = "text-xs font-bold text-green-600 uppercase tracking-wider mb-1";
+            }
+
+            // Start od 270deg (lewy bok). Rysujemy kolor do policzonych stopni, potem resztę szarym.
+            arc.style.background = `conic-gradient(from 270deg, ${color} 0deg, ${color} ${degrees}deg, #f1f5f9 ${degrees}deg, #f1f5f9 180deg, transparent 180deg)`;
+            text.innerHTML = `${score}<span class="text-xl">%</span>`;
+        }
+
+        // Testowe wywołanie: wizualnie dokładne 88%
+        setHealthGauge(88);
+
+
+        // --- Wykres Historyczny ---
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        const labels = Array.from({length: 60}, (_, i) => i + 's');
+        let tempData = Array.from({length: 60}, () => 40 + Math.random() * 5);
+        let vibData = Array.from({length: 60}, () => 0.8 + Math.random() * 0.4);
+
+        const historyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Temperature', data: tempData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y-temp' },
+                    { label: 'Vibration', data: vibData, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', borderWidth: 2, tension: 0.3, pointRadius: 0, yAxisID: 'y-vib' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 12, usePointStyle: true, font: {family: 'sans-serif', weight: 'bold'}, padding: 20 } } },
+                scales: {
+                    x: { display: false },
+                    'y-temp': { type: 'linear', position: 'left', min: 20, max: 100, grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', font: {family: 'monospace'}, callback: function(value) { return value + '°C'; } } },
+                    'y-vib': { type: 'linear', position: 'right', min: 0, max: 5, grid: { drawOnChartArea: false }, ticks: { color: '#64748b', font: {family: 'monospace'}, callback: function(value) { return Number(value).toFixed(1) + ' mm/s'; } } }
+                }
+            }
+        });
+
+        // --- Symulacja odczytów na żywo ---
+        setInterval(() => {
+            const newTemp = (45 + Math.random() * 2).toFixed(1);
+            const newVib = (1.2 + Math.random() * 0.15).toFixed(2);
+            const newPing = Math.floor(30 + Math.random() * 5);
+            const newPower = (15.0 + Math.random() * 0.8).toFixed(1);
+
+            document.getElementById('live-temp').innerHTML = `${newTemp} <span class="text-base text-slate-400">°C</span>`;
+            document.getElementById('live-vib').innerHTML = `${newVib} <span class="text-base text-slate-400">mm/s</span>`;
+            document.getElementById('live-ping').innerHTML = `${newPing} <span class="text-base text-blue-400">ms</span>`;
+            document.getElementById('live-power').innerHTML = `${newPower} <span class="text-base text-yellow-500">kW</span>`;
+
+            tempData.push(parseFloat(newTemp));
+            tempData.shift();
+            vibData.push(parseFloat(newVib));
+            vibData.shift();
+            historyChart.update();
+        }, 1000);
+    </script>
+</body>
+</html>

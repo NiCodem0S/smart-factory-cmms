@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Styl dla kursora przy łapaniu kart (Drag & Drop UI hint) */
+        .kanban-card { cursor: grab; }
+        .kanban-card:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-xl font-bold text-white tracking-wider">🏭 Smart<span class="text-blue-500">Factory</span></span>
+        </div>
+        <nav class="flex-1 py-6 space-y-1">
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">📊</span> Live Dashboard
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚙️</span> Machine Fleet
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚠️</span> Incident History
+            </a>
+
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">Planning & Analysis</div>
+            <a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500 justify-between w-full">
+                <div class="flex items-center"><span class="mr-3">🛠️</span> Maintenance</div>
+                <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">3</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">📈</span> Analytics & Reports
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚡</span> Energy Hub
+            </a>
+
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">System</div>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">🔧</span> Settings
+            </a>
+        </nav>
+        <div class="p-6 bg-slate-950 text-sm">
+            <div class="text-slate-500 text-xs mb-1">Logged in as:</div>
+            <div class="font-bold text-white flex items-center">
+                <div class="w-6 h-6 rounded-full bg-blue-500 text-center leading-6 text-xs mr-2">JD</div>
+                John Doe (Admin)
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        
+        <header class="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Work Orders</h1>
+                <p class="text-xs text-slate-500">Manage machine repairs, inspections, and predictive tasks</p>
+            </div>
+            <div class="flex space-x-3">
+                <button class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center shadow-sm">
+                    <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Filter Tasks
+                </button>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center">
+                    <span class="mr-2">+</span> Create Work Order
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-x-auto overflow-y-hidden bg-slate-50 p-8">
+            
+            <div class="flex space-x-6 mb-6">
+                <div class="flex items-center text-sm font-medium text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> 1 Critical
+                </div>
+                <div class="flex items-center text-sm font-medium text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span> 2 Overdue
+                </div>
+                <div class="flex items-center text-sm font-medium text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> 4 Scheduled Today
+                </div>
+            </div>
+
+            <div class="flex gap-6 h-[calc(100%-3rem)] items-start">
+                
+                <div class="flex flex-col w-[320px] shrink-0 max-h-full bg-slate-100 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-100/50 rounded-t-xl">
+                        <h3 class="font-bold text-slate-700 uppercase tracking-wider text-sm flex items-center">
+                            Open <span class="ml-2 bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">3</span>
+                        </h3>
+                        <button class="text-slate-400 hover:text-slate-600">➕</button>
+                    </div>
+                    <div class="p-3 overflow-y-auto space-y-3 flex-1">
+                        
+                        <div class="kanban-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow transition-all group">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-blue-100">Predictive</span>
+                                <span class="text-xs text-slate-400 font-mono">#WO-1042</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1">Main Servo Inspection</h4>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2">RUL estimated at <400 hours. Scheduled check of bearing health triggered by analytics.</p>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                                <div class="flex items-center">
+                                    <div class="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 border-dashed flex items-center justify-center text-slate-400 text-xs" title="Unassigned">?</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded flex items-center">
+                                    📅 Oct 24
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="kanban-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow transition-all group">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-slate-200">Routine</span>
+                                <span class="text-xs text-slate-400 font-mono">#WO-1039</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1">Coolant Refill (Pump 04)</h4>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2">Monthly coolant replacement and filter cleaning.</p>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                                <div class="flex items-center -space-x-2">
+                                    <div class="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white relative z-10" title="Sarah Jenkins">SJ</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                    📅 Oct 26
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex flex-col w-[320px] shrink-0 max-h-full bg-slate-100 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="p-4 border-b border-blue-200 flex justify-between items-center bg-blue-50/50 rounded-t-xl">
+                        <h3 class="font-bold text-blue-800 uppercase tracking-wider text-sm flex items-center">
+                            In Progress <span class="ml-2 bg-blue-200 text-blue-800 text-xs px-2 py-0.5 rounded-full">2</span>
+                        </h3>
+                    </div>
+                    <div class="p-3 overflow-y-auto space-y-3 flex-1">
+                        
+                        <div class="kanban-card bg-white p-4 rounded-lg shadow-sm border border-red-200 hover:shadow-md transition-all group relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                            <div class="flex justify-between items-start mb-2 pl-2">
+                                <span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-red-100 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1 animate-pulse"></span> Critical
+                                </span>
+                                <span class="text-xs text-slate-400 font-mono">#WO-1045</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1 pl-2">Hydraulic Press B2 - Overheat</h4>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2 pl-2">Temperature threshold breached (89.5°C). Machine auto-stopped. Valve block suspected.</p>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100 ml-2">
+                                <div class="flex items-center">
+                                    <div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold" title="John Doe">JD</div>
+                                    <span class="text-[10px] font-bold text-blue-600 ml-2">Working... (1h 15m)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kanban-card bg-white p-4 rounded-lg shadow-sm border border-orange-200 hover:shadow-md transition-all group relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+                            <div class="flex justify-between items-start mb-2 pl-2">
+                                <span class="bg-orange-50 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-orange-100">High Priority</span>
+                                <span class="text-xs text-slate-400 font-mono">#WO-1044</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1 pl-2">Network Module Reboot (C1)</h4>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2 pl-2">Conveyor Belt C1 reporting 100% packet loss. Cable inspection required.</p>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100 ml-2">
+                                <div class="flex items-center">
+                                    <div class="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center text-[10px] font-bold" title="Mike Kowalski">MK</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded">
+                                    Overdue 2h
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex flex-col w-[320px] shrink-0 max-h-full bg-slate-100 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="p-4 border-b border-purple-200 flex justify-between items-center bg-purple-50/50 rounded-t-xl">
+                        <h3 class="font-bold text-purple-800 uppercase tracking-wider text-sm flex items-center">
+                            Review & Test <span class="ml-2 bg-purple-200 text-purple-800 text-xs px-2 py-0.5 rounded-full">1</span>
+                        </h3>
+                    </div>
+                    <div class="p-3 overflow-y-auto space-y-3 flex-1">
+                        
+                        <div class="kanban-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:border-purple-400 hover:shadow transition-all group">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-slate-200">Routine</span>
+                                <span class="text-xs text-slate-400 font-mono">#WO-1035</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm mb-1">Arm A2 Calibration</h4>
+                            <p class="text-xs text-slate-500 mb-3 line-clamp-2">Joint angles recalibrated. Awaiting test cycle run to confirm OEE quality.</p>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                                <div class="flex items-center -space-x-2">
+                                    <div class="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white relative z-10">SJ</div>
+                                    <div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white relative z-20">JD</div>
+                                </div>
+                                <span class="text-[10px] font-bold text-purple-600 bg-purple-50 border border-purple-100 px-2 py-1 rounded">
+                                    Awaiting QA
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex flex-col w-[320px] shrink-0 max-h-full bg-slate-100 rounded-xl border border-slate-200 shadow-sm opacity-70">
+                    <div class="p-4 border-b border-green-200 flex justify-between items-center bg-green-50/50 rounded-t-xl">
+                        <h3 class="font-bold text-green-800 uppercase tracking-wider text-sm flex items-center">
+                            Resolved (24h) <span class="ml-2 bg-green-200 text-green-800 text-xs px-2 py-0.5 rounded-full">12</span>
+                        </h3>
+                    </div>
+                    <div class="p-3 overflow-y-auto space-y-3 flex-1">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 opacity-80">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-slate-800 text-sm line-through">Sensor Cleaning (Milling 1)</h4>
+                                <span class="text-green-500">✅</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mb-2">Closed by: Sarah J. at 10:15 AM</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

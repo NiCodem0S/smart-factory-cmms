@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & Reports</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-xl font-bold text-white tracking-wider">🏭 Smart<span class="text-blue-500">Factory</span></span>
+        </div>
+        <nav class="flex-1 py-6 space-y-1">
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">📊</span> Live Dashboard
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚙️</span> Machine Fleet
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚠️</span> Incident History
+            </a>
+
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">Planning & Analysis</div>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex justify-between w-full">
+                <div class="flex items-center"><span class="mr-3">🛠️</span> Maintenance</div>
+                <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">3</span>
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500">
+                <span class="mr-3">📈</span> Analytics & Reports
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">⚡</span> Energy Hub
+            </a>
+
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">System</div>
+            <a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+                <span class="mr-3">🔧</span> Settings
+            </a>
+        </nav>
+        <div class="p-6 bg-slate-950 text-sm">
+            <div class="text-slate-500 text-xs mb-1">Logged in as:</div>
+            <div class="font-bold text-white flex items-center">
+                <div class="w-6 h-6 rounded-full bg-blue-500 text-center leading-6 text-xs mr-2">JD</div>
+                John Doe (Admin)
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <header class="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Analytics & Reports</h1>
+                <p class="text-xs text-slate-500">Historical performance, OEE trends, and custom reporting</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden shadow-sm">
+                    <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border-r border-slate-200">7 Days</button>
+                    <button class="px-3 py-1.5 text-sm font-bold text-blue-700 bg-blue-50 border-r border-slate-200">30 Days</button>
+                    <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 border-r border-slate-200">This Year</button>
+                    <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center">
+                        <span class="mr-1">📅</span> Custom
+                    </button>
+                </div>
+                
+                <button class="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                    Generate Report (PDF)
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-6">
+            
+            <div class="grid grid-cols-4 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-green-50 rounded-bl-full -z-0"></div>
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 relative z-10">Global OEE Average</div>
+                    <div class="flex items-end relative z-10">
+                        <div class="text-3xl font-bold text-slate-800 mr-2">91.4%</div>
+                        <div class="text-xs font-bold text-green-600 flex items-center mb-1">
+                            <span class="mr-0.5">▲</span> 1.2%
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-0"></div>
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 relative z-10">Total Units Produced</div>
+                    <div class="flex items-end relative z-10">
+                        <div class="text-3xl font-bold text-slate-800 mr-2">342.5K</div>
+                        <div class="text-xs font-bold text-green-600 flex items-center mb-1">
+                            <span class="mr-0.5">▲</span> 4.5%
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-red-50 rounded-bl-full -z-0"></div>
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 relative z-10">Total Downtime</div>
+                    <div class="flex items-end relative z-10">
+                        <div class="text-3xl font-bold text-slate-800 mr-2">42.5 <span class="text-base text-slate-500 font-medium">hrs</span></div>
+                        <div class="text-xs font-bold text-red-500 flex items-center mb-1">
+                            <span class="mr-0.5">▲</span> 2.1%
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-yellow-50 rounded-bl-full -z-0"></div>
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1 relative z-10">Average Scrap Rate</div>
+                    <div class="flex items-end relative z-10">
+                        <div class="text-3xl font-bold text-slate-800 mr-2">1.8%</div>
+                        <div class="text-xs font-bold text-green-600 flex items-center mb-1">
+                            <span class="mr-0.5">▼</span> 0.3%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Production Volume vs Target</h2>
+                            <p class="text-xs text-slate-500">Daily output for the last 14 days</p>
+                        </div>
+                    </div>
+                    <div class="h-[300px] w-full relative">
+                        <canvas id="productionChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Downtime Root Causes</h2>
+                        <p class="text-xs text-slate-500">Distribution of 42.5 total hours</p>
+                    </div>
+                    <div class="flex-1 relative w-full h-[220px] mt-4 flex items-center justify-center">
+                        <canvas id="downtimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                
+                <div class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">OEE Trend Breakdown</h2>
+                            <p class="text-xs text-slate-500">Availability, Performance, and Quality over time</p>
+                        </div>
+                    </div>
+                    <div class="h-[300px] w-full relative">
+                        <canvas id="oeeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-slate-100">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Underperforming Assets</h2>
+                        <p class="text-xs text-slate-500 mt-1">Machines requiring immediate optimization</p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-[10px] text-slate-500 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3">Machine</th>
+                                    <th class="px-6 py-3">Avg OEE</th>
+                                    <th class="px-6 py-3">Downtime</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800">Hydraulic Press B2</div>
+                                        <div class="text-xs text-slate-400 font-mono">4B1X-0092</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-red-500">72.4%</td>
+                                    <td class="px-6 py-4 text-slate-600">14.2h</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800">Conveyor Belt C1</div>
+                                        <div class="text-xs text-slate-400 font-mono">1A9F-220B</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-orange-500">78.1%</td>
+                                    <td class="px-6 py-4 text-slate-600">8.5h</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800">Water Pump 04</div>
+                                        <div class="text-xs text-slate-400 font-mono">7C3D-884A</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-orange-500">81.0%</td>
+                                    <td class="px-6 py-4 text-slate-600">6.0h</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800">Milling CNC 2</div>
+                                        <div class="text-xs text-slate-400 font-mono">9X2M-551Z</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-slate-700">85.5%</td>
+                                    <td class="px-6 py-4 text-slate-600">3.1h</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+
+        // 1. PRODUCTION CHART (Bar)
+        const prodCtx = document.getElementById('productionChart').getContext('2d');
+        const prodLabels = Array.from({length: 14}, (_, i) => `Oct ${i+10}`);
+        const targetData = Array.from({length: 14}, () => 12000);
+        const actualData = [11500, 11800, 12200, 12500, 9500, 11000, 12100, 12300, 12600, 12400, 11900, 10200, 12100, 12450];
+
+        new Chart(prodCtx, {
+            type: 'bar',
+            data: {
+                labels: prodLabels,
+                datasets: [
+                    {
+                        label: 'Actual Produced',
+                        data: actualData,
+                        backgroundColor: '#3b82f6', // blue-500
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: 'Daily Target',
+                        type: 'line',
+                        data: targetData,
+                        borderColor: '#94a3b8', // slate-400
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 10 } } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, max: 15000 },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. DOWNTIME ROOT CAUSES (Doughnut)
+        const downCtx = document.getElementById('downtimeChart').getContext('2d');
+        new Chart(downCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Mechanical Failure', 'Planned Maint.', 'Network/Software', 'Operator Error'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#64748b'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15, font: {size: 11} } }
+                }
+            }
+        });
+
+        // 3. OEE TREND BREAKDOWN (Line)
+        const oeeCtx = document.getElementById('oeeChart').getContext('2d');
+        const oeeLabels = Array.from({length: 30}, (_, i) => `Day ${i+1}`);
+        // Wygładzone, realistyczne dane
+        const availData = Array.from({length: 30}, () => 92 + Math.random() * 6);
+        const perfData = Array.from({length: 30}, () => 88 + Math.random() * 8);
+        const qualData = Array.from({length: 30}, () => 97 + Math.random() * 2);
+
+        new Chart(oeeCtx, {
+            type: 'line',
+            data: {
+                labels: oeeLabels,
+                datasets: [
+                    {
+                        label: 'Quality',
+                        data: qualData,
+                        borderColor: '#22c55e', // green-500
+                        borderWidth: 2, tension: 0.4, pointRadius: 0
+                    },
+                    {
+                        label: 'Availability',
+                        data: availData,
+                        borderColor: '#3b82f6', // blue-500
+                        borderWidth: 2, tension: 0.4, pointRadius: 0
+                    },
+                    {
+                        label: 'Performance',
+                        data: perfData,
+                        borderColor: '#f59e0b', // amber-500
+                        borderWidth: 2, tension: 0.4, pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 10 } } },
+                scales: {
+                    y: { min: 60, max: 100, grid: { color: '#f1f5f9' }, ticks: { callback: v => v + '%' } },
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

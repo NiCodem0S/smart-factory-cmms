@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .live-indicator { animation: pulse-ring 2s infinite; }
+        
+        .donut-chart {
+            background: conic-gradient(
+                #22c55e 0% 73%,
+                #f59e0b 73% 90%,
+                #ef4444 90% 93%,
+                #94a3b8 93% 100%
+            );
+            border-radius: 50%;
+        }
+        .donut-inner {
+            background-color: white;
+            border-radius: 50%;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden font-sans text-slate-800">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300 shrink-0">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-xl font-bold text-white tracking-wider">🏭 Smart<span class="text-blue-500">Factory</span></span>
+        </div>
+		<nav class="flex-1 py-6 space-y-1">
+			<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+			<a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500">
+				<span class="mr-3">📊</span> Live Dashboard
+			</a>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+				<span class="mr-3">⚙️</span> Machine Fleet
+			</a>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+				<span class="mr-3">⚠️</span> Incident History
+			</a>
+
+			<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">Planning & Analysis</div>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex justify-between w-full">
+				<div class="flex items-center"><span class="mr-3">🛠️</span> Maintenance</div>
+				<span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+			</a>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+				<span class="mr-3">📈</span> Analytics & Reports
+			</a>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+				<span class="mr-3">⚡</span> Energy Hub
+			</a>
+
+			<div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">System</div>
+			<a href="#" class="flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors">
+				<span class="mr-3">🔧</span> Settings
+			</a>
+		</nav>
+        <div class="p-6 bg-slate-950 text-sm">
+            <div class="text-slate-500 text-xs mb-1">Logged in as:</div>
+            <div class="font-bold text-white flex items-center">
+                <div class="w-6 h-6 rounded-full bg-blue-500 text-center leading-6 text-xs mr-2">JD</div>
+                John Doe (Admin)
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <header class="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-8 shrink-0 z-10">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Production Line A</h1>
+                <p class="text-xs text-slate-500">Warsaw Plant - Hall 3</p>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-sm font-semibold text-green-600 flex items-center bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full mr-2 live-indicator"></span>
+                    SignalR Live
+                </span>
+                <button class="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span class="absolute top-1 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-8">
+            
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+                
+                <div class="xl:col-span-2 xl:row-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Fleet & OEE Status</h2>
+                            <p class="text-sm text-slate-500">Live distribution and overall equipment effectiveness</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-1 flex-col sm:flex-row items-center justify-between gap-8">
+                        <div class="flex items-center gap-6">
+                            <div class="w-32 h-32 donut-chart flex items-center justify-center shadow-inner relative shrink-0">
+                                <div class="w-20 h-20 donut-inner flex flex-col items-center justify-center absolute shadow-sm">
+                                    <span class="text-2xl font-bold text-slate-800">95%</span>
+                                    <span class="text-[10px] uppercase font-bold text-green-500 tracking-widest">OEE</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 shrink-0">
+                                <div class="flex items-center text-sm"><span class="w-3 h-3 bg-green-500 rounded-sm mr-3"></span> <span class="font-bold w-6">22</span> <span class="text-slate-500">Running</span></div>
+                                <div class="flex items-center text-sm"><span class="w-3 h-3 bg-yellow-500 rounded-sm mr-3"></span> <span class="font-bold w-6">5</span> <span class="text-slate-500">Maint.</span></div>
+                                <div class="flex items-center text-sm"><span class="w-3 h-3 bg-red-500 rounded-sm mr-3"></span> <span class="font-bold w-6">1</span> <span class="text-slate-500">Error</span></div>
+                                <div class="flex items-center text-sm"><span class="w-3 h-3 bg-slate-400 rounded-sm mr-3"></span> <span class="font-bold w-6">2</span> <span class="text-slate-500">Offline</span></div>
+                            </div>
+                        </div>
+
+                        <div class="w-full sm:w-auto sm:flex-1 sm:pl-8 sm:border-l border-slate-100 space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                                    <span>Availability</span>
+                                    <span>98.0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: 98%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                                    <span>Performance</span>
+                                    <span>92.5%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: 92.5%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                                    <span>Quality</span>
+                                    <span class="text-green-600">99.6%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                                    <div class="bg-green-500 h-1.5 rounded-full" style="width: 99.6%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 rounded-2xl shadow-sm border border-red-100 p-6 flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10 text-9xl -mt-4 -mr-4">⚠️</div>
+                    <div class="text-sm font-bold text-red-800 uppercase tracking-wider mb-2 z-10">Critical Alerts</div>
+                    <div class="text-4xl font-semibold text-red-600 z-10" id="alert-counter">1</div>
+                    <div class="text-xs text-red-700 mt-2 font-medium z-10 flex items-center">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-1 animate-pulse"></span> Requires attention
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between overflow-hidden relative">
+                    <div class="flex justify-between items-start z-10">
+                        <div>
+                            <div class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Avg Latency</div>
+                            <div class="text-2xl font-semibold text-blue-600"><span id="avg-ping">32</span> <span class="text-sm text-blue-500 font-medium">ms</span></div>
+                        </div>
+                        <div id="ping-icon" class="flex items-end gap-0.5 h-4 mt-1">
+                            <div class="w-1 h-1.5 bg-slate-200 rounded-sm transition-colors duration-300"></div>
+                            <div class="w-1 h-2 bg-slate-200 rounded-sm transition-colors duration-300"></div>
+                            <div class="w-1 h-3 bg-slate-200 rounded-sm transition-colors duration-300"></div>
+                            <div class="w-1 h-4 bg-slate-200 rounded-sm transition-colors duration-300"></div>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full h-24 pt-2">
+                        <canvas id="pingChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-center">
+                    <div class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                        Power Load <span class="text-yellow-500">⚡</span>
+                    </div>
+                    <div class="text-4xl font-semibold text-slate-800"><span id="total-power">452</span> <span class="text-xl text-slate-400 font-medium">kW</span></div>
+                    <div class="text-xs text-slate-500 mt-2 font-medium">
+                        ~1.2 MW daily estimate
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col justify-center">
+                    <div class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                        Produced <span class="text-purple-500">📦</span>
+                    </div>
+                    <div class="text-4xl font-semibold text-purple-600" id="total-production">12,450</div>
+                    <div class="flex justify-between items-center mt-2 border-t border-slate-100 pt-2">
+                        <div class="text-xs text-slate-500 font-medium">Good: <span id="good-parts" class="font-bold text-slate-700">12,400</span></div>
+                        <div class="text-xs text-red-500 font-medium">Defects: <span id="defective-parts" class="font-bold">50</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Live Plant Heatmap</h3>
+                        <p class="text-xs text-slate-500">Real-time status of all individual nodes</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5" id="heatmap-container">
+                    </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">Monitored Units</h2>
+                    <input type="text" placeholder="Search ID or name..." class="px-4 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-72 bg-white">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow relative">
+                        <div class="h-1.5 bg-green-500 w-full"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-5">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">Robotic Arm A1</h3>
+                                    <span class="inline-flex items-center mt-1 text-xs font-bold text-green-600 uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Running
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-400 font-mono" id="ping-m1">32ms</span>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-5">
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Temperature</div>
+                                    <div class="text-xl font-black text-slate-700" id="temp-m1">45.2°C</div>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Vibration</div>
+                                    <div class="text-xl font-black text-slate-700" id="vib-m1">1.2 mm/s</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-sm border-t border-slate-100 pt-4 space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500 text-xs font-medium">Joint Angle</span> <span class="font-mono font-bold text-slate-700 text-xs">112°</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500 text-xs font-medium">Current Task</span> <span class="font-mono font-bold text-slate-700 text-xs">Welding</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-red-300 overflow-hidden relative ring-4 ring-red-500 ring-opacity-10">
+                        <div class="h-1.5 bg-red-500 w-full"></div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-5">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">Hydraulic Press B2</h3>
+                                    <span class="inline-flex items-center mt-1 text-xs font-bold text-red-600 uppercase tracking-wider animate-pulse">
+                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span> Critical Error
+                                    </span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-400 font-mono" id="ping-m2">45ms</span>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-5">
+                                <div class="bg-red-50 p-3 rounded-lg border border-red-100">
+                                    <div class="text-[10px] uppercase tracking-wider text-red-500 font-bold mb-1">Temperature</div>
+                                    <div class="text-xl font-black text-red-600" id="temp-m2">89.5°C</div>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Vibration</div>
+                                    <div class="text-xl font-black text-slate-700" id="vib-m2">2.4 mm/s</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-sm border-t border-slate-100 pt-4 space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500 text-xs font-medium">Oil Pressure</span> <span class="font-mono font-bold text-slate-700 text-xs">140 bar</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-slate-500 text-xs font-medium">Valve State</span> <span class="font-mono font-black text-red-600 text-xs">BLOCKED</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <aside class="w-80 bg-white border-l border-slate-200 flex flex-col hidden xl:flex shrink-0 shadow-[-10px_0_20px_rgba(0,0,0,0.02)]">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div>
+                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Event Stream</h2>
+                <div class="text-xs text-green-500 mt-1 font-mono flex items-center">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span> Receiving data...
+                </div>
+            </div>
+            <button class="text-xs text-blue-600 hover:underline">Clear all</button>
+        </div>
+        
+        <div class="flex-1 p-5 overflow-y-auto space-y-4">
+            <div class="bg-red-50 p-4 rounded-lg border border-red-100 shadow-sm relative">
+                <div class="absolute w-1 h-full bg-red-500 left-0 top-0 rounded-l-lg"></div>
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-[10px] font-bold text-red-600 tracking-wider uppercase">Critical</span>
+                    <span class="text-[10px] text-slate-400 font-mono">Just now</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800">Hydraulic Press B2</p>
+                <p class="text-xs text-slate-600 mt-1">Temperature threshold exceeded (>85°C).</p>
+                <button class="mt-3 w-full text-xs bg-white border border-red-200 hover:bg-red-100 text-red-700 font-semibold py-1.5 px-3 rounded shadow-sm transition-colors">
+                    Acknowledge
+                </button>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 shadow-sm relative">
+                <div class="absolute w-1 h-full bg-yellow-400 left-0 top-0 rounded-l-lg"></div>
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-[10px] font-bold text-yellow-700 tracking-wider uppercase">Warning</span>
+                    <span class="text-[10px] text-slate-400 font-mono">5m ago</span>
+                </div>
+                <p class="text-sm font-bold text-slate-800">Water Pump 04</p>
+                <p class="text-xs text-slate-600 mt-1">High vibration detected on main shaft.</p>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        const heatmapContainer = document.getElementById('heatmap-container');
+        for(let i=1; i<=60; i++) {
+            let colorClass = 'bg-green-500';
+            if(i === 14 || i === 42) colorClass = 'bg-red-500 animate-pulse';
+            if(i === 7 || i === 23 || i === 50) colorClass = 'bg-yellow-400';
+            if(i === 5 || i === 60) colorClass = 'bg-slate-300';
+            
+            heatmapContainer.innerHTML += `<div class="w-6 h-6 rounded ${colorClass} transition-colors duration-300" title="Node ${i}"></div>`;
+        }
+
+        function updatePingIcon(pingValue) {
+            const bars = document.getElementById('ping-icon').children;
+            for(let i=0; i<4; i++) {
+                bars[i].classList.remove('bg-blue-500');
+                bars[i].classList.add('bg-slate-200');
+            }
+            let activeBars = 1;
+            if (pingValue < 45) { activeBars = 4; }
+            else if (pingValue < 65) { activeBars = 3; }
+            else if (pingValue < 85) { activeBars = 2; }
+            for(let i=0; i<activeBars; i++) {
+                bars[i].classList.remove('bg-slate-200');
+                bars[i].classList.add('bg-blue-500'); 
+            }
+        }
+
+        const pingCtx = document.getElementById('pingChart').getContext('2d');
+        let pingData = Array.from({length: 20}, () => Math.floor(30 + Math.random() * 8)); 
+        
+        let gradient = pingCtx.createLinearGradient(0, 0, 0, 80);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+
+        const pingChart = new Chart(pingCtx, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{
+                    data: pingData,
+                    borderColor: '#2563eb',
+                    borderWidth: 2,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    x: { display: false, min: 0, max: 21 },
+                    y: { 
+                        display: true, position: 'right', min: 0, max: 100,
+                        border: { display: false }, 
+                        grid: { drawOnChartArea: false, drawTicks: true, tickLength: 8, color: '#94a3b8' },
+                        ticks: { stepSize: 50, color: '#94a3b8', font: { size: 9, family: 'monospace' }, padding: 6, callback: function(value) { return value + 'ms'; } }
+                    }
+                },
+                layout: { padding: { left: 0, right: 15, bottom: -5, top: 0 } }
+            }
+        });
+
+        updatePingIcon(32);
+
+        let goodParts = 12400;
+        let defectiveParts = 50;
+
+        setInterval(() => {
+            document.getElementById('temp-m1').innerText = (45 + Math.random() * 0.8).toFixed(1) + '°C';
+            document.getElementById('vib-m1').innerText = (1.2 + Math.random() * 0.1).toFixed(2) + ' mm/s';
+            document.getElementById('ping-m1').innerText = Math.floor(30 + Math.random() * 5) + 'ms';
+            
+            document.getElementById('temp-m2').innerText = (89.5 + Math.random() * 0.5).toFixed(1) + '°C';
+            
+            document.getElementById('total-power').innerText = Math.floor(450 + Math.random() * 8);
+            
+            const isSpike = Math.random() > 0.85;
+            const newPing = isSpike ? Math.floor(55 + Math.random() * 35) : Math.floor(30 + Math.random() * 8);
+            
+            document.getElementById('avg-ping').innerText = newPing;
+            updatePingIcon(newPing);
+            
+            pingData.push(newPing);
+            pingData.shift();
+            pingChart.update();
+            
+            // Produkcja z podziałem
+            if(Math.random() > 0.4) {
+                if(Math.random() > 0.95) {
+                    defectiveParts++;
+                    document.getElementById('defective-parts').innerText = defectiveParts;
+                } else {
+                    goodParts++;
+                    document.getElementById('good-parts').innerText = goodParts.toLocaleString('en-US');
+                }
+                document.getElementById('total-production').innerText = (goodParts + defectiveParts).toLocaleString('en-US');
+            }
+        }, 1200);
+    </script>
+</body>
+</html>

@@ -4,14 +4,13 @@ using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.Repositories;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 
-var builder = WebApplication.CreateBuilder(args);
-
 DotNetEnv.Env.Load();
+
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
-                           ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 });
 

@@ -6,6 +6,7 @@ using AutoMapper;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using System.Linq;
+using SmartFactoryCMMS.Api.Filters;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
@@ -25,6 +26,7 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpGet]
+        [PagingValidation]
         public async Task<ActionResult<PagedResult<MachineListDto>>> GetMachines(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
@@ -90,6 +92,7 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpGet("{id}/telemetry")]
+        [PagingValidation(LimitArgumentName = "limit", MaxLimit = 1000)]
         public async Task<ActionResult<List<TelemetryReadDto>>> GetMachineTelemetry(
             Guid id,
             [FromQuery] int limit = 10)

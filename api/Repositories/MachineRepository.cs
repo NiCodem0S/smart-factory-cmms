@@ -11,6 +11,9 @@ namespace SmartFactoryCMMS.Api.Repositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+
+        private IQueryable<Machine> ActiveMachines => _context.Machines.Where(m => m.IsActive);
+
         public MachineRepository(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
@@ -19,7 +22,7 @@ namespace SmartFactoryCMMS.Api.Repositories
 
         public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, string? status)
         {
-            IQueryable<Machine> query = _context.Machines;
+            IQueryable<Machine> query = ActiveMachines;
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -34,6 +37,7 @@ namespace SmartFactoryCMMS.Api.Repositories
             int totalCount = await query.CountAsync();
 
             var machines = await query
+                .OrderBy(m => m.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -53,7 +57,7 @@ namespace SmartFactoryCMMS.Api.Repositories
 
         public async Task<MachineDetailDto?> GetMachineDetailsAsync(Guid id)
         {
-            var machine = await _context.Machines
+            var machine = await ActiveMachines
                 .Include(m => m.WorkOrders)
                 .Include(m => m.TelemetryReads)
                 .Include(m => m.Incidents)
@@ -66,7 +70,7 @@ namespace SmartFactoryCMMS.Api.Repositories
 
         public async Task<List<TelemetryReadDto>> GetMachineTelemetryAsync(Guid id, int limit)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await ActiveMachines.FirstOrDefaultAsync(m => m.Id == id);
 
             if (machine == null) return new List<TelemetryReadDto>();
 

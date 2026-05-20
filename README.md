@@ -2,7 +2,7 @@
 
 > 🚧 **Status: In Progress** > This project is currently under active development.
 
-## 🎨 Target User Interface (Mockups)
+## Target User Interface (Mockups)
 > *Note: These are the target HTML/Tailwind mockups that are currently being integrated into the React application.*
 
 ### Main Dashboard

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Filters;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 namespace SmartFactoryCMMS.Api.Controllers
@@ -18,6 +19,7 @@ namespace SmartFactoryCMMS.Api.Controllers
 
         // GET: api/workorders
         [HttpGet]
+        [PagingValidation]
         public async Task<ActionResult<PagedResult<WorkOrderListDto>>> GetWorkOrders(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,

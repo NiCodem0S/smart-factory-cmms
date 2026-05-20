@@ -6,8 +6,14 @@ using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 var builder = WebApplication.CreateBuilder(args);
 
+DotNetEnv.Env.Load();
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
+                           ?? builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(connectionString);
+});
 
 builder.Services.AddAutoMapper(config =>
 {
@@ -21,6 +27,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IMachineRepository, MachineRepository>();
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+// Paging options from configuration
+builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));
+builder.Services.AddScoped<SmartFactoryCMMS.Api.Filters.PagingValidationAttribute>();
 
 var app = builder.Build();
 

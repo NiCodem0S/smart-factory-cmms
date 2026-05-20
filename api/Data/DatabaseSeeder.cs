@@ -1,4 +1,5 @@
-﻿using SmartFactoryCMMS.Api.Models;
+﻿using Microsoft.AspNetCore.Identity;
+using SmartFactoryCMMS.Api.Models;
 
 namespace SmartFactoryCMMS.Api.Data
 {
@@ -6,6 +7,9 @@ namespace SmartFactoryCMMS.Api.Data
     {
         public static void Seed(ApplicationDbContext context)
         {
+            var passwordHasher = new PasswordHasher<User>();
+            const string seedPassword = "TestPassword123!";
+
             if (context.Machines.Any())
             {
                 return;
@@ -30,7 +34,7 @@ namespace SmartFactoryCMMS.Api.Data
             {
                 FullName = "John Doe",
                 Email = "admin@smartfactory.com",
-                PasswordHash = "TestPassword123!",
+                PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
                 Role = "Admin",
                 IsActive = true
             };
@@ -39,7 +43,7 @@ namespace SmartFactoryCMMS.Api.Data
             {
                 FullName = "Anna Smith",
                 Email = "technician@smartfactory.com",
-                PasswordHash = "TestPassword123!",
+                PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
                 Role = "Technician",
                 IsActive = true
             };

@@ -54,7 +54,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error occured durning seeding data: {ex.Message}");
+        Console.WriteLine($"Error occurred during seeding data: {ex}");
     }
 }
 

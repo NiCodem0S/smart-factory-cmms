@@ -10,47 +10,85 @@ namespace SmartFactoryCMMS.Api.Data
             var passwordHasher = new PasswordHasher<User>();
             const string seedPassword = "TestPassword123!";
 
+            // Guard: if machines exist, assume seeding is complete
             if (context.Machines.Any())
             {
                 return;
             }
 
-            context.SystemSettings.Add(new SystemSettings
+            // Seed system settings (idempotent: check if any settings exist)
+            if (!context.SystemSettings.Any())
             {
-                SiteName = "Warsaw Plant - Hall 3",
-                Timezone = "Europe/Warsaw",
-                Currency = "PLN",
-                PeakPowerLimitMw = 1.0m,
-                RawTelemetryRetentionDays = 30,
-                EnableEmailAlerts = true
-            });
+                context.SystemSettings.Add(new SystemSettings
+                {
+                    SiteName = "Warsaw Plant - Hall 3",
+                    Timezone = "Europe/Warsaw",
+                    Currency = "PLN",
+                    PeakPowerLimitMw = 1.0m,
+                    RawTelemetryRetentionDays = 30,
+                    EnableEmailAlerts = true
+                });
+            }
 
-            var shiftA = new WorkShift { Name = "Shift A (Morning)", StartTime = new TimeSpan(6, 0, 0), EndTime = new TimeSpan(14, 0, 0) };
-            var shiftB = new WorkShift { Name = "Shift B (Afternoon)", StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(22, 0, 0) };
-            var shiftC = new WorkShift { Name = "Shift C (Night)", StartTime = new TimeSpan(22, 0, 0), EndTime = new TimeSpan(6, 0, 0) };
-            context.WorkShifts.AddRange(shiftA, shiftB, shiftC);
+            // Seed work shifts (idempotent: check if shifts exist)
+            var shiftA = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift A (Morning)")
+                ?? new WorkShift { Name = "Shift A (Morning)", StartTime = new TimeSpan(6, 0, 0), EndTime = new TimeSpan(14, 0, 0) };
+            var shiftB = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift B (Afternoon)")
+                ?? new WorkShift { Name = "Shift B (Afternoon)", StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(22, 0, 0) };
+            var shiftC = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift C (Night)")
+                ?? new WorkShift { Name = "Shift C (Night)", StartTime = new TimeSpan(22, 0, 0), EndTime = new TimeSpan(6, 0, 0) };
 
-            var adminUser = new User
+            if (!context.WorkShifts.Any(s => s.Name == "Shift A (Morning)"))
             {
-                FullName = "John Doe",
-                Email = "admin@smartfactory.com",
-                PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
-                Role = "Admin",
-                IsActive = true
-            };
-
-            var technicianUser = new User
+                context.WorkShifts.Add(shiftA);
+            }
+            if (!context.WorkShifts.Any(s => s.Name == "Shift B (Afternoon)"))
             {
-                FullName = "Anna Smith",
-                Email = "technician@smartfactory.com",
-                PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
-                Role = "Technician",
-                IsActive = true
-            };
+                context.WorkShifts.Add(shiftB);
+            }
+            if (!context.WorkShifts.Any(s => s.Name == "Shift C (Night)"))
+            {
+                context.WorkShifts.Add(shiftC);
+            }
 
-            context.Users.AddRange(adminUser, technicianUser);
+            // Seed users (idempotent: check by email)
+            User? adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@smartfactory.com");
+            if (adminUser == null)
+            {
+                adminUser = new User
+                {
+                    FullName = "John Doe",
+                    Email = "admin@smartfactory.com",
+                    PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
+                    Role = "Admin",
+                    IsActive = true
+                };
+                context.Users.Add(adminUser);
+            }
 
-            // Create 35 machines with realistic data
+            User? technicianUser = context.Users.FirstOrDefault(u => u.Email == "technician@smartfactory.com");
+            if (technicianUser == null)
+            {
+                technicianUser = new User
+                {
+                    FullName = "Anna Smith",
+                    Email = "technician@smartfactory.com",
+                    PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
+                    Role = "Technician",
+                    IsActive = true
+                };
+                context.Users.Add(technicianUser);
+            }
+
+            context.SaveChanges();
+
+            // Refresh from DB in case they were just created
+            adminUser = context.Users.First(u => u.Email == "admin@smartfactory.com");
+            technicianUser = context.Users.First(u => u.Email == "technician@smartfactory.com");
+            shiftA = context.WorkShifts.First(s => s.Name == "Shift A (Morning)");
+            shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
+            shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
+
             var machines = new List<Machine>
             {
                 new Machine { Name = "Hydraulic Press B1", Category = "HeavyMachinery", SerialNumber = "HP001-2023", Status = "Running", InstallationDate = DateTime.UtcNow.AddYears(-3), IsActive = true },
@@ -88,7 +126,7 @@ namespace SmartFactoryCMMS.Api.Data
                 new Machine { Name = "Press Machine PM1", Category = "Pressing", SerialNumber = "PMC001-2023", Status = "Running", InstallationDate = DateTime.UtcNow.AddMonths(-5), IsActive = true },
                 new Machine { Name = "Heat Treatment HT1", Category = "Treatment", SerialNumber = "HT001-2023", Status = "Maintenance", InstallationDate = DateTime.UtcNow.AddMonths(-4), IsActive = true },
                 new Machine { Name = "Grinding Machine GM1", Category = "Finishing", SerialNumber = "GM001-2023", Status = "Running", InstallationDate = DateTime.UtcNow.AddMonths(-3), IsActive = true },
-                new Machine { Name = "Polishing Unit PU1", Category = "Finishing", SerialNumber = "PU001-2023", Status = "Idle", InstallationDate = DateTime.UtcNow.AddMonths(-2), IsActive = true },
+                new Machine { Name = "Polishing Unit PU1", Category = "Finishing", SerialNumber = "PU001-2023", Status = "Idle", InstallationDate = DateTime.UtcNow.AddMonths(-2), IsActive = true }
             };
 
             context.Machines.AddRange(machines);

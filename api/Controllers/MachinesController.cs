@@ -51,28 +51,54 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Machine>> CreateMachine([FromBody] Machine machine)
+        public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
+            var normalizedStatus = string.IsNullOrWhiteSpace(dto.Status)
+                ? "Offline"
+                : dto.Status.Trim();
+
+            var machine = _mapper.Map<Machine>(dto);
+
             machine.Id = Guid.NewGuid();
             machine.InstallationDate = DateTime.UtcNow;
+
+            machine.Status = normalizedStatus;
+            machine.IsActive = true;
 
             _context.Machines.Add(machine);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMachineDetails), new {id = machine.Id}, machine); //using annonymous new object because CreatedAtAction method accepts a type object   and then looks for requested data as the objects properties
+            var machineDetailDto = _mapper.Map<MachineDetailDto>(machine);
+            return CreatedAtAction(nameof(GetMachineDetails), new { id = machine.Id }, machineDetailDto);
         }
+
         [HttpPut("{id}")]
-        public async Task<ActionResult<Machine>> UpdateMachine([FromRoute] Guid id,[FromBody] UpdateMachineDto dto)
+        public async Task<IActionResult> UpdateMachine([FromRoute] Guid id, [FromBody] UpdateMachineDto dto)
         {
             var machine = await _context.Machines.FindAsync(id);
 
             if (machine == null)
             {
-                return NotFound($"Machine {id} was not found.");
+                return NotFound(new { message = $"Machine {id} was not found." });
             }
 
             _mapper.Map(dto, machine);
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                var machineExists = await _context.Machines.AnyAsync(m => m.Id == id);
+
+                if (!machineExists)
+                {
+                    return NotFound(new { message = $"Machine {id} was not found." });
+                }
+
+                throw;
+            }
 
             return NoContent();
         }

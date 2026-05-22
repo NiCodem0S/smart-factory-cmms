@@ -33,6 +33,8 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(props => props.ActiveAlerts,
                     confg => confg.MapFrom(src => src.Incidents.Where(i => i.Status == "Active").Take(5)));
 
+            CreateMap<CreateMachineDto, Machine>();
+
             // TelemetryRead → TelemetryReadDto
             CreateMap<TelemetryRead, TelemetryReadDto>();
 

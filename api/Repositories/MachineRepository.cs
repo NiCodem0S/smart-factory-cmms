@@ -4,6 +4,7 @@ using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -20,7 +21,7 @@ namespace SmartFactoryCMMS.Api.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, string? status)
+        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status)
         {
             IQueryable<Machine> query = ActiveMachines;
 
@@ -29,9 +30,9 @@ namespace SmartFactoryCMMS.Api.Repositories
                 query = query.Where(m => m.Name.Contains(search));
             }
 
-            if (!string.IsNullOrEmpty(status))
+            if (status.HasValue)
             {
-                query = query.Where(m => m.Status == status);
+                query = query.Where(m => m.Status == status.Value);
             }
 
             int totalCount = await query.CountAsync();

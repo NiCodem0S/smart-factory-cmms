@@ -11,6 +11,15 @@ namespace SmartFactoryCMMS.Api.Data
 
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Machine>()
+        .Property(m => m.Status)
+        .HasConversion<string>(); // Saves "Running" instead of 0 in SQL Server
+}
+
         public DbSet<Machine> Machines { get; set; }
         public DbSet<TelemetryRead> TelemetryRead { get; set; }
         public DbSet<Incident> Incidents { get; set; }

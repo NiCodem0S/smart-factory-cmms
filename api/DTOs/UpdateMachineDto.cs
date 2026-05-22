@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.DTOs
 {
@@ -17,7 +18,7 @@ namespace SmartFactoryCMMS.Api.DTOs
 
         [Required]
         [StringLength(30)]
-        public string Status { get; set; } = string.Empty;
+        public MachineStatus Status { get; set; } = MachineStatus.Offline;
 
         public bool IsActive { get; set; }
     }

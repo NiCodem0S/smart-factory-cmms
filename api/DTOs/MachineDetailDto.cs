@@ -1,3 +1,5 @@
+using SmartFactoryCMMS.Api.Helpers.Enums;
+
 namespace SmartFactoryCMMS.Api.DTOs
 {
     public class MachineDetailDto
@@ -6,7 +8,7 @@ namespace SmartFactoryCMMS.Api.DTOs
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string SerialNumber { get; set; } = string.Empty;
-        public string Status { get; set; } = "Offline";  // Running, Maintenance, Error, Offline
+        public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Maintenance, Error, Offline
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; }  // JSON string with additional properties
         public bool IsActive { get; set; }

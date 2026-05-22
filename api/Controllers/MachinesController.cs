@@ -7,6 +7,7 @@ using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using System.Linq;
 using SmartFactoryCMMS.Api.Filters;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
@@ -31,7 +32,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
-            [FromQuery] string? status = null)
+            [FromQuery] MachineStatus? status = null)
         {
             var result = await _machineRepository.GetMachinesAsync(page, pageSize, search, status);
             return Ok(result);
@@ -53,16 +54,12 @@ namespace SmartFactoryCMMS.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
-            var normalizedStatus = string.IsNullOrWhiteSpace(dto.Status)
-                ? "Offline"
-                : dto.Status.Trim();
-
             var machine = _mapper.Map<Machine>(dto);
 
             machine.Id = Guid.NewGuid();
             machine.InstallationDate = DateTime.UtcNow;
 
-            machine.Status = normalizedStatus;
+            machine.Status = dto.Status;
             machine.IsActive = true;
 
             _context.Machines.Add(machine);

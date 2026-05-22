@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.DTOs
 {
@@ -17,6 +18,6 @@ namespace SmartFactoryCMMS.Api.DTOs
 
         [Required]
         [StringLength(30)]
-        public string Status { get; set; } = "Offline";  // Running, Maintenance, Error, Offline
+        public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Maintenance, Error, Offline
     }
 }

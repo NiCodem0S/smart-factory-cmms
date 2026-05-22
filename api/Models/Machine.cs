@@ -1,4 +1,6 @@
-﻿namespace SmartFactoryCMMS.Api.Models
+﻿using SmartFactoryCMMS.Api.Helpers.Enums;
+
+namespace SmartFactoryCMMS.Api.Models
 {
     public class Machine
     {
@@ -6,7 +8,7 @@
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string? SerialNumber { get; set; }
-        public string Status { get; set; } = "Offline";
+        public MachineStatus Status { get; set; } = MachineStatus.Offline;
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; } // JSON
         public bool IsActive { get; set; } = true;

@@ -7,9 +7,14 @@ export async function fetchMachines(
 	pageSize: number = 10,
 	search?: string,
 	status?: MachineStatus,
-): Promise<PagedResult<MachineListDto>> {
-	const response = await apiClient.get<PagedResult<MachineListDto>>('/machines', {
-		params: { page, pageSize, search, status },
+): Promise<PagedResult<MachineListDto>> { // : return type
+	const response = await apiClient.get<PagedResult<MachineListDto>>('/Machines', {
+		params: {
+			page,
+			pageSize,
+			search: search || undefined,
+			status: status || undefined,
+		},
 	})
 
 	return response.data

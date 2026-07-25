@@ -11,7 +11,7 @@
 # Osobiste ustawienia i sekrety (User Secrets)
 appsettings.Development.json
 appsettings.Local.json
-
+agent_context.md
 # Visual Studio / Rider / VS Code
 .vs/
 .idea/
@@ -47,6 +47,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.github/workflows/
+**/agent_context.md
 
 # =========================
 # OS Files (Systemowe)

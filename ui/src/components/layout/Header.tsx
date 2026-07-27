@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react'
+import { Menu, Plus } from 'lucide-react'
 
 interface HeaderProps {
 	onMenuClick: () => void
@@ -15,16 +15,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
 				<Menu className='w-6 h-6' />
 			</button>
 
-			{/* Reszta Headera (np. nazwa otwartej strony, profil użytkownika) */}
+			{/* Reszta Headera (nazwa otwartej strony, przycisk akcji) */}
 			<div className='flex-1 flex justify-between items-center'>
-				<h1 className='text-xl font-semibold text-gray-800'>Machine Fleet</h1>
-
-				{/* Miejsce na tymczasowy profil użytkownika */}
-				<div className='flex items-center space-x-4'>
-					<div className='w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm'>
-						JD
-					</div>
+				<div>
+					<h1 className='text-xl font-bold text-slate-800'>Machine Fleet</h1>
+					<p className='text-xs text-slate-500 hidden sm:block'>Manage units, status, and work order allocations</p>
 				</div>
+
+				{/* Przycisk dodawania nowej maszyny */}
+				<button className='bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center'>
+					<Plus className='w-4 h-4 mr-2' />
+					<span>Add New Machine</span>
+				</button>
 			</div>
 		</header>
 	)

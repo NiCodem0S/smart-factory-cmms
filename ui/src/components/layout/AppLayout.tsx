@@ -1,6 +1,6 @@
 import Sidebar from './Sidebar'
 import Header from './Header'
-import { useState, ReactNode, use } from 'react'
+import { useState, ReactNode } from 'react'
 
 interface AppLayoutProps {
 	children: ReactNode

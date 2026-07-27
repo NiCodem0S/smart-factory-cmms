@@ -1,4 +1,5 @@
 import { X, LayoutDashboard, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings } from 'lucide-react'
+import { NavLink, Link } from 'react-router-dom'
 
 interface SidebarProps {
     isOpen: boolean;
@@ -22,12 +23,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             `}>
                 {/* Logo & Brand Header */}
                 <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2.5 ">
-                        <img src="/logo.png" alt="Smart Factory Logo" className="w-[32px] h-[32px] object-contain" />
+                    <Link to="/machines" className="flex items-center gap-2.5 ">
+                        <img src="/logo.png" alt="Smart Factory Logo" className="w-[33px] h-[33px] object-contain" />
                         <span className="text-[19px] font-bold text-white tracking-wider">
                             Smart<span className="text-blue-500">Factory</span>
                         </span>
-                    </div>
+                    </Link>
                     <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400 hover:text-white">
                         <X className="w-6 h-6" />
                     </button>
@@ -43,10 +44,19 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <LayoutDashboard className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
                         <span>Live Dashboard</span>
                     </a>
-                    <a href="#" className="flex items-center px-6 py-2.5 bg-blue-600/10 text-blue-400 border-r-4 border-blue-500 text-sm font-semibold">
-                        <Cpu className="w-4 h-4 mr-3 shrink-0 text-blue-400" />
+                    <NavLink
+                        to="/machines"
+                        className={({ isActive }) =>
+                            `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
+                                isActive
+                                    ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
+                        <Cpu className="w-4 h-4 mr-3 shrink-0" />
                         <span>Machine Fleet</span>
-                    </a>
+                    </NavLink>
                     <a href="#" className="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
                         <AlertTriangle className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
                         <span>Incident History</span>

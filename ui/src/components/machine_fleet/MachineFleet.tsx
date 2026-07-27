@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMachines } from "../../hooks/useMachines";
 import { MachineStatus } from "../../types/machine";
-import { Search, Filter, AlertCircle, Loader2 } from "lucide-react";
+import { Search, AlertCircle, Loader2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function MachineFleet() {
     const [page, setPage] = useState<number>(1)
@@ -119,12 +120,13 @@ export default function MachineFleet() {
                                 <th className="px-6 py-4">Machine Name & ID</th>
                                 <th className="px-6 py-4">Category</th>
                                 <th className="px-6 py-4 text-center">Active Work Orders</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm divide-y divide-slate-100">
                             {data.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                                         No machines found matching the specified criteria.
                                     </td>
                                 </tr>
@@ -135,9 +137,12 @@ export default function MachineFleet() {
                                             {renderStatusBadge(machine.status)}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-800">
+                                            <Link
+                                                to={`/machines/${machine.id}`}
+                                                className="font-bold text-slate-800 hover:text-blue-600 transition-colors"
+                                            >
                                                 {machine.name}
-                                            </div>
+                                            </Link>
                                             <div className="text-xs text-slate-500 font-mono mt-0.5">
                                                 SN: {machine.serialNumber}
                                             </div>
@@ -153,6 +158,15 @@ export default function MachineFleet() {
                                             ) : (
                                                 <span className="text-slate-400 font-normal">0</span>
                                             )}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <Link
+                                                to={`/machines/${machine.id}`}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 shadow-sm"
+                                            >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                Details
+                                            </Link>
                                         </td>
                                     </tr>
                                 ))

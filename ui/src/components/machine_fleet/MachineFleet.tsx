@@ -1,15 +1,26 @@
 import { useState } from "react";
 import { useMachines } from "../../hooks/useMachines";
 import { MachineStatus } from "../../types/machine";
-import { Search, AlertCircle, Loader2, Eye } from "lucide-react";
+import AddMachineModal from "./AddMachineModal";
+import { Search, AlertCircle, Loader2, Eye, Plus, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function MachineFleet() {
     const [page, setPage] = useState<number>(1)
     const [search, setSearch] = useState<string>('')
     const [statusFilter, setStatusFilter] = useState<MachineStatus | undefined>(undefined)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    const { data, isLoading, error } = useMachines(page, 10, search, statusFilter);
+    const { data, isLoading, error, refetch } = useMachines(page, 10, search, statusFilter);
+
+    const handleSuccess = () => {
+        refetch();
+        setSuccessMessage("Machine added successfully!");
+        setTimeout(() => {
+            setSuccessMessage(null);
+        }, 4000);
+    };
 
     const renderStatusBadge = (status: MachineStatus) => {
         switch (status) {
@@ -52,6 +63,36 @@ export default function MachineFleet() {
 
     return (
         <div className="space-y-6">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800">Machine Fleet</h1>
+                    <p className="text-sm text-slate-500">Manage units, status, and work order allocations</p>
+                </div>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Machine</span>
+                </button>
+            </div>
+
+            {/* Success Banner */}
+            {successMessage && (
+                <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                        <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                        <span>{successMessage}</span>
+                    </div>
+                    <button
+                        onClick={() => setSuccessMessage(null)}
+                        className="text-green-700 hover:text-green-900 font-bold text-sm px-2 py-1 rounded"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
+
             {/* Controls Bar: Search & Status Filter */}
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
                 <div className="flex flex-col sm:flex-row gap-3 flex-1">
@@ -198,6 +239,11 @@ export default function MachineFleet() {
                     </div>
                 </div>
             )}
+            <AddMachineModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handleSuccess}
+            />
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { MachineListDto, MachineStatus } from '../types/machine'
+import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto } from '../types/machine'
 import { PagedResult } from '../types/common'
 
 export async function fetchMachines(
@@ -16,6 +16,14 @@ export async function fetchMachines(
 			status: status || undefined,
 		},
 	})
+
+	return response.data
+}
+
+export async function createMachine(
+	dto: CreateMachineDto,
+): Promise<MachineDetailDto> {
+	const response = await apiClient.post<MachineDetailDto>('/Machines', dto)
 
 	return response.data
 }

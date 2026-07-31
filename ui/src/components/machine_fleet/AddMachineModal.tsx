@@ -1,25 +1,30 @@
 import { use, useState } from "react";
 import ReactDOM from "react-dom"
 import { useForm, SubmitHandler } from "react-hook-form"
-import { MachineStatus } from "../../types/machine";
+import { MachineStatus, CreateMachineDto } from "../../types/machine";
+import useCreateMachine from "../../hooks/useCreateMachine";
 
 export default function AddMachineModal() {
 
     const [isOpen, setIsOpen] = useState(false);
-    type Inputs = {
-        name: string,
-        category: string,
-        serialNumber: string,
-        status: MachineStatus
-    }
+    const { execute, isLoading, error } = useCreateMachine();
     const {
         register,
         handleSubmit,
-        watch,
+        reset,
         formState: { errors },
-    } = useForm<Inputs>()
+    } = useForm<CreateMachineDto>()
 
-    const onSucSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
+    const handleFormSubmit: SubmitHandler<CreateMachineDto> = async (dto) => {
+        try {
+            await execute(dto);
+            reset();
+            setIsOpen(false);
+        }
+        catch (err) {
+
+        }
+    }
 
     return (
         <div>
@@ -38,26 +43,32 @@ export default function AddMachineModal() {
                             Add Machine
                         </h2>
 
-                        <form onSubmit={handleSubmit(onSucSubmit)}>
+                        <form onSubmit={handleSubmit(handleFormSubmit)}>
                             <label>Name: </label>
-                            <input type="text" {...register("name", { required: true, maxLength: 64 })} className="bg-gray-100" />
+                            <input type="text" {...register("name", { required: true, maxLength: 255 })} className="bg-gray-100" />
                             <label>Category:</label>
-                            <input type="text" {...register("category", { required: true, maxLength: 64 })} className="bg-gray-100" />
+                            <input type="text" {...register("category", { required: true, maxLength: 127 })} className="bg-gray-100" />
                             <label>Serial Number:</label>
-                            <input type="text" {...register("serialNumber", { required: true, maxLength: 128 })} className="bg-gray-100" />
+                            <input type="text" {...register("serialNumber", { required: true, maxLength: 127 })} className="bg-gray-100" />
                             <label>Status: </label>
                             <select {...register("status")} className="bg-gray-100">
                                 <option value="Running">Running</option>
                                 <option value="Offline">Offline</option>
-                                <option value="Maintenace">Maintenace</option>
+                                <option value="Maintenance">Maintenance</option>
                                 <option value="Error">Error</option>
                             </select>
-                            <input type="submit" className="px-4 py-2 bg-blue-500 text-white rounded" />
+                            <button type="submit" disabled={isLoading} className="px-4 py-2 bg-blue-500 text-white rounded" />
                         </form>
 
                     </div>
                 </div>
             )}
+            {error && (
+                <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm mb-3">
+                    {error}
+                </div>
+            )}
+
 
         </div>
     )

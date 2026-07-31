@@ -6,18 +6,17 @@ namespace SmartFactoryCMMS.Api.DTOs
     public class CreateMachineDto
     {
         [Required]
-        [StringLength(200)]
+        [StringLength(255)]
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100)]
+        [StringLength(127)]
         public string Category { get; set; } = string.Empty;
 
-        [StringLength(100)]
+        [StringLength(127)]
         public string SerialNumber { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(30)]
         public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Maintenance, Error, Offline
     }
 }

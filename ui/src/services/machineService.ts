@@ -20,6 +20,13 @@ export async function fetchMachines(
 	return response.data
 }
 
+export async function fetchMachinesById(
+	id: string
+): Promise<MachineDetailDto> {
+	const response = await apiClient.get<MachineDetailDto>(`/Machines/${id}`)
+	return response.data
+}
+
 export async function createMachine(
 	dto: CreateMachineDto,
 ): Promise<MachineDetailDto> {

@@ -16,5 +16,7 @@ namespace SmartFactoryCMMS.Api.DTOs
         public DateTime InstallationDate { get; set; }
         public int ActiveWorkOrdersCount { get; set; }
         public DateTime? LastTelemetryRead { get; set; }
+        public double TotalOperatingHours { get; set; } = 0;
+        public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
     }
 }

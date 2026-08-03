@@ -12,6 +12,8 @@ namespace SmartFactoryCMMS.Api.Models
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; } // JSON
         public bool IsActive { get; set; } = true;
+        public double TotalOperatingHours { get; set; } = 0;
+        public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
 
         // Relacje
         public ICollection<TelemetryRead> TelemetryReads { get; set; } = new List<TelemetryRead>();

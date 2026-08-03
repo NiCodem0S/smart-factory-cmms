@@ -9,6 +9,8 @@ export interface MachineListDto {
 	installationDate: string
 	activeWorkOrdersCount: number
 	lastTelemetryRead: string | null
+	totalOperatingHours: number
+	lastStatusChangedAt: string | null
 }
 
 export interface TelemetryReadDto {
@@ -48,6 +50,8 @@ export interface MachineDetailDto {
 	installationDate: string
 	staticProperties: string | null
 	isActive: boolean
+	totalOperatingHours: number
+	lastStatusChangedAt: string | null
 
 	// Aggregated data
 	totalWorkOrders: number

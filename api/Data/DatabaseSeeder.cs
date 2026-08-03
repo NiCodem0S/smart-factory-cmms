@@ -93,7 +93,7 @@ namespace SmartFactoryCMMS.Api.Data
             var machines = new List<Machine>
             {
                 new Machine { Name = "Hydraulic Press B1", Category = "HeavyMachinery", SerialNumber = "HP001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-3), IsActive = true },
-                new Machine { Name = "Hydraulic Press B2", Category = "HeavyMachinery", SerialNumber = "HP002-2023", Status = MachineStatus.Stopped, InstallationDate = DateTime.UtcNow.AddYears(-2), IsActive = true },
+                new Machine { Name = "Hydraulic Press B2", Category = "HeavyMachinery", SerialNumber = "HP002-2023", Status = MachineStatus.Error, InstallationDate = DateTime.UtcNow.AddYears(-2), IsActive = true },
                 new Machine { Name = "Hydraulic Press B3", Category = "HeavyMachinery", SerialNumber = "HP003-2023", Status = MachineStatus.Maintenance, InstallationDate = DateTime.UtcNow.AddYears(-2), IsActive = true },
                 new Machine { Name = "Conveyor Belt C1", Category = "Conveyance", SerialNumber = "CB001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-1), IsActive = true },
                 new Machine { Name = "Conveyor Belt C2", Category = "Conveyance", SerialNumber = "CB002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-8), IsActive = true },
@@ -105,7 +105,7 @@ namespace SmartFactoryCMMS.Api.Data
                 new Machine { Name = "Lathe Machine L2", Category = "Turning", SerialNumber = "LM002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-10), IsActive = true },
                 new Machine { Name = "Welding Robot W1", Category = "Welding", SerialNumber = "WR001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-24), IsActive = true },
                 new Machine { Name = "Welding Robot W2", Category = "Welding", SerialNumber = "WR002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-18), IsActive = true },
-                new Machine { Name = "Welding Robot W3", Category = "Welding", SerialNumber = "WR003-2023", Status = MachineStatus.Stopped, InstallationDate = DateTime.UtcNow.AddMonths(-12), IsActive = true },
+                new Machine { Name = "Welding Robot W3", Category = "Welding", SerialNumber = "WR003-2023", Status = MachineStatus.Error, InstallationDate = DateTime.UtcNow.AddMonths(-12), IsActive = true },
                 new Machine { Name = "Assembly Robot A1", Category = "Assembly", SerialNumber = "AR001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-14), IsActive = true },
                 new Machine { Name = "Assembly Robot A2", Category = "Assembly", SerialNumber = "AR002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-10), IsActive = true },
                 new Machine { Name = "Assembly Robot A3", Category = "Assembly", SerialNumber = "AR003-2023", Status = MachineStatus.Maintenance, InstallationDate = DateTime.UtcNow.AddMonths(-8), IsActive = true },
@@ -120,7 +120,7 @@ namespace SmartFactoryCMMS.Api.Data
                 new Machine { Name = "Pump System PS1", Category = "Utility", SerialNumber = "PS001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-15), IsActive = true },
                 new Machine { Name = "Pump System PS2", Category = "Utility", SerialNumber = "PS002-2023", Status = MachineStatus.Maintenance, InstallationDate = DateTime.UtcNow.AddMonths(-12), IsActive = true },
                 new Machine { Name = "Drill Machine D1", Category = "Drilling", SerialNumber = "DR001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-13), IsActive = true },
-                new Machine { Name = "Drill Machine D2", Category = "Drilling", SerialNumber = "DR002-2023", Status = MachineStatus.Stopped, InstallationDate = DateTime.UtcNow.AddMonths(-11), IsActive = true },
+                new Machine { Name = "Drill Machine D2", Category = "Drilling", SerialNumber = "DR002-2023", Status = MachineStatus.Error, InstallationDate = DateTime.UtcNow.AddMonths(-11), IsActive = true },
                 new Machine { Name = "Saw Machine S1", Category = "Cutting", SerialNumber = "SAW001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-9), IsActive = true },
                 new Machine { Name = "Saw Machine S2", Category = "Cutting", SerialNumber = "SAW002-2023", Status = MachineStatus.Offline, InstallationDate = DateTime.UtcNow.AddMonths(-8), IsActive = true },
                 new Machine { Name = "CNC Router CR1", Category = "Cutting", SerialNumber = "CR001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-6), IsActive = true },
@@ -199,7 +199,7 @@ namespace SmartFactoryCMMS.Api.Data
             // Create incidents for machines
             var incidents = new List<Incident>();
 
-            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Stopped || m.Status == MachineStatus.Maintenance).Take(10))
+            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance).Take(10))
             {
                 for (int i = 0; i < random.Next(1, 3); i++)
                 {

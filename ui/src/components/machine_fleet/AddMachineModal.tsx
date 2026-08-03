@@ -1,7 +1,6 @@
-import { useState } from "react";
 import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { MachineStatus, CreateMachineDto } from "../../types/machine";
+import { CreateMachineDto } from "../../types/machine";
 import useCreateMachine from "../../hooks/useCreateMachine";
 
 interface AddMachineModalProps {
@@ -59,27 +58,54 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                         <label className="block text-xs font-semibold text-slate-600 mb-1">Name</label>
                         <input
                             type="text"
-                            {...register("name", { required: true, maxLength: 255 })}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            {...register("name", {
+                                required: "Machine name is required",
+                                maxLength: { value: 255, message: "Name cannot exceed 255 characters" }
+                            })}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.name ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"
+                                }`}
                         />
+                        {errors.name && (
+                            <span className="text-xs text-red-500 mt-1 block">
+                                {errors.name.message}
+                            </span>
+                        )}
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1">Category</label>
                         <input
                             type="text"
-                            {...register("category", { required: true, maxLength: 127 })}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            {...register("category", {
+                                required: "Category is required",
+                                maxLength: { value: 127, message: "Category cannot exceed 127 characters" }
+                            })}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.category ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"
+                                }`}
                         />
+                        {errors.category && (
+                            <span className="text-xs text-red-500 mt-1 block">
+                                {errors.category.message}
+                            </span>
+                        )}
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1">Serial Number</label>
                         <input
                             type="text"
-                            {...register("serialNumber", { required: true, maxLength: 127 })}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            {...register("serialNumber", {
+                                required: "Serial number is required",
+                                maxLength: { value: 127, message: "Serial number cannot exceed 127 characters" }
+                            })}
+                            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.serialNumber ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"
+                                }`}
                         />
+                        {errors.serialNumber && (
+                            <span className="text-xs text-red-500 mt-1 block">
+                                {errors.serialNumber.message}
+                            </span>
+                        )}
                     </div>
 
                     <div>

@@ -8,8 +8,8 @@ namespace SmartFactoryCMMS.Api.Helpers.Enums
     public enum MachineStatus
     {
         Running,
-        Stopped,
+        Error,
         Maintenance,
-        Offline
+        Offline,
     }
 }

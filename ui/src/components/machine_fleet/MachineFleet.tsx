@@ -6,6 +6,7 @@ import { Search, AlertCircle, Loader2, Eye, Plus, CheckCircle } from "lucide-rea
 import { Link } from "react-router-dom";
 
 export default function MachineFleet() {
+
     const [page, setPage] = useState<number>(1)
     const [search, setSearch] = useState<string>('')
     const [statusFilter, setStatusFilter] = useState<MachineStatus | undefined>(undefined)
@@ -31,11 +32,11 @@ export default function MachineFleet() {
                         Running
                     </span>
                 );
-            case 'Stopped':
+            case 'Error':
                 return (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
                         <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
-                        Stopped
+                        Error
                     </span>
                 );
             case 'Maintenance':
@@ -122,7 +123,7 @@ export default function MachineFleet() {
                     >
                         <option value="">All Statuses</option>
                         <option value="Running">Running</option>
-                        <option value="Stopped">Stopped</option>
+                        <option value="Error">Error</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Offline">Offline</option>
                     </select>

@@ -3,7 +3,6 @@ import AppLayout from './components/layout/AppLayout'
 import LiveDashboard from './components/live_dashboard/LiveDashboard'
 import MachineFleet from './components/machine_fleet/MachineFleet'
 import MachineDetails from './components/machine_fleet/MachineDetails'
-import AddMachineModal from './components/machine_fleet/AddMachineModal'
 
 function App() {
 	return (
@@ -14,8 +13,6 @@ function App() {
 					<Route path="/machines" element={<MachineFleet />} />
 					<Route path="/machines/:id" element={<MachineDetails />} />
 					<Route path="/dashboard" element={<LiveDashboard />} />
-					{/*Temporary route*/}
-					<Route path="/machines/addmachine" element={<AddMachineModal />} />
 				</Routes>
 			</AppLayout>
 		</BrowserRouter>

@@ -1,4 +1,4 @@
-export type MachineStatus = 'Running' | 'Stopped' | 'Maintenance' | 'Offline'
+export type MachineStatus = 'Running' | 'Error' | 'Maintenance' | 'Offline'
 
 export interface MachineListDto {
 	id: string

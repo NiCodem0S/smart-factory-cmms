@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MachineDetailDto, MachineListDto } from '../types/machine'
+import { MachineDetailDto } from '../types/machine'
 import { fetchMachinesById } from '../services/machineService'
 
 

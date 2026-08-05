@@ -13,7 +13,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 			<Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
 			<div className='flex flex-col flex-1 w-full overflow-hidden'>
-				<main className='flex-1 overflow-y-auto p-4 md:p-6'>{children}</main>
+				<main className='flex-1 overflow-y-auto'>{children}</main>
 			</div>
 		</div>
 	)

@@ -3,6 +3,7 @@ import { useMachines } from "../../hooks/useMachines";
 import { MachineStatus } from "../../types/machine";
 import AddMachineModal from "./AddMachineModal";
 import Header from "../layout/Header";
+import StatusBadge from "../common/StatusBadge";
 import { Search, AlertCircle, Loader2, Eye, Plus, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -22,45 +23,6 @@ export default function MachineFleet() {
         setTimeout(() => {
             setSuccessMessage(null);
         }, 4000);
-    };
-
-    const getStatusBadge = (status: MachineStatus) => {
-        switch (status) {
-            case 'Running':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                        Running
-                    </span>
-                );
-            case 'Error':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
-                        Error
-                    </span>
-                );
-            case 'Maintenance':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">
-                        <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5"></span>
-                        Maintenance
-                    </span>
-                );
-            case 'Offline':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full mr-1.5"></span>
-                        Offline
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                        {status}
-                    </span>
-                );
-        }
     };
 
     return (
@@ -182,7 +144,7 @@ export default function MachineFleet() {
                                 data.data.map((machine) => (
                                     <tr key={machine.id} className="hover:bg-slate-50 transition-colors group">
                                         <td className="px-6 py-4">
-                                            {getStatusBadge(machine.status)}
+                                            <StatusBadge status={machine.status} />
                                         </td>
                                         <td className="px-6 py-4">
                                             <Link

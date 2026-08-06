@@ -1,4 +1,4 @@
-﻿using SmartFactoryCMMS.Api.Helpers.Enums;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.Models
 {
@@ -14,8 +14,17 @@ namespace SmartFactoryCMMS.Api.Models
         public bool IsActive { get; set; } = true;
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
+        
+        // Production Tracking
+        public string? Icon { get; set; } = "fa-cogs"; // Default icon
+        public int TotalProduced { get; set; } = 0;
+        public double CycleTimeSeconds { get; set; } = 5.0; // Simulated time to produce one part
+        public int OrderInLine { get; set; } = 0;
 
         // Relacje
+        public Guid? ProductionLineId { get; set; }
+        public ProductionLine? ProductionLine { get; set; }
+        
         public ICollection<TelemetryRead> TelemetryReads { get; set; } = new List<TelemetryRead>();
         public ICollection<Incident> Incidents { get; set; } = new List<Incident>();
         public ICollection<WorkOrder> WorkOrders { get; set; } = new List<WorkOrder>();

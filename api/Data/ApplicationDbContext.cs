@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 using SmartFactoryCMMS.Api.Models;
 
@@ -18,6 +18,12 @@ namespace SmartFactoryCMMS.Api.Data
         modelBuilder.Entity<Machine>()
         .Property(m => m.Status)
         .HasConversion<string>(); // Saves "Running" instead of 0 in SQL Server
+
+        modelBuilder.Entity<ProductionLine>()
+            .HasOne(pl => pl.CurrentProduct)
+            .WithMany(p => p.ProductionLines)
+            .HasForeignKey(pl => pl.CurrentProductId)
+            .OnDelete(DeleteBehavior.SetNull);
 }
 
         public DbSet<Machine> Machines { get; set; }
@@ -30,5 +36,7 @@ namespace SmartFactoryCMMS.Api.Data
         public DbSet<AlertThreshold> AlertThresholds { get; set; }
         public DbSet<ProductionLog> ProductionLogs { get; set; }
         public DbSet<MachinePrediction> MachinePredictions { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ProductionLine> ProductionLines { get; set; }
     }
 }

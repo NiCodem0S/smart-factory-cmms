@@ -24,8 +24,25 @@ namespace SmartFactoryCMMS.Api.Data
             .WithMany(p => p.ProductionLines)
             .HasForeignKey(pl => pl.CurrentProductId)
             .OnDelete(DeleteBehavior.SetNull);
+            
+        modelBuilder.Entity<ProductionLine>()
+            .HasIndex(pl => pl.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<ProductionLine>()
+            .HasOne(pl => pl.FactoryHall)
+            .WithMany(fh => fh.ProductionLines)
+            .HasForeignKey(pl => pl.FactoryHallId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Machine>()
+            .HasOne(m => m.FactoryHall)
+            .WithMany(fh => fh.Machines)
+            .HasForeignKey(m => m.FactoryHallId)
+            .OnDelete(DeleteBehavior.Restrict); // Nie usuwaj maszyn jak usuniesz hale
 }
 
+        public DbSet<FactoryHall> FactoryHalls { get; set; }
         public DbSet<Machine> Machines { get; set; }
         public DbSet<TelemetryRead> TelemetryRead { get; set; }
         public DbSet<Incident> Incidents { get; set; }

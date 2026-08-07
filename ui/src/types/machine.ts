@@ -66,6 +66,18 @@ export interface CreateMachineDto {
 	category: string
 	serialNumber: string
 	status: MachineStatus
+	cycleTimeSeconds: number
+	orderInLine: number
+	factoryHallId: string
+	productionLineId: string | null
+	normTemp: number
+	baseVib: number
+	normPower: number
+	alertThresholds: {
+		metricType: string;
+		warningValue: number;
+		criticalValue: number;
+	}[];
 }
 
 export interface UpdateMachineDto {

@@ -22,6 +22,9 @@ namespace SmartFactoryCMMS.Api.Models
         public int OrderInLine { get; set; } = 0;
 
         // Relacje
+        public Guid FactoryHallId { get; set; }
+        public FactoryHall FactoryHall { get; set; } = null!;
+
         public Guid? ProductionLineId { get; set; }
         public ProductionLine? ProductionLine { get; set; }
         

@@ -17,6 +17,9 @@ namespace SmartFactoryCMMS.Api.Models
         public Guid? CurrentProductId { get; set; }
         public Product? CurrentProduct { get; set; }
 
+        public Guid FactoryHallId { get; set; }
+        public FactoryHall FactoryHall { get; set; } = null!;
+
         public ICollection<Machine> Machines { get; set; } = new List<Machine>();
     }
 }

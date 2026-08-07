@@ -1,7 +1,9 @@
 import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CreateMachineDto } from "../../types/machine";
+import { FactoryHallListDto, ProductionLineListDto } from "../../types/factory";
 import useCreateMachine from "../../hooks/useCreateMachine";
+import { useEffect, useState } from "react";
 
 interface AddMachineModalProps {
     isOpen: boolean;
@@ -9,19 +11,84 @@ interface AddMachineModalProps {
     onSuccess?: () => void;
 }
 
+interface FormValues extends Omit<CreateMachineDto, "alertThresholds"> {
+    tempWarning: number;
+    tempCritical: number;
+    vibWarning: number;
+    vibCritical: number;
+    powerWarning: number;
+    powerCritical: number;
+}
+
 export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachineModalProps) {
     if (!isOpen) return null;
 
-    const { execute, isLoading, error } = useCreateMachine();
+    const { execute, isLoading: isCreating, error } = useCreateMachine();
+    
+    const [halls, setHalls] = useState<FactoryHallListDto[]>([]);
+    const [lines, setLines] = useState<ProductionLineListDto[]>([]);
+    const [isLoadingHalls, setIsLoadingHalls] = useState(false);
+    const [isLoadingLines, setIsLoadingLines] = useState(false);
+
+    useEffect(() => {
+        setIsLoadingHalls(true);
+        fetch('http://localhost:5240/api/FactoryHalls')
+            .then(res => res.json())
+            .then(data => setHalls(data))
+            .catch(console.error)
+            .finally(() => setIsLoadingHalls(false));
+    }, []);
     const {
         register,
         handleSubmit,
         reset,
+        watch,
         formState: { errors },
-    } = useForm<CreateMachineDto>();
+    } = useForm<FormValues>({
+        defaultValues: {
+            cycleTimeSeconds: 5.0,
+            orderInLine: 0,
+            normTemp: 60.0,
+            baseVib: 1.0,
+            normPower: 15.0,
+            status: "Offline",
+            factoryHallId: "",
+            tempWarning: 75.0,
+            tempCritical: 90.0,
+            vibWarning: 4.0,
+            vibCritical: 6.0,
+            powerWarning: 30.0,
+            powerCritical: 45.0
+        }
+    });
 
-    const handleFormSubmit: SubmitHandler<CreateMachineDto> = async (dto) => {
+    const selectedHallId = watch("factoryHallId");
+
+    useEffect(() => {
+        if (!selectedHallId) {
+            setLines([]);
+            return;
+        }
+        setIsLoadingLines(true);
+        fetch(`http://localhost:5240/api/ProductionLines?factoryHallId=${selectedHallId}`)
+            .then(res => res.json())
+            .then(data => setLines(data))
+            .catch(console.error)
+            .finally(() => setIsLoadingLines(false));
+    }, [selectedHallId]);
+
+    const handleFormSubmit: SubmitHandler<FormValues> = async (formData) => {
         try {
+            const dto: CreateMachineDto = {
+                ...formData,
+                productionLineId: formData.productionLineId || null,
+                alertThresholds: [
+                    { metricType: "Temperature", warningValue: Number(formData.tempWarning), criticalValue: Number(formData.tempCritical) },
+                    { metricType: "Vibration", warningValue: Number(formData.vibWarning), criticalValue: Number(formData.vibCritical) },
+                    { metricType: "PowerLoadKw", warningValue: Number(formData.powerWarning), criticalValue: Number(formData.powerCritical) },
+                ]
+            };
+
             await execute(dto);
             reset();
             onSuccess?.();
@@ -121,7 +188,165 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                         </select>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Cycle Time (s)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                {...register("cycleTimeSeconds", { required: true, min: 0.1 })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Order in Line</label>
+                            <input
+                                type="number"
+                                {...register("orderInLine", { required: true, min: 0 })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Factory Hall</label>
+                            <select
+                                {...register("factoryHallId", { required: "Factory Hall is required" })}
+                                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.factoryHallId ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"} bg-white`}
+                            >
+                                <option value="">Select Hall...</option>
+                                {halls.map(hall => (
+                                    <option key={hall.id} value={hall.id}>{hall.name}</option>
+                                ))}
+                            </select>
+                            {errors.factoryHallId && (
+                                <span className="text-xs text-red-500 mt-1 block">
+                                    {errors.factoryHallId.message}
+                                </span>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Production Line (Optional)</label>
+                            <select
+                                {...register("productionLineId")}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                disabled={!selectedHallId || isLoadingLines}
+                            >
+                                <option value="">None (Utility)</option>
+                                {lines.map(line => (
+                                    <option key={line.id} value={line.id}>{line.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Base Temp (°C)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                {...register("normTemp", { required: true })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Base Vib (mm/s)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                {...register("baseVib", { required: true })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Base Pwr (kW)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                {...register("normPower", { required: true })}
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-slate-200">
+                        <h4 className="text-sm font-semibold text-slate-700 mb-4">Alert Thresholds</h4>
+                        
+                        <div className="grid grid-cols-3 gap-6">
+                            {/* Temperature Thresholds */}
+                            <div className="space-y-3 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                                <h5 className="text-xs font-semibold text-orange-800 uppercase">Temperature (°C)</h5>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Warning</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("tempWarning")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Critical</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("tempCritical")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Vibration Thresholds */}
+                            <div className="space-y-3 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                <h5 className="text-xs font-semibold text-blue-800 uppercase">Vibration (mm/s)</h5>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Warning</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("vibWarning")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Critical</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("vibCritical")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Power Thresholds */}
+                            <div className="space-y-3 bg-purple-50/50 p-3 rounded-lg border border-purple-100">
+                                <h5 className="text-xs font-semibold text-purple-800 uppercase">Power (kW)</h5>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Warning</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("powerWarning")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">Critical</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        {...register("powerCritical")}
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 mt-4">
                         <button
                             type="button"
                             onClick={onClose}
@@ -131,10 +356,10 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                         </button>
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isCreating}
                             className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
-                            {isLoading ? "Saving..." : "Add Machine"}
+                            {isCreating ? "Saving..." : "Add Machine"}
                         </button>
                     </div>
                 </form>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.Models;
@@ -61,6 +61,27 @@ namespace SmartFactoryCMMS.Api.Controllers
 
             machine.Status = dto.Status;
             machine.IsActive = true;
+
+            machine.StaticProperties = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                NormTemp = dto.NormTemp,
+                BaseVib = dto.BaseVib,
+                NormPower = dto.NormPower
+            });
+
+            if (dto.AlertThresholds != null && dto.AlertThresholds.Any())
+            {
+                foreach (var thresholdDto in dto.AlertThresholds)
+                {
+                    _context.AlertThresholds.Add(new AlertThreshold
+                    {
+                        MachineId = machine.Id,
+                        MetricType = thresholdDto.MetricType,
+                        WarningValue = thresholdDto.WarningValue,
+                        CriticalValue = thresholdDto.CriticalValue
+                    });
+                }
+            }
 
             _context.Machines.Add(machine);
             await _context.SaveChangesAsync();

@@ -28,5 +28,6 @@ namespace SmartFactoryCMMS.Api.Models
         public ICollection<TelemetryRead> TelemetryReads { get; set; } = new List<TelemetryRead>();
         public ICollection<Incident> Incidents { get; set; } = new List<Incident>();
         public ICollection<WorkOrder> WorkOrders { get; set; } = new List<WorkOrder>();
+        public ICollection<AlertThreshold> AlertThresholds { get; set; } = new List<AlertThreshold>();
     }
 }

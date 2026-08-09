@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
+using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
@@ -9,20 +11,32 @@ namespace SmartFactoryCMMS.Api.Controllers
     public class FactoryHallsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IFactoryHallRepository _hallsRepository;
 
-        public FactoryHallsController(ApplicationDbContext context)
+        public FactoryHallsController(IFactoryHallRepository hallsRepository, ApplicationDbContext context)
         {
             _context = context;
+            _hallsRepository = hallsRepository;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFactoryHalls()
+        public async Task<ActionResult<List<FactoryHallDto>>> GetFactoryHalls()
         {
-            var halls = await _context.FactoryHalls
-                .Select(h => new { h.Id, h.Name })
-                .ToListAsync();
+            var result = await _hallsRepository.GetFactoryHallsAsync();
+            return Ok(result);
+        }
 
-            return Ok(halls);
+        [HttpGet("{id}")]
+        public async Task<ActionResult<FactoryHallDto>> GetFactoryHallById(Guid id)
+        {
+            var factoryHallDto = await _hallsRepository.GetFactoryHallByIdAsync(id);
+
+            if(factoryHallDto == null)
+            {
+                return NotFound(new { message = $"Factory Hall: {id} not found" });
+            }
+
+            return Ok(factoryHallDto);
         }
     }
 }

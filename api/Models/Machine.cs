@@ -16,7 +16,7 @@ namespace SmartFactoryCMMS.Api.Models
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
         
         // Production Tracking
-        public string? Icon { get; set; } = "fa-cogs"; // Default icon
+        public string? Icon { get; set; } = "PrecisionManufacturing"; // Default icon
         public int TotalProduced { get; set; } = 0;
         public double CycleTimeSeconds { get; set; } = 5.0; // Simulated time to produce one part
         public int OrderInLine { get; set; } = 0;

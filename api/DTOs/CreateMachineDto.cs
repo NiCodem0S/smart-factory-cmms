@@ -22,6 +22,8 @@ namespace SmartFactoryCMMS.Api.DTOs
         public double CycleTimeSeconds { get; set; } = 5.0;
         
         public int OrderInLine { get; set; } = 0;
+
+        public string? Icon { get; set; } = "PrecisionManufacturing";
         
         [Required]
         public Guid FactoryHallId { get; set; }

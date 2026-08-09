@@ -68,6 +68,7 @@ export interface CreateMachineDto {
 	status: MachineStatus
 	cycleTimeSeconds: number
 	orderInLine: number
+	icon?: string
 	factoryHallId: string
 	productionLineId: string | null
 	normTemp: number
@@ -78,6 +79,20 @@ export interface CreateMachineDto {
 		warningValue: number;
 		criticalValue: number;
 	}[];
+}
+
+export interface AlertThresholdsDto {
+	id: string,
+	machineId: string,
+	metricType: string,
+	warningValue: number,
+	criticalValue: number
+}
+
+export interface CreateAlertThresholdsDto {
+	metricType: string,
+	warningValue: number,
+	criticalValue: number
 }
 
 export interface UpdateMachineDto {

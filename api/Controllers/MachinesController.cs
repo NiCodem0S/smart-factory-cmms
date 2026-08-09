@@ -55,19 +55,8 @@ namespace SmartFactoryCMMS.Api.Controllers
         public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
             var machine = _mapper.Map<Machine>(dto);
-
-            machine.Id = Guid.NewGuid();
-            machine.InstallationDate = DateTime.UtcNow;
-
-            machine.Status = dto.Status;
-            machine.IsActive = true;
-
-            machine.StaticProperties = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                NormTemp = dto.NormTemp,
-                BaseVib = dto.BaseVib,
-                NormPower = dto.NormPower
-            });
+            var createdMachine = _machineRepository.CreateMachineAsync(machine);
+            var alertThresholds = _mapper.Map<AlertThreshold>(dto.AlertThresholds);
 
             if (dto.AlertThresholds != null && dto.AlertThresholds.Any())
             {
@@ -83,10 +72,8 @@ namespace SmartFactoryCMMS.Api.Controllers
                 }
             }
 
-            _context.Machines.Add(machine);
-            await _context.SaveChangesAsync();
-
-            var machineDetailDto = _mapper.Map<MachineDetailDto>(machine);
+            var machineDetailDto = _mapper.Map<MachineDetailDto>(createdMachine);
+            
             return CreatedAtAction(nameof(GetMachineDetails), new { id = machine.Id }, machineDetailDto);
         }
 

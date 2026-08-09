@@ -84,6 +84,12 @@ namespace SmartFactoryCMMS.Api.Repositories
             return _mapper.Map<List<TelemetryReadDto>>(telemetryReads);
         }
 
+        public Task<Machine> CreateMachineAsync(Machine machine)
+        {
+            _context.Machine.Add(machine)
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteMachineAsync(Guid id)
         {
             var machine = await _context.Machines.FindAsync(id);

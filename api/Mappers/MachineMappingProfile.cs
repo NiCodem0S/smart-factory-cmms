@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Models;
+using System.Text.Json;
 
 namespace SmartFactoryCMMS.Api.Mappers
 {
@@ -33,7 +34,11 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(props => props.ActiveAlerts,
                     confg => confg.MapFrom(src => src.Incidents.Where(i => i.Status == "Active").Take(5)));
 
-            CreateMap<CreateMachineDto, Machine>();
+            CreateMap<CreateMachineDto, Machine>()
+                .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom(src => 
+                    JsonSerializer.Serialize(new {src.NormTemp, src.BaseVib, src.NormPower})))
+                .ForMember(dest => dest.Icon, opt => opt.MapFrom(src =>
+                    string.IsNullOrEmpty(src.Icon) ? "PrecisionManufacturing" : src.Icon));
 
             // TelemetryRead → TelemetryReadDto
             CreateMap<TelemetryRead, TelemetryReadDto>();

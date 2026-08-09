@@ -1,4 +1,4 @@
-import { X, LayoutDashboard, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings } from 'lucide-react'
+import { X, LayoutDashboard, Factory, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
 
 interface SidebarProps {
@@ -40,10 +40,32 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <div className="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                         OPERATIONS
                     </div>
-                    <a href="#" className="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                    <NavLink
+                        to="/dashboard"
+                        className={({ isActive }) =>
+                            `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
+                                isActive
+                                    ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
                         <LayoutDashboard className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
                         <span>Live Dashboard</span>
-                    </a>
+                    </NavLink>
+                    <NavLink
+                        to="/production"
+                        className={({ isActive }) =>
+                            `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
+                                isActive
+                                    ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
+                        <Factory className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
+                        <span>Production Lines</span>
+                    </NavLink>
                     <NavLink
                         to="/machines"
                         className={({ isActive }) =>

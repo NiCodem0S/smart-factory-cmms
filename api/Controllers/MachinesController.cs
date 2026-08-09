@@ -54,24 +54,8 @@ namespace SmartFactoryCMMS.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
-            var machine = _mapper.Map<Machine>(dto);
-            var createdMachine = _machineRepository.CreateMachineAsync(machine);
-            var alertThresholds = _mapper.Map<AlertThreshold>(dto.AlertThresholds);
-
-            if (dto.AlertThresholds != null && dto.AlertThresholds.Any())
-            {
-                foreach (var thresholdDto in dto.AlertThresholds)
-                {
-                    _context.AlertThresholds.Add(new AlertThreshold
-                    {
-                        MachineId = machine.Id,
-                        MetricType = thresholdDto.MetricType,
-                        WarningValue = thresholdDto.WarningValue,
-                        CriticalValue = thresholdDto.CriticalValue
-                    });
-                }
-            }
-
+            var machine = _mapper.Map<Machine>(dto);     
+            var createdMachine = await _machineRepository.CreateMachineAsync(machine);       
             var machineDetailDto = _mapper.Map<MachineDetailDto>(createdMachine);
             
             return CreatedAtAction(nameof(GetMachineDetails), new { id = machine.Id }, machineDetailDto);

@@ -69,6 +69,15 @@ namespace SmartFactoryCMMS.Api.Repositories
             return _mapper.Map<MachineDetailDto>(machine);
         }
 
+        public async Task<Machine?> FindMachineByIdAsync(Guid id)
+        {
+            var machine = await _context.Machines.FindAsync(id);
+
+            if (machine == null) return null;
+
+            return machine;
+        }
+
         public async Task<List<TelemetryReadDto>> GetMachineTelemetryAsync(Guid id, int limit)
         {
             var machine = await ActiveMachines.FirstOrDefaultAsync(m => m.Id == id);
@@ -92,15 +101,43 @@ namespace SmartFactoryCMMS.Api.Repositories
             return machine;
         }
 
-        public async Task DeleteMachineAsync(Guid id)
+        public async Task<Machine?> UpdateMachineAsync(Guid id, UpdateMachineDto dto)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await _context.Machines.FirstOrDefaultAsync(m => m.IsActive && m.Id == id);
 
-            if (machine != null)
+            if (machine == null) return null;
+
+            if (machine.Status != dto.Status)
             {
-                machine.IsActive = false;
+                machine.LastStatusChangedAt = DateTime.UtcNow;
+            }
+
+            _mapper.Map(dto, machine);
+
+            try
+            {
                 await _context.SaveChangesAsync();
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                return null;
+            }
+
+            return machine;
+
+        }
+
+        public async Task<Machine?> DeleteMachineAsync(Guid id)
+        {
+            var machine = await _context.Machines.FirstOrDefaultAsync(m => m.IsActive && m.Id == id);
+
+            if (machine == null) return null;
+
+            machine.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            return machine;
+            
         }
     }
 }

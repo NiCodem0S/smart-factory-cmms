@@ -2,7 +2,7 @@ import { apiClient } from './apiClient'
 import { FactoryHallListDto } from '../types/factory'
 
 export async function fetchHalls(): Promise<FactoryHallListDto[]> {
-    const response = await apiClient.get<FactoryHallListDto>('/FactoryHalls')
+    const response = await apiClient.get<FactoryHallListDto[]>('/FactoryHalls')
 
     return response.data;
 }

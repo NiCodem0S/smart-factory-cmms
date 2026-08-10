@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Models;
 using System.Text.Json;
@@ -9,8 +9,11 @@ namespace SmartFactoryCMMS.Api.Mappers
     {
         public MachineMappingProfile() 
         {
-            // Existing
-            CreateMap<UpdateMachineDto, Machine>();
+            CreateMap<UpdateMachineDto, Machine>()
+                .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
+                    JsonSerializer.Serialize(new { src.NormTemp, src.BaseVib, src.NormPower })))
+                .ForMember(dest => dest.Icon, opt => opt.MapFrom((src, dest) =>
+                    string.IsNullOrEmpty(src.Icon) ? dest.Icon ?? "PrecisionManufacturing" : src.Icon));
 
             // Machine → MachineListDto (for table view)
             CreateMap<Machine, MachineListDto>()

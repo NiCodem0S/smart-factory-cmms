@@ -100,5 +100,12 @@ export interface UpdateMachineDto {
 	category: string
 	serialNumber: string | null
 	status: MachineStatus
-	isActive: boolean
+	cycleTimeSeconds: number
+	orderInLine: number
+	icon?: string
+	factoryHallId: string
+	productionLineId: string | null
+	normTemp: number
+	baseVib: number
+	normPower: number
 }

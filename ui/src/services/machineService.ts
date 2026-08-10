@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto } from '../types/machine'
+import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto } from '../types/machine'
 import { PagedResult } from '../types/common'
 
 export async function fetchMachines(
@@ -33,4 +33,11 @@ export async function createMachine(
 	const response = await apiClient.post<MachineDetailDto>('/Machines', dto)
 
 	return response.data
+}
+
+export async function updateMachine(
+	id: string,
+	dto: UpdateMachineDto
+): Promise<void> {
+	await apiClient.put(`/Machines/${id}`, dto)
 }

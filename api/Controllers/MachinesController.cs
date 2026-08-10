@@ -16,13 +16,11 @@ namespace SmartFactoryCMMS.Api.Controllers
     public class MachinesController : ControllerBase
     {
         private readonly IMachineRepository _machineRepository;
-        private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
 
-        public MachinesController(IMachineRepository machineRepository, ApplicationDbContext context, IMapper mapper)
+        public MachinesController(IMachineRepository machineRepository, IMapper mapper)
         {
             _machineRepository = machineRepository;
-            _context = context;
             _mapper = mapper;
         }
 
@@ -64,29 +62,11 @@ namespace SmartFactoryCMMS.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMachine([FromRoute] Guid id, [FromBody] UpdateMachineDto dto)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await _machineRepository.UpdateMachineAsync(id, dto);
 
             if (machine == null)
             {
                 return NotFound(new { message = $"Machine {id} was not found." });
-            }
-
-            _mapper.Map(dto, machine);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                var machineExists = await _context.Machines.AnyAsync(m => m.Id == id);
-
-                if (!machineExists)
-                {
-                    return NotFound(new { message = $"Machine {id} was not found." });
-                }
-
-                throw;
             }
 
             return NoContent();
@@ -95,14 +75,13 @@ namespace SmartFactoryCMMS.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMachine(Guid id)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await _machineRepository.DeleteMachineAsync(id);
 
             if (machine == null)
             {
                 return NotFound(new { message = $"Machine {id} not found" });
             }
-
-            await _machineRepository.DeleteMachineAsync(id);
+            
             return NoContent();
         }
 
@@ -112,7 +91,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             Guid id,
             [FromQuery] int limit = 10)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await _machineRepository.FindMachineByIdAsync(id);
 
             if (machine == null)
             {

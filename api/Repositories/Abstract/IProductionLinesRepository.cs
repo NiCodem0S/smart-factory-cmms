@@ -4,6 +4,6 @@ namespace SmartFactoryCMMS.Api.Repositories.Abstract
 {
     public interface IProductionLinesRepository
     {
-        Task<List<ProductionLineDto>> GetProductionLinesByHallsId(Guid id);
+        Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId);
     }
 }

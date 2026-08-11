@@ -1,7 +1,8 @@
 import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { AlertThresholds, AlertThresholdsDto, CreateAlertThresholdsDto, CreateMachineDto } from "../../types/machine";
-import { FactoryHallListDto, ProductionLineListDto } from "../../types/factory";
+import { FactoryHallDto } from "../../types/factory";
+import { ProductionLineDto } from "../../types/production"
 import useCreateMachine from "../../hooks/useCreateMachine";
 import { useEffect, useState } from "react";
 

@@ -38,6 +38,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<IMachineRepository, MachineRepository>();
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+builder.Services.AddScoped<IFactoryHallRepository, FactoryHallRepository>();
+builder.Services.AddScoped<IProductionLinesRepository, ProductionLinesRepository>();
 // Paging options from configuration
 builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));
 builder.Services.AddScoped<SmartFactoryCMMS.Api.Filters.PagingValidationAttribute>();

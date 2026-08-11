@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
-import { FactoryHallListDto } from "../types/factory"
+import { FactoryHallDto } from "../types/factory"
 import { fetchHalls } from "../services/factoryHallsService"
 
 
 export function useFactoryHalls() {
-    const [data, setData] = useState<FactoryHallListDto[] | null>(null)
+    const [data, setData] = useState<FactoryHallDto[] | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null);
 

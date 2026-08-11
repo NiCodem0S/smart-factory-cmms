@@ -14,7 +14,7 @@ export async function fetchMachines(
 			pageSize,
 			search: search || undefined,
 			status: status || undefined,
-		},
+		}
 	})
 
 	return response.data

@@ -25,7 +25,7 @@ namespace SmartFactoryCMMS.Api.Repositories
         }
         public async Task<FactoryHallDto?> GetFactoryHallByIdAsync(Guid id)
         {
-            var factoryHall = await _context.FactoryHalls.FirstOrDefaultAsync(f => f.Id == id);
+            var factoryHall = await _context.FactoryHalls.FindAsync(id);
 
             if (factoryHall == null) return null;
 

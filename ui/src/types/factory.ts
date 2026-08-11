@@ -1,11 +1,4 @@
-export interface FactoryHallListDto {
+export interface FactoryHallDto {
     id: string
     name: string
-}
-
-export interface ProductionLineListDto {
-    id: string
-    name: string
-    status: string
-    factoryHallId: string
 }

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SmartFactoryCMMS.Api.Data;
+using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
@@ -8,28 +8,21 @@ namespace SmartFactoryCMMS.Api.Controllers
     [ApiController]
     public class ProductionLinesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductionLinesRepository _productionLinesRepo;
 
-        public ProductionLinesController(ApplicationDbContext context)
+        public ProductionLinesController(IProductionLinesRepository productionLinesRepo)
         {
-            _context = context;
+            _productionLinesRepo = productionLinesRepo;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProductionLines([FromQuery] Guid? factoryHallId)
         {
-            var query = _context.ProductionLines.AsQueryable();
+            var productionLines = await _productionLinesRepo.GetProductionLinesByHallsId(factoryHallId);
 
-            if (factoryHallId.HasValue)
-            {
-                query = query.Where(pl => pl.FactoryHallId == factoryHallId);
-            }
+            if (productionLines == null) return NotFound(new { message = $"Factory hall {factoryHallId} not found."});
 
-            var lines = await query
-                .Select(pl => new { pl.Id, pl.Name, pl.Status, pl.FactoryHallId })
-                .ToListAsync();
-
-            return Ok(lines);
+            return Ok(productionLines);
         }
     }
 }

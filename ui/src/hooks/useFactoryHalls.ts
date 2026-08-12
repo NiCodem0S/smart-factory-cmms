@@ -4,9 +4,9 @@ import { fetchHalls } from "../services/factoryHallsService"
 
 
 export function useFactoryHalls() {
-    const [data, setData] = useState<FactoryHallDto[] | null>(null)
+    const [data, setData] = useState<FactoryHallDto[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
 

@@ -1,10 +1,8 @@
 import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { AlertThresholds, AlertThresholdsDto, CreateAlertThresholdsDto, CreateMachineDto } from "../../types/machine";
-import { FactoryHallDto } from "../../types/factory";
-import { ProductionLineDto } from "../../types/production"
+import { CreateAlertThresholdsDto, CreateMachineDto } from "../../types/machine";
 import useCreateMachine from "../../hooks/useCreateMachine";
-import { useEffect, useState } from "react";
+import { useState } from 'react'
 
 import TireRepairIcon from '@mui/icons-material/TireRepair';
 import WindPowerIcon from '@mui/icons-material/WindPower';
@@ -37,6 +35,7 @@ import ShowerIcon from '@mui/icons-material/Shower';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useFactoryHalls } from "../../hooks/useFactoryHalls";
+import useProductionLinesByHallsId from "../../hooks/useProductionLines";
 
 const TwoCogsIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -100,9 +99,6 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
 
     const { execute, isLoading: isCreating, error } = useCreateMachine();
 
-    const [lines, setLines] = useState<ProductionLineListDto[]>([]);
-    const [isLoadingLines, setIsLoadingLines] = useState(false);
-
     // Icon Picker Modal state
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
@@ -135,19 +131,8 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
     const selectedHallId = watch("factoryHallId");
     const selectedIconName = watch("icon") || "PrecisionManufacturing";
     const selectedIconObj = AVAILABLE_ICONS.find(i => i.name === selectedIconName) || AVAILABLE_ICONS[0];
+    const { lines: lines = [], isLoading: isLoadingLines, error: linesError } = useProductionLinesByHallsId(selectedHallId)
 
-    useEffect(() => {
-        if (!selectedHallId) {
-            setLines([]);
-            return;
-        }
-        setIsLoadingLines(true);
-        fetch(`http://localhost:5240/api/ProductionLines?factoryHallId=${selectedHallId}`)
-            .then(res => res.json())
-            .then(data => setLines(data))
-            .catch(console.error)
-            .finally(() => setIsLoadingLines(false));
-    }, [selectedHallId]);
 
     const handleFormSubmit: SubmitHandler<FormValues> = async (formData) => {
         try {
@@ -197,6 +182,12 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                 {hallsError && (
                     <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                         {hallsError}
+                    </div>
+                )}
+
+                {linesError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                        {linesError}
                     </div>
                 )}
 
@@ -293,7 +284,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                             <option value="">-- Select Factory Hall --</option>
                             {halls.map(hall => (
                                 <option key={hall.id} value={hall.id}>
-                                    {hall.name} ({hall.code})
+                                    {hall.name}
                                 </option>
                             ))}
                         </select>
@@ -317,7 +308,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                             <option value="">-- None (Utility Machine) --</option>
                             {lines.map(line => (
                                 <option key={line.id} value={line.id}>
-                                    {line.name} ({line.code})
+                                    {line.name}
                                 </option>
                             ))}
                         </select>

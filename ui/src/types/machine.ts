@@ -13,34 +13,6 @@ export interface MachineListDto {
 	lastStatusChangedAt: string | null
 }
 
-export interface TelemetryReadDto {
-	id: string
-	machineId: string
-	temperature: number | null
-	vibration: number | null
-	powerLoadKw: number | null
-	networkLatencyMs: number | null
-	timestamp: string
-}
-
-export interface IncidentDto {
-	id: string
-	machineId: string
-	triggeredAt: string
-	message: string
-	severity: string
-	status: string
-}
-
-export interface AlertDto {
-	id: string
-	machineId: string
-	severity: string
-	message: string
-	createdAt: string
-	acknowledged: boolean
-}
-
 export interface MachineDetailDto {
 	id: string
 	name: string
@@ -52,6 +24,12 @@ export interface MachineDetailDto {
 	isActive: boolean
 	totalOperatingHours: number
 	lastStatusChangedAt: string | null
+
+	// Production Tracking
+	icon: string
+	totalProduced: number
+	cycleTimeSeconds: number
+	orderInLine: number
 
 	// Aggregated data
 	totalWorkOrders: number
@@ -79,6 +57,34 @@ export interface CreateMachineDto {
 		warningValue: number;
 		criticalValue: number;
 	}[];
+}
+
+export interface TelemetryReadDto {
+	id: string
+	machineId: string
+	temperature: number | null
+	vibration: number | null
+	powerLoadKw: number | null
+	networkLatencyMs: number | null
+	timestamp: string
+}
+
+export interface IncidentDto {
+	id: string
+	machineId: string
+	triggeredAt: string
+	message: string
+	severity: string
+	status: string
+}
+
+export interface AlertDto {
+	id: string
+	machineId: string
+	severity: string
+	message: string
+	createdAt: string
+	acknowledged: boolean
 }
 
 export interface AlertThresholdsDto {

@@ -59,14 +59,12 @@ namespace SmartFactoryCMMS.Api.Repositories
         public async Task<MachineDetailDto?> GetMachineDetailsAsync(Guid id)
         {
             var machine = await ActiveMachines
-                .Include(m => m.WorkOrders)
-                .Include(m => m.TelemetryReads)
-                .Include(m => m.Incidents)
+                .ProjectTo<MachineDetailDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (machine == null) return null;
 
-            return _mapper.Map<MachineDetailDto>(machine);
+            return machine;
         }
 
         public async Task<Machine?> FindMachineByIdAsync(Guid id)

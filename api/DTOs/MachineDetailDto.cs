@@ -15,6 +15,12 @@ namespace SmartFactoryCMMS.Api.DTOs
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
 
+        // Production Tracking
+        public string? Icon { get; set; } = "PrecisionManufacturing"; // Default icon
+        public int TotalProduced { get; set; } 
+        public double CycleTimeSeconds { get; set; }
+        public int OrderInLine { get; set; }
+
         // Aggregated data
         public int TotalWorkOrders { get; set; }
         public int OpenWorkOrders { get; set; }

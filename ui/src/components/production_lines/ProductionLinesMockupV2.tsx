@@ -27,7 +27,7 @@ import UnarchiveIcon from '@mui/icons-material/Unarchive';
 interface MachineItem {
   id: number;
   name: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   status: 'running' | 'warning' | 'error' | 'offline';
   cycleTime: number; // in seconds
 }

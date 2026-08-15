@@ -5,6 +5,7 @@ import MachineFleet from './components/machine_fleet/MachineFleet'
 import MachineDetails from './components/machine_fleet/MachineDetails'
 import ProductionLinesMockupV2 from './components/production_lines/ProductionLinesMockupV2'
 import FactoryProvider from './context/FactoryContext'
+import ProductionLines from './components/production_lines/ProductionLines'
 
 function App() {
 	return (
@@ -17,6 +18,7 @@ function App() {
 						<Route path="/machines/:id" element={<MachineDetails />} />
 						<Route path="/dashboard" element={<LiveDashboard />} />
 						<Route path="/production" element={<ProductionLinesMockupV2 />} />
+						<Route path="/production1" element={<ProductionLines />} />
 					</Routes>
 				</AppLayout>
 			</FactoryProvider>

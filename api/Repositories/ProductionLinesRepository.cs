@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using SmartFactoryCMMS.Api.Data;
+using AutoMapper.QueryableExtensions;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -25,7 +26,7 @@ namespace SmartFactoryCMMS.Api.Repositories
         {
             IQueryable<ProductionLine> query = _context.ProductionLines;
 
-            if(hallsId.HasValue) //
+            if(hallsId.HasValue)
             {
                 var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value);
                 if(hall == null) return null;
@@ -33,9 +34,11 @@ namespace SmartFactoryCMMS.Api.Repositories
                 query = query.Where(p => p.FactoryHallId == hallsId);
             }
 
-            var productionLines = await query.ToListAsync();
+            var productionLines = await query
+                .ProjectTo<ProductionLineDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
 
-            return _mapper.Map<List<ProductionLineDto>>(productionLines);
+            return productionLines;
             
         }
     }

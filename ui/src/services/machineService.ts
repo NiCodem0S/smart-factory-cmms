@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto } from '../types/machine'
+import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto, MachineProductionLineDto } from '../types/machine'
 import { PagedResult } from '../types/common'
 
 export async function fetchMachines(
@@ -27,6 +27,13 @@ export async function fetchMachinesById(
 	return response.data
 }
 
+export async function fetchMachinesByProdLineId(
+	id: string
+): Promise<MachineProductionLineDto[]> {
+	const response = await apiClient.get<MachineProductionLineDto[]>(`/ProductionLines/${id}/Machines`)
+	return response.data
+}
+
 export async function createMachine(
 	dto: CreateMachineDto,
 ): Promise<MachineDetailDto> {
@@ -41,3 +48,4 @@ export async function updateMachine(
 ): Promise<void> {
 	await apiClient.put(`/Machines/${id}`, dto)
 }
+

@@ -2,6 +2,7 @@ import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CreateAlertThresholdsDto, CreateMachineDto } from "../../types/machine";
 import useCreateMachine from "../../hooks/useCreateMachine";
+import { useMachinesByProductionHallId } from "../../hooks/useProductionLines";
 import { useState } from 'react'
 
 import TireRepairIcon from '@mui/icons-material/TireRepair';
@@ -97,13 +98,6 @@ interface FormValues extends Omit<CreateMachineDto, "alertThresholds"> {
 export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachineModalProps) {
     if (!isOpen) return null;
 
-    const { execute, isLoading: isCreating, error } = useCreateMachine();
-
-    // Icon Picker Modal state
-    const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-
-    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls();
-
     const {
         register,
         handleSubmit,
@@ -128,15 +122,23 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
         }
     });
 
+
     const selectedHallId = watch("factoryHallId");
+    const selectedLineId = watch("productionLineId");
+
     const selectedIconName = watch("icon") || "PrecisionManufacturing";
     const selectedIconObj = AVAILABLE_ICONS.find(i => i.name === selectedIconName) || AVAILABLE_ICONS[0];
-    const { lines: lines = [], isLoading: isLoadingLines, error: linesError } = useProductionLinesByHallsId(selectedHallId)
 
+    const { execute, isLoading: isCreating, error } = useCreateMachine();
+    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls();
+    const { lines: lines = [], isLoading: isLoadingLines, error: linesError } = useProductionLinesByHallsId(selectedHallId)
+    const { machines: lineMachines = [], } = useMachinesByProductionHallId(selectedLineId || '');
+
+    // Icon Picker Modal state
+    const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
     const handleFormSubmit: SubmitHandler<FormValues> = async (formData) => {
         try {
-            //check wether the order in line is unique
             const alertThresholdsDtos: CreateAlertThresholdsDto[] = [
                 { metricType: "Temperature", warningValue: Number(formData.tempWarning), criticalValue: Number(formData.tempCritical) },
                 { metricType: "Vibration", warningValue: Number(formData.vibWarning), criticalValue: Number(formData.vibCritical) }
@@ -358,9 +360,23 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">Order Index in Line</label>
                                 <input
                                     type="number"
-                                    {...register("orderInLine", { required: true, min: 0 })}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                    {...register("orderInLine", {
+                                        required: true,
+                                        min: 0,
+                                        validate: (value) => {
+                                            if (!selectedLineId) return true;
+                                            const exists = lineMachines.some(m => m.orderInLine === Number(value))
+                                            return !exists || `Index ${value} is already used by another machine on this line`
+                                        }
+                                    })}
+                                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 bg-white ${errors.orderInLine ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"
+                                        }`}
                                 />
+                                {errors.orderInLine && (
+                                    <span className="text-xs text-red-500 mt-1 block">
+                                        {errors.orderInLine.message}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

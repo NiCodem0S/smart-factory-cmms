@@ -17,12 +17,8 @@ namespace SmartFactoryCMMS.Api.Mappers
 
             // Machine → MachineListDto (for table view)
             CreateMap<Machine, MachineListDto>()
-                .ForMember(props => props.ActiveWorkOrdersCount, 
-                    confg => confg.MapFrom(src => src.WorkOrders.Count(wo => wo.Status != "Done")))
-                .ForMember(props => props.LastTelemetryRead,
-                    confg => confg.MapFrom(src => src.TelemetryReads.OrderByDescending(t => t.Timestamp).FirstOrDefault() != null 
-                        ? src.TelemetryReads.OrderByDescending(t => t.Timestamp).First().Timestamp 
-                        : (DateTime?)null));
+                .ForMember(props => props.ActiveWorkOrdersCount,
+                    confg => confg.MapFrom(src => src.WorkOrders.Count(wo => wo.Status != "Done")));
 
             // Machine → MachineDetailDto (for details page)
             CreateMap<Machine, MachineDetailDto>()
@@ -36,6 +32,10 @@ namespace SmartFactoryCMMS.Api.Mappers
                     confg => confg.MapFrom(src => src.Incidents.OrderByDescending(i => i.TriggeredAt).Take(5)))
                 .ForMember(props => props.ActiveAlerts,
                     confg => confg.MapFrom(src => src.Incidents.Where(i => i.Status == "Active").Take(5)));
+            
+            CreateMap<Machine, MachineProductionLineDto>()
+            .ForMember(dest => dest.ActiveAlerts, 
+                opt => opt.MapFrom(src => src.Incidents.Where(i => i.Status == "Active")));
 
             CreateMap<CreateMachineDto, Machine>()
                 .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
@@ -49,6 +49,10 @@ namespace SmartFactoryCMMS.Api.Mappers
 
             // Incident → IncidentDto
             CreateMap<Incident, IncidentDto>();
+
+            CreateMap<Incident, AlertDto>()
+                .ForMember(dest => dest.Acknowledged,
+                    opt => opt.MapFrom(src => src.Status != "Active"));                
         }
     }
 }

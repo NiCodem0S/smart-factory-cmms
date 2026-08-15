@@ -5,6 +5,7 @@ using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using SmartFactoryCMMS.Api.Helpers.Enums;
+using AutoMapper.QueryableExtensions;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -36,14 +37,13 @@ namespace SmartFactoryCMMS.Api.Repositories
             }
 
             int totalCount = await query.CountAsync();
-
-            var machines = await query
+            
+            var machineListDtos = await query
                 .OrderBy(m => m.Id)
-                .Skip((page - 1) * pageSize)
+                .Skip((page -1) * pageSize)
                 .Take(pageSize)
+                .ProjectTo<MachineListDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
-
-            var machineListDtos = _mapper.Map<List<MachineListDto>>(machines);
 
             var result = new PagedResult<MachineListDto>
             {
@@ -65,6 +65,17 @@ namespace SmartFactoryCMMS.Api.Repositories
             if (machine == null) return null;
 
             return machine;
+        }
+
+        public async Task<List<MachineProductionLineDto>> GetMachinesByProductionLineId(Guid id)
+        {
+            var machines = await ActiveMachines
+                .Where(m => m.ProductionLineId == id)
+                .OrderBy(m => m.OrderInLine)
+                .ProjectTo<MachineProductionLineDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+            
+            return machines;
         }
 
         public async Task<Machine?> FindMachineByIdAsync(Guid id)

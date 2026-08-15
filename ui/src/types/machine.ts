@@ -6,11 +6,7 @@ export interface MachineListDto {
 	category: string
 	serialNumber: string
 	status: MachineStatus
-	installationDate: string
 	activeWorkOrdersCount: number
-	lastTelemetryRead: string | null
-	totalOperatingHours: number
-	lastStatusChangedAt: string | null
 }
 
 export interface MachineDetailDto {
@@ -36,6 +32,28 @@ export interface MachineDetailDto {
 	openWorkOrders: number
 	latestTelemetry: TelemetryReadDto[]
 	recentIncidents: IncidentDto[]
+	activeAlerts: AlertDto[]
+}
+
+export interface MachineProductionLineDto {
+	id: string
+	name: string
+	category: string
+	serialNumber: string
+	status: MachineStatus
+	installationDate: string
+	staticProperties: string | null
+	isActive: boolean
+	totalOperatingHours: number
+	lastStatusChangedAt: string | null
+
+	// Production Tracking
+	icon: string
+	totalProduced: number
+	cycleTimeSeconds: number
+	orderInLine: number
+
+	// Aggregated data
 	activeAlerts: AlertDto[]
 }
 

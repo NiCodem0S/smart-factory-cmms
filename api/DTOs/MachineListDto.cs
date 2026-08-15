@@ -13,10 +13,6 @@ namespace SmartFactoryCMMS.Api.DTOs
         public string Category { get; set; } = string.Empty;
         public string SerialNumber { get; set; } = string.Empty;
         public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Maintenance, Error, Offline
-        public DateTime InstallationDate { get; set; }
         public int ActiveWorkOrdersCount { get; set; }
-        public DateTime? LastTelemetryRead { get; set; }
-        public double TotalOperatingHours { get; set; } = 0;
-        public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
     }
 }

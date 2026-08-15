@@ -12,7 +12,7 @@ namespace SmartFactoryCMMS.Api.DTOs
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string SerialNumber { get; set; } = string.Empty;
-        public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Maintenance, Error, Offline
+        public MachineStatus Status { get; set; } = MachineStatus.Offline;  // Running, Warning, Maintenance, Error, Offline
         public int ActiveWorkOrdersCount { get; set; }
     }
 }

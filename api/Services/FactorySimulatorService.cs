@@ -70,7 +70,7 @@ namespace SmartFactoryCMMS.Api.Services
                         .Include(pl => pl.Machines)
                         .ToListAsync(stoppingToken);
 
-                    var machinesRunning = machines.Where(m => m.Status == MachineStatus.Running).ToList();
+                    var machinesRunning = machines.Where(m => m.Status == MachineStatus.Running || m.Status == MachineStatus.Warning).ToList();
                     var lastMachinesIds = new HashSet<Guid>();
 
                     EvaluateProductionLines(productionLines, lastMachinesIds, ref dbChangesMade);
@@ -111,22 +111,34 @@ namespace SmartFactoryCMMS.Api.Services
                     lastMachinesIds.Add(lastMachine.Id);
                 }
 
-                // Stop the line if one of its machines is in Error
-                if (line.Status == "Running")
+                // Check line status based on machine states
+                bool hasError = line.Machines.Any(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance);
+                bool hasWarning = line.Machines.Any(m => m.Status == MachineStatus.Warning);
+
+                if (hasError)
                 {
-                    bool hasError = line.Machines.Any(m => m.Status != MachineStatus.Running && m.Status != MachineStatus.Offline);
-                    if (hasError)
+                    if (line.Status != "Halted")
                     {
                         line.Status = "Halted";
-                        
-                        foreach (var lineMachine in line.Machines)
+                        dbChangesMade = true;
+                    }
+                    
+                    foreach (var lineMachine in line.Machines)
+                    {
+                        if (lineMachine.Status == MachineStatus.Running || lineMachine.Status == MachineStatus.Warning)
                         {
-                            if (lineMachine.Status == MachineStatus.Running)
-                            {
-                                lineMachine.Status = MachineStatus.Offline;
-                                _productionProgress[lineMachine.Id] = 0;
-                            }
+                            lineMachine.Status = MachineStatus.Offline;
+                            _productionProgress[lineMachine.Id] = 0;
+                            dbChangesMade = true;
                         }
+                    }
+                }
+                else if (line.Machines.Any(m => m.Status == MachineStatus.Running || m.Status == MachineStatus.Warning))
+                {
+                    string targetStatus = hasWarning ? "Warning" : "Running";
+                    if (line.Status != targetStatus)
+                    {
+                        line.Status = targetStatus;
                         dbChangesMade = true;
                     }
                 }
@@ -175,14 +187,17 @@ namespace SmartFactoryCMMS.Api.Services
             var tempThreshold = machine.AlertThresholds?.FirstOrDefault(t => t.MetricType == "Temperature");
             var vibThreshold = machine.AlertThresholds?.FirstOrDefault(t => t.MetricType == "Vibration");
 
+            double warningTemp = tempThreshold != null ? (double)tempThreshold.WarningValue : (_machineBaseTemperatures[machine.Id] + 15.0);
             double criticalTemp = tempThreshold != null ? (double)tempThreshold.CriticalValue : (_machineBaseTemperatures[machine.Id] + 30.0);
+
+            double warningVib = vibThreshold != null ? (double)vibThreshold.WarningValue : (_machineBaseVibrations[machine.Id] + 2.0);
             double criticalVib = vibThreshold != null ? (double)vibThreshold.CriticalValue : (_machineBaseVibrations[machine.Id] + 3.5); 
 
             double currentTemp = _machineTemperatures[machine.Id];
             double currentVib = _machineVibrations[machine.Id];
             double currentPower = 0.0;
 
-            if (machine.Status == MachineStatus.Running)
+            if (machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning)
             {
                 currentPower = _machineBasePowerLoads[machine.Id] + (_random.NextDouble() * 5.0 - 2.5);
                 currentVib = _machineBaseVibrations[machine.Id] + (_random.NextDouble() * 1.5 - 0.75);
@@ -194,14 +209,6 @@ namespace SmartFactoryCMMS.Api.Services
                 {
                     currentTemp += 1.0 + (_random.NextDouble() * 2.0);
                     currentVib += 3.0; 
-                    
-                    if (currentTemp >= criticalTemp)
-                    {
-                        machine.Status = MachineStatus.Error;
-                        _productionProgress[machine.Id] = 0;
-                        dbChangesMade = true;
-                        anyEventThisWindow = true;
-                    }
                 }
                 else
                 {
@@ -215,16 +222,32 @@ namespace SmartFactoryCMMS.Api.Services
                 if (_isOvervibrating[machine.Id])
                 {
                     currentVib += 0.5 + (_random.NextDouble() * 1.5);
-                    if (currentVib >= criticalVib)
+                }
+
+                // Check Thresholds & Status transitions
+                if (currentTemp >= criticalTemp || currentVib >= criticalVib)
+                {
+                    machine.Status = MachineStatus.Error;
+                    _productionProgress[machine.Id] = 0;
+                    dbChangesMade = true;
+                    anyEventThisWindow = true;
+                }
+                else if (currentTemp >= warningTemp || currentVib >= warningVib)
+                {
+                    if (machine.Status != MachineStatus.Warning)
                     {
-                        machine.Status = MachineStatus.Error;
-                        _productionProgress[machine.Id] = 0;
+                        machine.Status = MachineStatus.Warning;
                         dbChangesMade = true;
                         anyEventThisWindow = true;
                     }
                 }
+                else if (machine.Status == MachineStatus.Warning)
+                {
+                    machine.Status = MachineStatus.Running;
+                    dbChangesMade = true;
+                }
 
-                if (machine.Status == MachineStatus.Running && _random.NextDouble() < failureProbability)
+                if ((machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning) && _random.NextDouble() < failureProbability)
                 {
                     machine.Status = MachineStatus.Error;
                     _productionProgress[machine.Id] = 0;
@@ -232,7 +255,7 @@ namespace SmartFactoryCMMS.Api.Services
                     anyEventThisWindow = true;
                 }
 
-                if (machine.Status == MachineStatus.Running)
+                if (machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning)
                 {
                     _productionProgress[machine.Id] += 1.0;
 
@@ -294,7 +317,7 @@ namespace SmartFactoryCMMS.Api.Services
                 if (!anyEventThisWindow && machinesRunning.Count > 0)
                 {
                     var chosen = machinesRunning[_random.Next(machinesRunning.Count)];
-                    chosen.Status = MachineStatus.Error;
+                    chosen.Status = MachineStatus.Warning;
                     dbChangesMade = true;
                 }
                 windowStart = DateTime.UtcNow;

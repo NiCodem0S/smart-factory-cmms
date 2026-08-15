@@ -13,6 +13,13 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
                     Running
                 </span>
             );
+        case 'Warning':
+            return (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5 animate-pulse"></span>
+                    Warning
+                </span>
+            );
         case 'Maintenance':
             return (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">

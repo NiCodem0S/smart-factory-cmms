@@ -203,7 +203,7 @@ namespace SmartFactoryCMMS.Api.Data
             // Create incidents for machines
             var incidents = new List<Incident>();
 
-            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance).Take(10))
+            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance || m.Status == MachineStatus.Warning).Take(10))
             {
                 for (int i = 0; i < random.Next(1, 3); i++)
                 {

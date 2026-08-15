@@ -91,6 +91,7 @@ export default function MachineFleet() {
                     >
                         <option value="">All Statuses</option>
                         <option value="Running">Running</option>
+                        <option value="Warning">Warning</option>
                         <option value="Error">Error</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Offline">Offline</option>

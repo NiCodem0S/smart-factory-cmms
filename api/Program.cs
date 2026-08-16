@@ -3,8 +3,20 @@ using Microsoft.Extensions.DependencyInjection;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.Repositories;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/cmms-log-.txt",
+        rollingInterval: RollingInterval.Day, // Nowy plik codziennie
+        retainedFileCountLimit: 14            // Usuwa pliki starsze niż 14 dni
+    )
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -44,6 +56,9 @@ builder.Services.AddScoped<IProductionLinesRepository, ProductionLinesRepository
 builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));
 builder.Services.AddScoped<SmartFactoryCMMS.Api.Filters.PagingValidationAttribute>();
 
+builder.Services.AddExceptionHandler<SmartFactoryCMMS.Api.Middleware.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -53,6 +68,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.UseCors("AllowReactApp");
 

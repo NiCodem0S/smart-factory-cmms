@@ -54,49 +54,42 @@ namespace SmartFactoryCMMS.Api.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
+                using var scope = _serviceScope.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                bool dbChangesMade = false;
+
+                var machines = await dbContext.Machines
+                    .Include(m => m.AlertThresholds)
+                    .Where(m => m.IsActive)
+                    .ToListAsync(stoppingToken);
+                    
+                var productionLines = await dbContext.ProductionLines
+                    .Include(pl => pl.Machines)
+                    .ToListAsync(stoppingToken);
+
+                var machinesRunning = machines.Where(m => m.Status == MachineStatus.Running || m.Status == MachineStatus.Warning).ToList();
+                var lastMachinesIds = new HashSet<Guid>();
+
+                EvaluateProductionLines(productionLines, lastMachinesIds, ref dbChangesMade);
+
+                foreach(var machine in machines)
                 {
-                    using var scope = _serviceScope.CreateScope();
-                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                    bool dbChangesMade = false;
-
-                    var machines = await dbContext.Machines
-                        .Include(m => m.AlertThresholds)
-                        .Where(m => m.IsActive)
-                        .ToListAsync(stoppingToken);
-                        
-                    var productionLines = await dbContext.ProductionLines
-                        .Include(pl => pl.Machines)
-                        .ToListAsync(stoppingToken);
-
-                    var machinesRunning = machines.Where(m => m.Status == MachineStatus.Running || m.Status == MachineStatus.Warning).ToList();
-                    var lastMachinesIds = new HashSet<Guid>();
-
-                    EvaluateProductionLines(productionLines, lastMachinesIds, ref dbChangesMade);
-
-                    foreach(var machine in machines)
-                    {
-                        InitializeMachineState(machine);
-                        var physicsResult = await SimulateMachinePhysicsAsync(machine, lastMachinesIds, genericFailureProbability, stoppingToken);
-                        
-                        if (physicsResult.DbChangesMade) dbChangesMade = true;
-                        if (physicsResult.AnyEventThisWindow) anyEventThisWindow = true;
-                    }
-
-                    EvaluateFallbackEvents(machinesRunning, windowSeconds, ref windowStart, ref anyEventThisWindow, ref dbChangesMade);
-
-                    if(dbChangesMade)
-                    {
-                        await dbContext.SaveChangesAsync(stoppingToken);
-                    }
-
-                    await Task.Delay(loopDelayMs, stoppingToken);
+                    InitializeMachineState(machine);
+                    var physicsResult = await SimulateMachinePhysicsAsync(machine, lastMachinesIds, genericFailureProbability, stoppingToken);
+                    
+                    if (physicsResult.DbChangesMade) dbChangesMade = true;
+                    if (physicsResult.AnyEventThisWindow) anyEventThisWindow = true;
                 }
-                catch(Exception ex)
+
+                EvaluateFallbackEvents(machinesRunning, windowSeconds, ref windowStart, ref anyEventThisWindow, ref dbChangesMade);
+
+                if(dbChangesMade)
                 {
-                    _logger.LogError(ex, "Simulation service error");
+                    await dbContext.SaveChangesAsync(stoppingToken);
                 }
+
+                await Task.Delay(loopDelayMs, stoppingToken); 
             }
         }
 
@@ -158,14 +151,10 @@ namespace SmartFactoryCMMS.Api.Services
 
                 if (!string.IsNullOrEmpty(machine.StaticProperties))
                 {
-                    try
-                    {
-                        using var jsonDoc = System.Text.Json.JsonDocument.Parse(machine.StaticProperties);
-                        if (jsonDoc.RootElement.TryGetProperty("NormTemp", out var tProp)) bTemp = tProp.GetDouble();
-                        if (jsonDoc.RootElement.TryGetProperty("BaseVib", out var vProp)) bVib = vProp.GetDouble();
-                        if (jsonDoc.RootElement.TryGetProperty("NormPower", out var pProp)) bPower = pProp.GetDouble();
-                    } 
-                    catch { }
+                    using var jsonDoc = System.Text.Json.JsonDocument.Parse(machine.StaticProperties);
+                    if (jsonDoc.RootElement.TryGetProperty("NormTemp", out var tProp)) bTemp = tProp.GetDouble();
+                    if (jsonDoc.RootElement.TryGetProperty("BaseVib", out var vProp)) bVib = vProp.GetDouble();
+                    if (jsonDoc.RootElement.TryGetProperty("NormPower", out var pProp)) bPower = pProp.GetDouble();
                 }
 
                 _machineBaseTemperatures[machine.Id] = bTemp;

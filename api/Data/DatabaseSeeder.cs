@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Helpers.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace SmartFactoryCMMS.Api.Data
 {
@@ -11,27 +12,21 @@ namespace SmartFactoryCMMS.Api.Data
             var passwordHasher = new PasswordHasher<User>();
             const string seedPassword = "TestPassword123!";
 
-            // Guard: if products exist, assume seeding is complete
-            if (context.Products.Any())
-            {
-                return;
-            }
-
-            // Seed system settings (idempotent: check if any settings exist)
+            // 1. Seed system settings
             if (!context.SystemSettings.Any())
             {
                 context.SystemSettings.Add(new SystemSettings
                 {
-                    SiteName = "Warsaw Plant - Hall 3",
+                    SiteName = "Smart Factory Warsaw - Plant 1",
                     Timezone = "Europe/Warsaw",
                     Currency = "PLN",
-                    PeakPowerLimitMw = 1.0m,
+                    PeakPowerLimitMw = 2.5m,
                     RawTelemetryRetentionDays = 30,
                     EnableEmailAlerts = true
                 });
             }
 
-            // Seed work shifts (idempotent: check if shifts exist)
+            // 2. Seed work shifts
             var shiftA = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift A (Morning)")
                 ?? new WorkShift { Name = "Shift A (Morning)", StartTime = new TimeSpan(6, 0, 0), EndTime = new TimeSpan(14, 0, 0) };
             var shiftB = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift B (Afternoon)")
@@ -39,20 +34,11 @@ namespace SmartFactoryCMMS.Api.Data
             var shiftC = context.WorkShifts.FirstOrDefault(s => s.Name == "Shift C (Night)")
                 ?? new WorkShift { Name = "Shift C (Night)", StartTime = new TimeSpan(22, 0, 0), EndTime = new TimeSpan(6, 0, 0) };
 
-            if (!context.WorkShifts.Any(s => s.Name == "Shift A (Morning)"))
-            {
-                context.WorkShifts.Add(shiftA);
-            }
-            if (!context.WorkShifts.Any(s => s.Name == "Shift B (Afternoon)"))
-            {
-                context.WorkShifts.Add(shiftB);
-            }
-            if (!context.WorkShifts.Any(s => s.Name == "Shift C (Night)"))
-            {
-                context.WorkShifts.Add(shiftC);
-            }
+            if (!context.WorkShifts.Any(s => s.Name == "Shift A (Morning)")) context.WorkShifts.Add(shiftA);
+            if (!context.WorkShifts.Any(s => s.Name == "Shift B (Afternoon)")) context.WorkShifts.Add(shiftB);
+            if (!context.WorkShifts.Any(s => s.Name == "Shift C (Night)")) context.WorkShifts.Add(shiftC);
 
-            // Seed users (idempotent: check by email)
+            // 3. Seed users
             User? adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@smartfactory.com");
             if (adminUser == null)
             {
@@ -83,93 +69,520 @@ namespace SmartFactoryCMMS.Api.Data
 
             context.SaveChanges();
 
-            // Refresh from DB in case they were just created
+            // Refresh references
             adminUser = context.Users.First(u => u.Email == "admin@smartfactory.com");
             technicianUser = context.Users.First(u => u.Email == "technician@smartfactory.com");
             shiftA = context.WorkShifts.First(s => s.Name == "Shift A (Morning)");
             shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
             shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
 
-            var productA = new Product { Name = "Engine Block V8", SKUNumber = "PROD-V8-BLOCK", Description = "Heavy duty engine block" };
-            var productB = new Product { Name = "Chassis Frame", SKUNumber = "PROD-CH-FR", Description = "Electric Vehicle Chassis Frame" };
-            
-            context.Products.AddRange(productA, productB);
+            // 4. Clean re-seed check: if old machines with FontAwesome icon names exist, remove old demo data to refresh with new structure
+            bool hasLegacyIcons = context.Machines.Any(m => m.Icon != null && m.Icon.StartsWith("fa-") && m.Icon != "fa-cogs");
+            if (hasLegacyIcons)
+            {
+                context.AlertThresholds.RemoveRange(context.AlertThresholds);
+                context.Incidents.RemoveRange(context.Incidents);
+                context.TelemetryRead.RemoveRange(context.TelemetryRead);
+                context.WorkOrders.RemoveRange(context.WorkOrders);
+                context.ProductionLogs.RemoveRange(context.ProductionLogs);
+                context.Machines.RemoveRange(context.Machines);
+                context.ProductionLines.RemoveRange(context.ProductionLines);
+                context.Products.RemoveRange(context.Products);
+                context.FactoryHalls.RemoveRange(context.FactoryHalls);
+                context.SaveChanges();
+            }
+
+            if (context.Machines.Any())
+            {
+                return;
+            }
+
+            // 5. Products
+            var productBattery = new Product
+            {
+                Name = "EV Battery Module 75kWh",
+                SKUNumber = "PROD-EV-BAT75",
+                Description = "High-density modular lithium-ion battery pack with integrated BMS"
+            };
+
+            var productEngine = new Product
+            {
+                Name = "Aluminum Engine Block V6",
+                SKUNumber = "PROD-ENG-V6ALU",
+                Description = "Precision machined lightweight aluminum automotive engine block"
+            };
+
+            var productChassis = new Product
+            {
+                Name = "Heavy Duty Chassis Frame",
+                SKUNumber = "PROD-CHS-FR400",
+                Description = "High-tensile robotic welded and e-coated commercial vehicle chassis"
+            };
+
+            context.Products.AddRange(productBattery, productEngine, productChassis);
             context.SaveChanges();
 
-            var hall1 = new FactoryHall { Name = "Hala Główna A (Montaż)" };
-            var hall2 = new FactoryHall { Name = "Hala B (Spawalnia i Utility)" };
+            // 6. Factory Halls
+            var hall1 = new FactoryHall { Name = "Hala Główna A (Automotive & Battery Assembly)" };
+            var hall2 = new FactoryHall { Name = "Hala B (Obróbka Skrawaniem & Spawalnia)" };
             context.FactoryHalls.AddRange(hall1, hall2);
             context.SaveChanges();
 
-            var lineA = new ProductionLine { Name = "L1: Engine Block Assembly", Status = "Running", CurrentProductId = productA.Id, FactoryHallId = hall1.Id };
-            var lineB = new ProductionLine { Name = "L2: Chassis Welding", Status = "Halted", CurrentProductId = productB.Id, FactoryHallId = hall2.Id };
+            // 7. Production Lines
+            var line1 = new ProductionLine
+            {
+                Name = "L1: EV Battery Pack Assembly",
+                Status = "Running",
+                CurrentProductId = productBattery.Id,
+                FactoryHallId = hall1.Id
+            };
 
-            context.ProductionLines.AddRange(lineA, lineB);
+            var line2 = new ProductionLine
+            {
+                Name = "L2: Engine Block CNC Machining",
+                Status = "Warning",
+                CurrentProductId = productEngine.Id,
+                FactoryHallId = hall2.Id
+            };
+
+            var line3 = new ProductionLine
+            {
+                Name = "L3: Chassis Frame Welding & Coating",
+                Status = "Halted",
+                CurrentProductId = productChassis.Id,
+                FactoryHallId = hall2.Id
+            };
+
+            context.ProductionLines.AddRange(line1, line2, line3);
             context.SaveChanges();
 
-            var randomMachineGen = new Random(42);
-
+            // 8. Machines Setup
             var machines = new List<Machine>
             {
-                // Line A machines (Running)
-                new Machine { Name = "Metal Feeder A1", Category = "HeavyMachinery", SerialNumber = "HP001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-3), IsActive = true, TotalOperatingHours = 3450.5, LastStatusChangedAt = DateTime.UtcNow.AddHours(-12), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-pallet", OrderInLine = 1, StaticProperties = "{\"NormTemp\": 45.0, \"BaseVib\": 2.0, \"NormPower\": 12.5}" },
-                new Machine { Name = "CNC Milling C1", Category = "Milling", SerialNumber = "MC001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-18), IsActive = true, TotalOperatingHours = 2890.4, LastStatusChangedAt = DateTime.UtcNow.AddHours(-8), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-cogs", OrderInLine = 2, StaticProperties = "{\"NormTemp\": 65.0, \"BaseVib\": 3.5, \"NormPower\": 22.0}" },
-                new Machine { Name = "Hydraulic Press P1", Category = "Pressing", SerialNumber = "PMC001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-5), IsActive = true, TotalOperatingHours = 540.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-17), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-compress-alt", OrderInLine = 3, StaticProperties = "{\"NormTemp\": 55.0, \"BaseVib\": 5.0, \"NormPower\": 35.0}" },
-                new Machine { Name = "Robotic Drill D1", Category = "Drilling", SerialNumber = "DR001-2023", Status = MachineStatus.Maintenance, InstallationDate = DateTime.UtcNow.AddMonths(-13), IsActive = true, TotalOperatingHours = 1550.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-9), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-robot", OrderInLine = 4, StaticProperties = "{\"NormTemp\": 70.0, \"BaseVib\": 4.0, \"NormPower\": 18.5}" },
-                new Machine { Name = "Welding Robot W1", Category = "Welding", SerialNumber = "WR001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-24), IsActive = true, TotalOperatingHours = 3100.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-16), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-robot", OrderInLine = 5, StaticProperties = "{\"NormTemp\": 120.0, \"BaseVib\": 1.5, \"NormPower\": 45.0}" },
-                new Machine { Name = "Coating Station C1", Category = "Treatment", SerialNumber = "HT001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-4), IsActive = true, TotalOperatingHours = 410.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-6), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-paint-roller", OrderInLine = 6, StaticProperties = "{\"NormTemp\": 85.0, \"BaseVib\": 1.0, \"NormPower\": 10.0}" },
-                new Machine { Name = "Optical QC Scanner Q1", Category = "Inspection", SerialNumber = "QC001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-11), IsActive = true, TotalOperatingHours = 1430.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-22), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-microscope", OrderInLine = 7, StaticProperties = "{\"NormTemp\": 30.0, \"BaseVib\": 0.2, \"NormPower\": 2.5}" },
-                new Machine { Name = "Packager P1", Category = "Packaging", SerialNumber = "PM001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-9), IsActive = true, TotalOperatingHours = 1050.4, LastStatusChangedAt = DateTime.UtcNow.AddHours(-15), ProductionLineId = lineA.Id, FactoryHallId = hall1.Id, Icon = "fa-box", OrderInLine = 8, StaticProperties = "{\"NormTemp\": 40.0, \"BaseVib\": 1.8, \"NormPower\": 8.0}" },
+                // ==================== LINE 1: EV Battery Pack Assembly (Running) ====================
+                new Machine
+                {
+                    Name = "Cell Infeed Feeder CF-01",
+                    Category = "Conveyance",
+                    SerialNumber = "CF01-2024",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-18),
+                    IsActive = true,
+                    TotalOperatingHours = 2480.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-12),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "Unarchive",
+                    OrderInLine = 1,
+                    CycleTimeSeconds = 4.0,
+                    StaticProperties = "{\"NormTemp\": 35.0, \"BaseVib\": 1.2, \"NormPower\": 8.5}"
+                },
+                new Machine
+                {
+                    Name = "Laser Cell Welder LW-02",
+                    Category = "Welding",
+                    SerialNumber = "LW02-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-24),
+                    IsActive = true,
+                    TotalOperatingHours = 3850.5,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-10),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "Fireplace",
+                    OrderInLine = 2,
+                    CycleTimeSeconds = 6.0,
+                    StaticProperties = "{\"NormTemp\": 85.0, \"BaseVib\": 2.1, \"NormPower\": 42.0}"
+                },
+                new Machine
+                {
+                    Name = "BMS Wire Bonder WB-03",
+                    Category = "Electronics",
+                    SerialNumber = "WB03-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-14),
+                    IsActive = true,
+                    TotalOperatingHours = 1920.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-14),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "Cable",
+                    OrderInLine = 3,
+                    CycleTimeSeconds = 5.0,
+                    StaticProperties = "{\"NormTemp\": 48.0, \"BaseVib\": 1.0, \"NormPower\": 14.0}"
+                },
+                new Machine
+                {
+                    Name = "Thermal Dispenser TD-04",
+                    Category = "Treatment",
+                    SerialNumber = "TD04-2024",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-8),
+                    IsActive = true,
+                    TotalOperatingHours = 890.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-7),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "Shower",
+                    OrderInLine = 4,
+                    CycleTimeSeconds = 5.5,
+                    StaticProperties = "{\"NormTemp\": 38.0, \"BaseVib\": 1.6, \"NormPower\": 12.0}"
+                },
+                new Machine
+                {
+                    Name = "Optical & Voltage Scanner QC-05",
+                    Category = "Inspection",
+                    SerialNumber = "QC05-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-11),
+                    IsActive = true,
+                    TotalOperatingHours = 1430.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-22),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "BarcodeReader",
+                    OrderInLine = 5,
+                    CycleTimeSeconds = 4.5,
+                    StaticProperties = "{\"NormTemp\": 28.0, \"BaseVib\": 0.3, \"NormPower\": 3.0}"
+                },
+                new Machine
+                {
+                    Name = "Tightening Robot TR-06",
+                    Category = "Robotics",
+                    SerialNumber = "TR06-2024",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-6),
+                    IsActive = true,
+                    TotalOperatingHours = 720.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-15),
+                    ProductionLineId = line1.Id,
+                    FactoryHallId = hall1.Id,
+                    Icon = "PrecisionManufacturing",
+                    OrderInLine = 6,
+                    CycleTimeSeconds = 6.0,
+                    StaticProperties = "{\"NormTemp\": 52.0, \"BaseVib\": 2.4, \"NormPower\": 24.0}"
+                },
 
-                // Line B machines (Halted due to error)
-                new Machine { Name = "Part Feeder B1", Category = "Conveyance", SerialNumber = "CB001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-1), IsActive = true, TotalOperatingHours = 1240.8, LastStatusChangedAt = DateTime.UtcNow.AddHours(-24), ProductionLineId = lineB.Id, FactoryHallId = hall2.Id, Icon = "fa-box", OrderInLine = 1, StaticProperties = "{\"NormTemp\": 45.0, \"BaseVib\": 2.2, \"NormPower\": 5.5}" },
-                new Machine { Name = "CNC Milling C2", Category = "Milling", SerialNumber = "MC002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-6), IsActive = true, TotalOperatingHours = 750.2, LastStatusChangedAt = DateTime.UtcNow.AddHours(-14), ProductionLineId = lineB.Id, FactoryHallId = hall2.Id, Icon = "fa-cogs", OrderInLine = 2, StaticProperties = "{\"NormTemp\": 68.0, \"BaseVib\": 3.8, \"NormPower\": 24.0}" },
-                new Machine { Name = "Main Welding Robot W3", Category = "Welding", SerialNumber = "WR003-2023", Status = MachineStatus.Error, InstallationDate = DateTime.UtcNow.AddMonths(-12), IsActive = true, TotalOperatingHours = 1320.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-4), ProductionLineId = lineB.Id, FactoryHallId = hall2.Id, Icon = "fa-fire", OrderInLine = 3, StaticProperties = "{\"NormTemp\": 130.0, \"BaseVib\": 2.0, \"NormPower\": 48.0}" },
-                new Machine { Name = "Coating Station C2", Category = "Treatment", SerialNumber = "HT002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-4), IsActive = true, TotalOperatingHours = 410.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-6), ProductionLineId = lineB.Id, FactoryHallId = hall2.Id, Icon = "fa-paint-roller", OrderInLine = 4, StaticProperties = "{\"NormTemp\": 85.0, \"BaseVib\": 1.0, \"NormPower\": 10.0}" },
-                new Machine { Name = "QC Scanner Q2", Category = "Inspection", SerialNumber = "QC002-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-11), IsActive = true, TotalOperatingHours = 1430.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-22), ProductionLineId = lineB.Id, FactoryHallId = hall2.Id, Icon = "fa-search", OrderInLine = 5, StaticProperties = "{\"NormTemp\": 30.0, \"BaseVib\": 0.2, \"NormPower\": 2.5}" },
-                
-                // Other unassigned machines (Utility w Hali 2)
-                new Machine { Name = "Air Compressor AC1", Category = "Utility", SerialNumber = "AC001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-2), IsActive = true, TotalOperatingHours = 5200.0, LastStatusChangedAt = DateTime.UtcNow.AddDays(-10), FactoryHallId = hall2.Id, Icon = "fa-fan", StaticProperties = "{\"NormTemp\": 75.0, \"BaseVib\": 8.0, \"NormPower\": 60.0}" },
-                new Machine { Name = "Chiller System CH1", Category = "Utility", SerialNumber = "CS001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddYears(-3), IsActive = true, TotalOperatingHours = 6800.0, LastStatusChangedAt = DateTime.UtcNow.AddDays(-15), FactoryHallId = hall2.Id, Icon = "fa-snowflake", StaticProperties = "{\"NormTemp\": 15.0, \"BaseVib\": 1.5, \"NormPower\": 85.0}" },
-                new Machine { Name = "Pump System PS1", Category = "Utility", SerialNumber = "PS001-2023", Status = MachineStatus.Running, InstallationDate = DateTime.UtcNow.AddMonths(-15), IsActive = true, TotalOperatingHours = 1890.0, LastStatusChangedAt = DateTime.UtcNow.AddHours(-11), FactoryHallId = hall2.Id, Icon = "fa-water", StaticProperties = "{\"NormTemp\": 50.0, \"BaseVib\": 4.5, \"NormPower\": 15.0}" }
+                // ==================== LINE 2: Engine Block CNC Machining (Warning) ====================
+                new Machine
+                {
+                    Name = "Raw Casting Loader RL-11",
+                    Category = "Conveyance",
+                    SerialNumber = "RL11-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddYears(-2),
+                    IsActive = true,
+                    TotalOperatingHours = 3200.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-20),
+                    ProductionLineId = line2.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "Repartition",
+                    OrderInLine = 1,
+                    CycleTimeSeconds = 5.0,
+                    StaticProperties = "{\"NormTemp\": 40.0, \"BaseVib\": 1.8, \"NormPower\": 9.5}"
+                },
+                new Machine
+                {
+                    Name = "5-Axis CNC Milling Center MC-12",
+                    Category = "Milling",
+                    SerialNumber = "MC12-2022",
+                    Status = MachineStatus.Warning,
+                    InstallationDate = DateTime.UtcNow.AddYears(-3),
+                    IsActive = true,
+                    TotalOperatingHours = 5120.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-2),
+                    ProductionLineId = line2.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "fa-cogs",
+                    OrderInLine = 2,
+                    CycleTimeSeconds = 8.0,
+                    StaticProperties = "{\"NormTemp\": 74.0, \"BaseVib\": 4.5, \"NormPower\": 40.0}"
+                },
+                new Machine
+                {
+                    Name = "Robotic Drilling Unit RD-13",
+                    Category = "Drilling",
+                    SerialNumber = "RD13-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-16),
+                    IsActive = true,
+                    TotalOperatingHours = 2100.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-8),
+                    ProductionLineId = line2.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "Tune",
+                    OrderInLine = 3,
+                    CycleTimeSeconds = 6.5,
+                    StaticProperties = "{\"NormTemp\": 62.0, \"BaseVib\": 2.8, \"NormPower\": 26.0}"
+                },
+                new Machine
+                {
+                    Name = "Hydraulic Core Press HP-14",
+                    Category = "Pressing",
+                    SerialNumber = "HP14-2024",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-5),
+                    IsActive = true,
+                    TotalOperatingHours = 640.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-16),
+                    ProductionLineId = line2.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "Compress",
+                    OrderInLine = 4,
+                    CycleTimeSeconds = 7.0,
+                    StaticProperties = "{\"NormTemp\": 56.0, \"BaseVib\": 4.2, \"NormPower\": 48.0}"
+                },
+                new Machine
+                {
+                    Name = "CMM Inspection Scanner CMM-15",
+                    Category = "Inspection",
+                    SerialNumber = "CMM15-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-12),
+                    IsActive = true,
+                    TotalOperatingHours = 1680.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-18),
+                    ProductionLineId = line2.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "SmartScreen",
+                    OrderInLine = 5,
+                    CycleTimeSeconds = 5.0,
+                    StaticProperties = "{\"NormTemp\": 25.0, \"BaseVib\": 0.2, \"NormPower\": 2.5}"
+                },
+
+                // ==================== LINE 3: Chassis Frame Welding & Coating (Halted) ====================
+                new Machine
+                {
+                    Name = "Frame Staging Carrier SC-21",
+                    Category = "Conveyance",
+                    SerialNumber = "SC21-2023",
+                    Status = MachineStatus.Offline,
+                    InstallationDate = DateTime.UtcNow.AddYears(-1),
+                    IsActive = true,
+                    TotalOperatingHours = 1240.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-4),
+                    ProductionLineId = line3.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "RvHookup",
+                    OrderInLine = 1,
+                    CycleTimeSeconds = 5.0,
+                    StaticProperties = "{\"NormTemp\": 36.0, \"BaseVib\": 1.5, \"NormPower\": 8.0}"
+                },
+                new Machine
+                {
+                    Name = "Robotic Spot Welder SW-22",
+                    Category = "Welding",
+                    SerialNumber = "SW22-2022",
+                    Status = MachineStatus.Error,
+                    InstallationDate = DateTime.UtcNow.AddYears(-2),
+                    IsActive = true,
+                    TotalOperatingHours = 3450.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-4),
+                    ProductionLineId = line3.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "ElectricCar",
+                    OrderInLine = 2,
+                    CycleTimeSeconds = 7.5,
+                    StaticProperties = "{\"NormTemp\": 138.0, \"BaseVib\": 3.0, \"NormPower\": 58.0}"
+                },
+                new Machine
+                {
+                    Name = "Dip Coating Station DC-23",
+                    Category = "Treatment",
+                    SerialNumber = "DC23-2023",
+                    Status = MachineStatus.Offline,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-10),
+                    IsActive = true,
+                    TotalOperatingHours = 1100.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-4),
+                    ProductionLineId = line3.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "ViewQuilt",
+                    OrderInLine = 3,
+                    CycleTimeSeconds = 9.0,
+                    StaticProperties = "{\"NormTemp\": 62.0, \"BaseVib\": 0.9, \"NormPower\": 19.0}"
+                },
+                new Machine
+                {
+                    Name = "Thermal Curing Oven TO-24",
+                    Category = "Thermal",
+                    SerialNumber = "TO24-2021",
+                    Status = MachineStatus.Offline,
+                    InstallationDate = DateTime.UtcNow.AddYears(-3),
+                    IsActive = true,
+                    TotalOperatingHours = 4900.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-4),
+                    ProductionLineId = line3.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "Microwave",
+                    OrderInLine = 4,
+                    CycleTimeSeconds = 10.0,
+                    StaticProperties = "{\"NormTemp\": 175.0, \"BaseVib\": 1.1, \"NormPower\": 72.0}"
+                },
+                new Machine
+                {
+                    Name = "Ultrasonic Weld Scanner US-25",
+                    Category = "Inspection",
+                    SerialNumber = "US25-2023",
+                    Status = MachineStatus.Offline,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-14),
+                    IsActive = true,
+                    TotalOperatingHours = 1890.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-4),
+                    ProductionLineId = line3.Id,
+                    FactoryHallId = hall2.Id,
+                    Icon = "Scale",
+                    OrderInLine = 5,
+                    CycleTimeSeconds = 6.0,
+                    StaticProperties = "{\"NormTemp\": 30.0, \"BaseVib\": 0.4, \"NormPower\": 3.8}"
+                },
+
+                // ==================== Standalone Utility Machines ====================
+                new Machine
+                {
+                    Name = "Central Screw Compressor AC-01",
+                    Category = "Utility",
+                    SerialNumber = "AC01-2022",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddYears(-2),
+                    IsActive = true,
+                    TotalOperatingHours = 6200.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddDays(-10),
+                    FactoryHallId = hall1.Id,
+                    Icon = "Air",
+                    StaticProperties = "{\"NormTemp\": 76.0, \"BaseVib\": 6.8, \"NormPower\": 75.0}"
+                },
+                new Machine
+                {
+                    Name = "Process Chiller System CH-01",
+                    Category = "Utility",
+                    SerialNumber = "CH01-2022",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddYears(-3),
+                    IsActive = true,
+                    TotalOperatingHours = 7400.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddDays(-15),
+                    FactoryHallId = hall1.Id,
+                    Icon = "WindPower",
+                    StaticProperties = "{\"NormTemp\": 14.0, \"BaseVib\": 1.6, \"NormPower\": 90.0}"
+                },
+                new Machine
+                {
+                    Name = "Dust Extraction Unit DE-02",
+                    Category = "Utility",
+                    SerialNumber = "DE02-2023",
+                    Status = MachineStatus.Maintenance,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-15),
+                    IsActive = true,
+                    TotalOperatingHours = 2300.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-11),
+                    FactoryHallId = hall2.Id,
+                    Icon = "FilterAlt",
+                    StaticProperties = "{\"NormTemp\": 44.0, \"BaseVib\": 3.2, \"NormPower\": 28.0}"
+                },
+                new Machine
+                {
+                    Name = "Central Hydraulic Power Unit HPU-02",
+                    Category = "Utility",
+                    SerialNumber = "HPU02-2023",
+                    Status = MachineStatus.Running,
+                    InstallationDate = DateTime.UtcNow.AddMonths(-18),
+                    IsActive = true,
+                    TotalOperatingHours = 2800.0,
+                    LastStatusChangedAt = DateTime.UtcNow.AddHours(-8),
+                    FactoryHallId = hall2.Id,
+                    Icon = "PowerInput",
+                    StaticProperties = "{\"NormTemp\": 50.0, \"BaseVib\": 3.8, \"NormPower\": 38.0}"
+                }
             };
 
             context.Machines.AddRange(machines);
             context.SaveChanges();
 
-            // Create work orders for machines
+            // 9. Alert Thresholds
+            var alertThresholds = new List<AlertThreshold>();
+            foreach (var m in machines)
+            {
+                double bTemp = 50.0;
+                double bVib = 2.0;
+                double bPower = 20.0;
+
+                if (!string.IsNullOrEmpty(m.StaticProperties))
+                {
+                    try
+                    {
+                        using var jsonDoc = System.Text.Json.JsonDocument.Parse(m.StaticProperties);
+                        if (jsonDoc.RootElement.TryGetProperty("NormTemp", out var tProp)) bTemp = tProp.GetDouble();
+                        if (jsonDoc.RootElement.TryGetProperty("BaseVib", out var vProp)) bVib = vProp.GetDouble();
+                        if (jsonDoc.RootElement.TryGetProperty("NormPower", out var pProp)) bPower = pProp.GetDouble();
+                    }
+                    catch { }
+                }
+
+                alertThresholds.Add(new AlertThreshold
+                {
+                    MachineId = m.Id,
+                    MetricType = "Temperature",
+                    WarningValue = (decimal)Math.Round(bTemp + 15.0, 1),
+                    CriticalValue = (decimal)Math.Round(bTemp + 30.0, 1)
+                });
+
+                alertThresholds.Add(new AlertThreshold
+                {
+                    MachineId = m.Id,
+                    MetricType = "Vibration",
+                    WarningValue = (decimal)Math.Round(bVib + 2.0, 1),
+                    CriticalValue = (decimal)Math.Round(bVib + 4.0, 1)
+                });
+
+                alertThresholds.Add(new AlertThreshold
+                {
+                    MachineId = m.Id,
+                    MetricType = "PowerLoadKw",
+                    WarningValue = (decimal)Math.Round(bPower * 1.35, 1),
+                    CriticalValue = (decimal)Math.Round(bPower * 1.7, 1)
+                });
+            }
+
+            context.AlertThresholds.AddRange(alertThresholds);
+            context.SaveChanges();
+
+            // 10. Work Orders
             var workOrders = new List<WorkOrder>();
             var random = new Random(42);
 
-            foreach (var machine in machines.Take(20))
+            foreach (var machine in machines)
             {
-                // 2-3 work orders per machine
-                for (int i = 0; i < random.Next(1, 4); i++)
-                {
-                    var status = random.Next(0, 4) switch
-                    {
-                        0 => "Open",
-                        1 => "InProgress",
-                        2 => "Review",
-                        _ => "Resolved"
-                    };
+                int woCount = machine.Status == MachineStatus.Error ? 3 : (machine.Status == MachineStatus.Warning || machine.Status == MachineStatus.Maintenance ? 2 : 1);
 
-                    var createdDate = DateTime.UtcNow.AddDays(-random.Next(1, 30));
-                    var dueDate = createdDate.AddDays(random.Next(3, 14));
-                    var resolvedDate = status == "Resolved" ? DateTime.UtcNow.AddDays(-random.Next(0, 15)) : (DateTime?)null;
+                for (int i = 0; i < woCount; i++)
+                {
+                    string status = machine.Status == MachineStatus.Error && i == 0 ? "InProgress"
+                        : (machine.Status == MachineStatus.Maintenance && i == 0 ? "Open"
+                        : (random.Next(0, 3) switch { 0 => "Open", 1 => "InProgress", _ => "Resolved" }));
+
+                    var createdDate = DateTime.UtcNow.AddDays(-random.Next(1, 20));
+                    var dueDate = createdDate.AddDays(random.Next(3, 10));
+                    var resolvedDate = status == "Resolved" ? DateTime.UtcNow.AddDays(-random.Next(0, 10)) : (DateTime?)null;
+
+                    string title = machine.Status == MachineStatus.Error && i == 0
+                        ? $"Emergency Repair: {machine.Name} Failure Inspection"
+                        : (machine.Status == MachineStatus.Warning && i == 0
+                            ? $"Predictive Maintenance: Check Vibration on {machine.Name}"
+                            : $"Scheduled Service: {machine.Name}");
 
                     workOrders.Add(new WorkOrder
                     {
                         TicketNumber = $"WO-{machine.SerialNumber}-{i + 1}",
                         MachineId = machine.Id,
-                        Title = $"Maintenance for {machine.Name}",
-                        Description = $"Scheduled maintenance and inspection for {machine.Name}",
-                        Type = new[] { "Routine", "Predictive", "Critical" }[random.Next(3)],
+                        Title = title,
+                        Description = $"Comprehensive inspection, diagnostics, and calibration for {machine.Name}.",
+                        Type = machine.Status == MachineStatus.Error ? "Critical" : (machine.Status == MachineStatus.Warning ? "Predictive" : "Routine"),
                         Status = status,
                         CreatedAt = createdDate,
                         DueDate = dueDate,
                         ResolvedAt = resolvedDate,
-                        AssignedUserId = i % 2 == 0 ? technicianUser.Id : adminUser.Id
+                        AssignedUserId = (i % 2 == 0) ? technicianUser.Id : adminUser.Id
                     });
                 }
             }
@@ -177,85 +590,93 @@ namespace SmartFactoryCMMS.Api.Data
             context.WorkOrders.AddRange(workOrders);
             context.SaveChanges();
 
-            // Create telemetry readings for machines
+            // 11. Incidents
+            var incidents = new List<Incident>();
+
+            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Warning || m.Status == MachineStatus.Maintenance))
+            {
+                string severity = machine.Status == MachineStatus.Error ? "Critical" : "Warning";
+                string incidentStatus = machine.Status == MachineStatus.Error || machine.Status == MachineStatus.Warning ? "Active" : "Resolved";
+
+                string msg = machine.Status == MachineStatus.Error
+                    ? $"Critical Fault on {machine.Name}: Overload protection trip detected."
+                    : (machine.Status == MachineStatus.Warning
+                        ? $"Warning on {machine.Name}: Vibration exceeded warning threshold."
+                        : $"Maintenance Notice: Filter replacement scheduled for {machine.Name}.");
+
+                incidents.Add(new Incident
+                {
+                    MachineId = machine.Id,
+                    TriggeredAt = DateTime.UtcNow.AddHours(-random.Next(1, 12)),
+                    Message = msg,
+                    Severity = severity,
+                    Status = incidentStatus
+                });
+            }
+
+            context.Incidents.AddRange(incidents);
+            context.SaveChanges();
+
+            // 12. Telemetry Readings
             var telemetryReads = new List<TelemetryRead>();
 
-            foreach (var machine in machines.Take(30))
+            foreach (var machine in machines)
             {
-                // 5-10 telemetry readings per machine
-                for (int i = 0; i < random.Next(5, 11); i++)
+                double bTemp = 45.0;
+                double bVib = 2.0;
+                double bPower = 15.0;
+
+                if (!string.IsNullOrEmpty(machine.StaticProperties))
+                {
+                    try
+                    {
+                        using var jsonDoc = System.Text.Json.JsonDocument.Parse(machine.StaticProperties);
+                        if (jsonDoc.RootElement.TryGetProperty("NormTemp", out var tProp)) bTemp = tProp.GetDouble();
+                        if (jsonDoc.RootElement.TryGetProperty("BaseVib", out var vProp)) bVib = vProp.GetDouble();
+                        if (jsonDoc.RootElement.TryGetProperty("NormPower", out var pProp)) bPower = pProp.GetDouble();
+                    }
+                    catch { }
+                }
+
+                for (int i = 0; i < 10; i++)
                 {
                     telemetryReads.Add(new TelemetryRead
                     {
                         MachineId = machine.Id,
-                        Temperature = random.Next(20, 85),
-                        Vibration = random.Next(0, 50),
-                        PowerLoadKw = random.Next(100, 800),
-                        NetworkLatencyMs = random.Next(10, 100),
-                        Timestamp = DateTime.UtcNow.AddMinutes(-random.Next(1, 1440))
+                        Temperature = (decimal)Math.Round(bTemp + (random.NextDouble() * 4.0 - 2.0), 2),
+                        Vibration = (decimal)Math.Round(bVib + (random.NextDouble() * 0.8 - 0.4), 2),
+                        PowerLoadKw = (decimal)Math.Round(bPower + (random.NextDouble() * 3.0 - 1.5), 2),
+                        NetworkLatencyMs = random.Next(12, 35),
+                        Timestamp = DateTime.UtcNow.AddMinutes(-i * 5)
                     });
                 }
             }
 
-            context.Set<TelemetryRead>().AddRange(telemetryReads);
+            context.TelemetryRead.AddRange(telemetryReads);
             context.SaveChanges();
 
-            // Create incidents for machines
-            var incidents = new List<Incident>();
-
-            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance || m.Status == MachineStatus.Warning).Take(10))
-            {
-                for (int i = 0; i < random.Next(1, 3); i++)
-                {
-                    incidents.Add(new Incident
-                    {
-                        MachineId = machine.Id,
-                        TriggeredAt = DateTime.UtcNow.AddDays(-random.Next(1, 15)),
-                        Message = $"Alert for {machine.Name}: High {new[] { "temperature", "vibration", "power consumption" }[random.Next(3)]}",
-                        Severity = random.Next(0, 2) == 0 ? "Warning" : "Critical",
-                        Status = random.Next(0, 2) == 0 ? "Active" : "Resolved"
-                    });
-                }
-            }
-
-            context.Set<Incident>().AddRange(incidents);
-            context.SaveChanges();
-
-            // Create production logs
+            // 13. Production Logs
             var productionLogs = new List<ProductionLog>();
 
-            foreach (var machine in machines.Take(25))
+            foreach (var machine in machines.Where(m => m.ProductionLineId.HasValue))
             {
-                for (int i = 0; i < random.Next(3, 8); i++)
+                for (int i = 0; i < 5; i++)
                 {
                     productionLogs.Add(new ProductionLog
                     {
                         MachineId = machine.Id,
                         ShiftId = new[] { shiftA.Id, shiftB.Id, shiftC.Id }[random.Next(3)],
-                        Timestamp = DateTime.UtcNow.AddDays(-random.Next(0, 30)),
-                        GoodParts = random.Next(100, 1500),
-                        DefectiveParts = random.Next(0, 50),
-                        AverageCycleTimeSeconds = random.Next(10, 120),
-                        IdealCycleTimeSeconds = random.Next(5, 100),
-                        ActiveOperatingSeconds = random.Next(1000, 28800)
+                        Timestamp = DateTime.UtcNow.AddDays(-i),
+                        GoodParts = random.Next(400, 1200),
+                        DefectiveParts = random.Next(0, 15),
+                        AverageCycleTimeSeconds = (int)machine.CycleTimeSeconds,
+                        IdealCycleTimeSeconds = (int)machine.CycleTimeSeconds,
+                        ActiveOperatingSeconds = random.Next(18000, 28000)
                     });
                 }
             }
 
-            context.Set<ProductionLog>().AddRange(productionLogs);
-            context.SaveChanges();
-
-            // Create alert thresholds for high-value machines
-            var alertThresholds = new List<AlertThreshold>();
-
-            foreach (var machine in machines.Where(m => m.Category == "HeavyMachinery" || m.Category == "Welding").Take(5))
-            {
-                alertThresholds.Add(new AlertThreshold { MachineId = machine.Id, MetricType = "Temperature", WarningValue = 75, CriticalValue = 90 });
-                alertThresholds.Add(new AlertThreshold { MachineId = machine.Id, MetricType = "Vibration", WarningValue = 40, CriticalValue = 60 });
-                alertThresholds.Add(new AlertThreshold { MachineId = machine.Id, MetricType = "PowerLoadKw", WarningValue = 700, CriticalValue = 900 });
-            }
-
-            context.Set<AlertThreshold>().AddRange(alertThresholds);
+            context.ProductionLogs.AddRange(productionLogs);
             context.SaveChanges();
         }
     }

@@ -12,7 +12,7 @@ interface HeaderProps {
 export default function Header({ onMenuClick, leftContent, rightContent, children }: HeaderProps) {
     const { selectedHallId, setSelectedHallId, halls, isLoadingHalls } = useFactory();
     return (
-        <header className="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
+        <header className="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-100">
             <div className="flex items-center gap-3">
                 {onMenuClick && (
                     <button

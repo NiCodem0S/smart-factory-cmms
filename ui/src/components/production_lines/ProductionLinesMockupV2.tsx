@@ -179,37 +179,33 @@ export default function ProductionLinesMockupV2() {
         {productionLinesV2.map((line) => (
           <div
             key={line.id}
-            className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all ${
-              line.status === 'Halted' ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-200'
-            }`}
+            className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all ${line.status === 'Halted' ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-200'
+              }`}
           >
             {/* Card Header */}
             <div
-              className={`p-6 border-b flex flex-wrap justify-between items-center gap-4 ${
-                line.status === 'Halted' ? 'border-red-100 bg-red-50/40' : 'border-slate-100 bg-slate-50'
-              }`}
+              className={`p-6 border-b flex flex-wrap justify-between items-center gap-4 ${line.status === 'Halted' ? 'border-red-100 bg-red-50/40' : 'border-slate-100 bg-slate-50'
+                }`}
             >
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-3 h-3 rounded-full ${
-                    line.status === 'Running'
+                  className={`w-3 h-3 rounded-full ${line.status === 'Running'
                       ? 'bg-green-500 animate-pulse'
                       : line.status === 'Warning'
-                      ? 'bg-amber-500 animate-pulse'
-                      : 'bg-red-500'
-                  }`}
+                        ? 'bg-amber-500 animate-pulse'
+                        : 'bg-red-500'
+                    }`}
                 />
                 <div>
                   <h2 className="text-lg font-bold text-slate-800 flex items-center gap-3">
                     {line.name}
                     <span
-                      className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-md border ${
-                        line.status === 'Running'
+                      className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-md border ${line.status === 'Running'
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : line.status === 'Warning'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
-                      }`}
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                        }`}
                     >
                       {line.status}
                     </span>
@@ -228,9 +224,8 @@ export default function ProductionLinesMockupV2() {
                 <div className="text-right">
                   <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Scrap Rate</div>
                   <div
-                    className={`font-bold font-mono text-base ${
-                      parseFloat(line.scrapRate) > 2 ? 'text-amber-600' : 'text-green-600'
-                    }`}
+                    className={`font-bold font-mono text-base ${parseFloat(line.scrapRate) > 2 ? 'text-amber-600' : 'text-green-600'
+                      }`}
                   >
                     {line.scrapRate}
                   </div>
@@ -259,16 +254,15 @@ export default function ProductionLinesMockupV2() {
             {/* Pipeline Visualization Area */}
             <div className="p-8 overflow-x-auto">
               <div className="relative min-w-max pb-4">
-                
+
                 {/* Main Conveyor Belt Background Line (Reduced by 1px: h-[10px]) */}
                 <div
-                  className={`absolute top-[44px] left-12 right-12 h-[10px] rounded-full z-0 ${
-                    line.status === 'Running'
+                  className={`absolute top-[44px] left-12 right-12 h-[10px] rounded-full z-0 ${line.status === 'Running'
                       ? 'bg-green-500 conveyor-belt border border-green-600'
                       : line.status === 'Warning'
-                      ? 'bg-amber-400 conveyor-belt border border-amber-500'
-                      : 'conveyor-halted border border-red-300'
-                  }`}
+                        ? 'bg-amber-400 conveyor-belt border border-amber-500'
+                        : 'conveyor-halted border border-red-300'
+                    }`}
                 />
 
                 {/* Machines Row & Inter-Machine Cycle Flow */}
@@ -278,20 +272,19 @@ export default function ProductionLinesMockupV2() {
 
                     return (
                       <div key={m.id} className="flex items-center flex-1">
-                        
+
                         {/* Machine Column Container (Guarantees Diamond is PERFECTLY centered under Machine Icon) */}
                         <div className="flex flex-col items-center w-28 shrink-0 group cursor-pointer">
                           {/* Machine Icon Card */}
                           <div
-                            className={`w-16 h-16 rounded-2xl bg-white border-2 shadow-md flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${
-                              m.status === 'running'
+                            className={`w-16 h-16 rounded-2xl bg-white border-2 shadow-md flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${m.status === 'running'
                                 ? 'border-green-500 text-green-600 shadow-green-50'
                                 : m.status === 'warning'
-                                ? 'border-amber-400 text-amber-500 ring-4 ring-amber-100'
-                                : m.status === 'error'
-                                ? 'border-red-500 text-red-600 ring-4 ring-red-100 bg-red-50'
-                                : 'border-slate-300 text-slate-400'
-                            }`}
+                                  ? 'border-amber-400 text-amber-500 ring-4 ring-amber-100'
+                                  : m.status === 'error'
+                                    ? 'border-red-500 text-red-600 ring-4 ring-red-100 bg-red-50'
+                                    : 'border-slate-300 text-slate-400'
+                              }`}
                           >
                             {m.icon}
                           </div>
@@ -303,15 +296,14 @@ export default function ProductionLinesMockupV2() {
 
                           {/* Status Badge */}
                           <span
-                            className={`text-[9px] font-extrabold uppercase mt-1 px-2 py-0.5 rounded border ${
-                              m.status === 'running'
+                            className={`text-[9px] font-extrabold uppercase mt-1 px-2 py-0.5 rounded border ${m.status === 'running'
                                 ? 'text-green-700 bg-green-50 border-green-200'
                                 : m.status === 'warning'
-                                ? 'text-amber-700 bg-amber-50 border-amber-200'
-                                : m.status === 'error'
-                                ? 'text-red-700 bg-red-50 border-red-200'
-                                : 'text-slate-500 bg-slate-100 border-slate-200'
-                            }`}
+                                  ? 'text-amber-700 bg-amber-50 border-amber-200'
+                                  : m.status === 'error'
+                                    ? 'text-red-700 bg-red-50 border-red-200'
+                                    : 'text-slate-500 bg-slate-100 border-slate-200'
+                              }`}
                           >
                             {m.status}
                           </span>
@@ -345,7 +337,8 @@ export default function ProductionLinesMockupV2() {
       </div>
 
       {/* Keyframes for Particle Travel & Conveyor Belt Animations */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .conveyor-belt {
           background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
           animation: moveConveyor 2s linear infinite;

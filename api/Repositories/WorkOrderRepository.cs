@@ -18,7 +18,7 @@ namespace SmartFactoryCMMS.Api.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<WorkOrderListDto>> GetWorkOrdersAsync(int page, int pageSize, string? status = null, string? type = null)
+        public async Task<PagedResult<WorkOrderListDto>> GetWorkOrdersAsync(int page, int pageSize, string? status = null, string? type = null, CancellationToken ct = default)
         {
             IQueryable<WorkOrder> query = _context.WorkOrders.Include(w => w.Machine);
 
@@ -32,13 +32,13 @@ namespace SmartFactoryCMMS.Api.Repositories
                 query = query.Where(w => w.Type == type);
             }
 
-            int totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync(ct);
 
             var workOrders = await query
                 .OrderByDescending(w => w.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var workOrderListDtos = _mapper.Map<List<WorkOrderListDto>>(workOrders);
 
@@ -53,11 +53,11 @@ namespace SmartFactoryCMMS.Api.Repositories
             return result;
         }
 
-        public async Task<WorkOrderDetailDto?> GetWorkOrderDetailsAsync(Guid id)
+        public async Task<WorkOrderDetailDto?> GetWorkOrderDetailsAsync(Guid id, CancellationToken ct = default)
         {
             var workOrder = await _context.WorkOrders
                 .Include(w => w.Machine)
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id == id, ct);
 
             if (workOrder == null) return null;
 

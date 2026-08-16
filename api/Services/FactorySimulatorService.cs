@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Hubs;

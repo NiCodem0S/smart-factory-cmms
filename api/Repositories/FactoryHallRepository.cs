@@ -18,14 +18,14 @@ namespace SmartFactoryCMMS.Api.Repositories
             _mapper = mapper;
         }
 
-        public async Task<List<FactoryHallDto>> GetFactoryHallsAsync()
+        public async Task<List<FactoryHallDto>> GetFactoryHallsAsync(CancellationToken ct = default)
         {
-            var factoryHalls = await _context.FactoryHalls.ToListAsync();
+            var factoryHalls = await _context.FactoryHalls.ToListAsync(ct);
             return _mapper.Map<List<FactoryHallDto>>(factoryHalls);
         }
-        public async Task<FactoryHallDto?> GetFactoryHallByIdAsync(Guid id)
+        public async Task<FactoryHallDto?> GetFactoryHallByIdAsync(Guid id, CancellationToken ct = default)
         {
-            var factoryHall = await _context.FactoryHalls.FindAsync(id);
+            var factoryHall = await _context.FactoryHalls.FindAsync(id, ct);
 
             if (factoryHall == null) return null;
 

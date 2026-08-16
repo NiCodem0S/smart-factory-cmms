@@ -30,9 +30,10 @@ namespace SmartFactoryCMMS.Api.Controllers
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
-            [FromQuery] MachineStatus? status = null)
+            [FromQuery] MachineStatus? status = null,
+            CancellationToken ct = default)
         {
-            var result = await _machineRepository.GetMachinesAsync(page, pageSize, search, status);
+            var result = await _machineRepository.GetMachinesAsync(page, pageSize, search, status, ct);
             return Ok(result);
         }
 

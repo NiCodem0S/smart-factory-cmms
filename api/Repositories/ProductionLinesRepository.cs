@@ -22,13 +22,13 @@ namespace SmartFactoryCMMS.Api.Repositories
             _factoryHallsRepo = factoryHallsRepo;
         }
 
-        public async Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId)
+        public async Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId, CancellationToken ct = default)
         {
             IQueryable<ProductionLine> query = _context.ProductionLines;
 
             if(hallsId.HasValue)
             {
-                var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value);
+                var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value, ct);
                 if(hall == null) return null;
 
                 query = query.Where(p => p.FactoryHallId == hallsId);
@@ -36,7 +36,7 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             var productionLines = await query
                 .ProjectTo<ProductionLineDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return productionLines;
             

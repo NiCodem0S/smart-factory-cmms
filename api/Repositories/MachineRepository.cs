@@ -22,7 +22,7 @@ namespace SmartFactoryCMMS.Api.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status)
+        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, CancellationToken ct = default)
         {
             IQueryable<Machine> query = ActiveMachines;
 
@@ -36,14 +36,14 @@ namespace SmartFactoryCMMS.Api.Repositories
                 query = query.Where(m => m.Status == status.Value);
             }
 
-            int totalCount = await query.CountAsync();
+            int totalCount = await query.CountAsync(ct);
             
             var machineListDtos = await query
                 .OrderBy(m => m.Id)
                 .Skip((page -1) * pageSize)
                 .Take(pageSize)
                 .ProjectTo<MachineListDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var result = new PagedResult<MachineListDto>
             {
@@ -56,40 +56,40 @@ namespace SmartFactoryCMMS.Api.Repositories
             return result;
         }
 
-        public async Task<MachineDetailDto?> GetMachineDetailsAsync(Guid id)
+        public async Task<MachineDetailDto?> GetMachineDetailsAsync(Guid id, CancellationToken ct = default)
         {
             var machine = await ActiveMachines
                 .ProjectTo<MachineDetailDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id, ct);
 
             if (machine == null) return null;
 
             return machine;
         }
 
-        public async Task<List<MachineProductionLineDto>> GetMachinesByProductionLineId(Guid id)
+        public async Task<List<MachineProductionLineDto>> GetMachinesByProductionLineId(Guid id, CancellationToken ct = default)
         {
             var machines = await ActiveMachines
                 .Where(m => m.ProductionLineId == id)
                 .OrderBy(m => m.OrderInLine)
                 .ProjectTo<MachineProductionLineDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .ToListAsync(ct);
             
             return machines;
         }
 
-        public async Task<Machine?> FindMachineByIdAsync(Guid id)
+        public async Task<Machine?> FindMachineByIdAsync(Guid id, CancellationToken ct = default)
         {
-            var machine = await _context.Machines.FindAsync(id);
+            var machine = await _context.Machines.FindAsync(id, ct);
 
             if (machine == null) return null;
 
             return machine;
         }
 
-        public async Task<List<TelemetryReadDto>> GetMachineTelemetryAsync(Guid id, int limit)
+        public async Task<List<TelemetryReadDto>> GetMachineTelemetryAsync(Guid id, int limit, CancellationToken ct = default)
         {
-            var machine = await ActiveMachines.FirstOrDefaultAsync(m => m.Id == id);
+            var machine = await ActiveMachines.FirstOrDefaultAsync(m => m.Id == id, ct);
 
             if (machine == null) return new List<TelemetryReadDto>();
 
@@ -97,7 +97,7 @@ namespace SmartFactoryCMMS.Api.Repositories
                 .Where(t => t.MachineId == id)
                 .OrderByDescending(t => t.Timestamp)
                 .Take(limit)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return _mapper.Map<List<TelemetryReadDto>>(telemetryReads);
         }

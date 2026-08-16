@@ -20,14 +20,14 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<FactoryHallDto>>> GetFactoryHalls()
+        public async Task<ActionResult<List<FactoryHallDto>>> GetFactoryHalls(CancellationToken ct = default)
         {
-            var result = await _hallsRepository.GetFactoryHallsAsync();
+            var result = await _hallsRepository.GetFactoryHallsAsync(ct);
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<FactoryHallDto>> GetFactoryHallById(Guid id)
+        public async Task<ActionResult<FactoryHallDto>> GetFactoryHallById(Guid id, CancellationToken ct = default)
         {
             var factoryHallDto = await _hallsRepository.GetFactoryHallByIdAsync(id);
 

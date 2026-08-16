@@ -20,9 +20,9 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProductionLines([FromQuery] Guid? factoryHallId)
+        public async Task<IActionResult> GetProductionLines([FromQuery] Guid? factoryHallId, CancellationToken ct = default)
         {
-            var productionLines = await _productionLinesRepo.GetProductionLinesByHallsId(factoryHallId);
+            var productionLines = await _productionLinesRepo.GetProductionLinesByHallsId(factoryHallId, ct);
 
             if (productionLines == null) return NotFound(new { message = $"Factory hall {factoryHallId} not found."});
 
@@ -30,9 +30,9 @@ namespace SmartFactoryCMMS.Api.Controllers
         }
 
         [HttpGet("{id}/machines")]
-        public async Task<ActionResult<List<MachineProductionLineDto>>> GetProductionLineMachines(Guid id)
+        public async Task<ActionResult<List<MachineProductionLineDto>>> GetProductionLineMachines(Guid id, CancellationToken ct = default)
         {
-            var machines = await _machineRepository.GetMachinesByProductionLineId(id);
+            var machines = await _machineRepository.GetMachinesByProductionLineId(id, ct);
             return Ok(machines);
         }
     }

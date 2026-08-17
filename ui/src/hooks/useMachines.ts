@@ -9,24 +9,36 @@ export function useMachines(page: number = 1, pageSize: number = 10, search?: st
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadData = useCallback(async () => {
+    const loadData = useCallback(async (signal?: AbortSignal) => {
         setIsLoading(true)
         setError(null)
 
         try {
-            const result = await fetchMachines(page, pageSize, search, status);
+            const result = await fetchMachines(page, pageSize, search, status, signal);
             setData(result)
         }
         catch (err: any) {
+            if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+                return;
+            }
             setError(err.message || 'Unrecognized error durning fetching data')
         }
         finally {
-            setIsLoading(false)
+            if (!signal?.aborted) setIsLoading(false)
         }
+
     }, [page, pageSize, search, status]);
 
     useEffect(() => {
-        loadData()
+
+        const controller = new AbortController();
+
+        loadData(controller.signal)
+
+        return () => {
+            controller.abort()
+        }
+
     }, [loadData])
 
     return { data, isLoading, error, refetch: loadData }

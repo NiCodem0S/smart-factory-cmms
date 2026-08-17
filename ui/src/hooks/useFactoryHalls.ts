@@ -10,23 +10,32 @@ export function useFactoryHalls() {
 
     useEffect(() => {
 
+        const controller = new AbortController();
+
         const loadData = (async () => {
             setIsLoading(true)
             setError(null)
 
             try {
-                const result = await fetchHalls();
+                const result = await fetchHalls(controller.signal);
                 setData(result);
             }
             catch (err: any) {
+                if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+                    return;
+                }
                 setError(err.message || 'Unrecognized error durning fetching data')
             }
             finally {
-                setIsLoading(false)
+                if (!controller.signal?.aborted) setIsLoading(false)
             }
         })
 
         loadData();
+
+        return () => {
+            controller.abort()
+        }
     }, [])
 
     return { data, isLoading, error }

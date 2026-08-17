@@ -7,6 +7,7 @@ export async function fetchMachines(
 	pageSize: number = 10,
 	search?: string,
 	status?: MachineStatus,
+	signal?: AbortSignal,
 ): Promise<PagedResult<MachineListDto>> { // : return type
 	const response = await apiClient.get<PagedResult<MachineListDto>>('/Machines', {
 		params: {
@@ -14,23 +15,32 @@ export async function fetchMachines(
 			pageSize,
 			search: search || undefined,
 			status: status || undefined,
-		}
+		},
+		signal
 	})
 
 	return response.data
 }
 
 export async function fetchMachinesById(
-	id: string
+	id: string,
+	signal?: AbortSignal
 ): Promise<MachineDetailDto> {
-	const response = await apiClient.get<MachineDetailDto>(`/Machines/${id}`)
+	const response = await apiClient.get<MachineDetailDto>(`/Machines/${id}`, {
+		params: {},
+		signal
+	})
 	return response.data
 }
 
 export async function fetchMachinesByProdLineId(
-	id: string
+	id: string,
+	signal?: AbortSignal
 ): Promise<MachineProductionLineDto[]> {
-	const response = await apiClient.get<MachineProductionLineDto[]>(`/ProductionLines/${id}/Machines`)
+	const response = await apiClient.get<MachineProductionLineDto[]>(`/ProductionLines/${id}/Machines`, {
+		params: {},
+		signal
+	})
 	return response.data
 }
 

@@ -180,7 +180,7 @@ export default function ProductionLineCard({ line }: ProductionLineCardProps) {
                                                 <div
                                                     className={`w-16 h-16 rounded-2xl bg-white border-2 shadow-md flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${m.status === 'Running'
                                                         ? 'border-green-500 text-green-600 shadow-green-50'
-                                                        : m.status === 'Warning'
+                                                        : m.status === 'Warning' || m.status === 'Maintenance'
                                                             ? 'border-amber-400 text-amber-500 ring-4 ring-amber-100'
                                                             : m.status === 'Error'
                                                                 ? 'border-red-500 text-red-600 ring-4 ring-red-100 bg-red-50'

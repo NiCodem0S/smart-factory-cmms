@@ -8,26 +8,35 @@ export default function useMachineDetails(id: string | undefined) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadMachine = useCallback(async () => {
+    const loadMachine = useCallback(async (signal?: AbortSignal) => {
         if (!id) return
 
         setIsLoading(true)
         setError(null)
 
         try {
-            const result = await fetchMachinesById(id)
+            const result = await fetchMachinesById(id, signal)
             setMachine(result)
         }
         catch (err: any) {
+            if (err.name === 'CanceledError' || err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+                return;
+            }
             setError(err.response?.data?.message || err.message || 'Failed to fetch details')
         }
         finally {
-            setIsLoading(false)
+            if (!signal?.aborted) setIsLoading(false)
         }
     }, [id])
 
     useEffect(() => {
-        loadMachine()
+        const controller = new AbortController()
+
+        loadMachine(controller.signal)
+
+        return () => {
+            controller.abort()
+        }
     }, [loadMachine])
 
     return { machine, isLoading, error, refetch: loadMachine }

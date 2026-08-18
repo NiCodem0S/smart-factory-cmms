@@ -6,7 +6,6 @@ import { AlertCircle, CheckCircle, Loader2, Plus } from "lucide-react";
 import ProductionLineCard from "./ProductionLineCard";
 
 export default function ProductionLines() {
-    const [page, setPage] = useState<number>(1)
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 

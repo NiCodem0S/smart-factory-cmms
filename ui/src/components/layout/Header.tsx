@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Menu, Building2 } from "lucide-react";
 import { useFactory } from "../../context/FactoryContext";
+import Select from "../common/Select";
 
 interface HeaderProps {
     onMenuClick?: () => void;
@@ -11,6 +12,15 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick, leftContent, rightContent, children }: HeaderProps) {
     const { selectedHallId, setSelectedHallId, halls, isLoadingHalls } = useFactory();
+
+    const hallOptions = [
+        { value: null, label: "All Factory Halls (Global)" },
+        ...halls.map((hall) => ({
+            value: hall.id,
+            label: hall.name,
+        })),
+    ];
+
     return (
         <header className="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-100">
             <div className="flex items-center gap-3">
@@ -29,22 +39,15 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
             {/* Prawa strona nagłówka - zawsze renderowana */}
             <div className="flex items-center gap-3">
                 {/* Przełącznik Hal */}
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
-                    <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
-                    <select
-                        value={selectedHallId || ""}
-                        onChange={(e) => setSelectedHallId(e.target.value ? e.target.value : null)}
-                        disabled={isLoadingHalls}
-                        className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
-                    >
-                        <option value="">All Factory Halls (Global)</option>
-                        {halls.map((hall) => (
-                            <option key={hall.id} value={hall.id}>
-                                {hall.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                <Select
+                    value={selectedHallId}
+                    onChange={(val: any) => setSelectedHallId(val)}
+                    options={hallOptions}
+                    icon={<Building2 className="w-4 h-4 text-slate-500" />}
+                    disabled={isLoadingHalls}
+                    headerTitle="Select Factory Hall"
+                />
+
                 {/* Opcjonalna zawartość przekazana z widoku (np. przycisk Add Machine) */}
                 {rightContent}
             </div>

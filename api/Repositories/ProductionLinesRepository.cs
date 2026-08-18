@@ -26,20 +26,21 @@ namespace SmartFactoryCMMS.Api.Repositories
         {
             IQueryable<ProductionLine> query = _context.ProductionLines;
 
-            if(hallsId.HasValue)
+            if (hallsId.HasValue)
             {
                 var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value, ct);
-                if(hall == null) return null;
+                if (hall == null) return null;
 
                 query = query.Where(p => p.FactoryHallId == hallsId);
             }
 
             var productionLines = await query
+                .OrderBy(p => p.OrderInHall.HasValue ? p.OrderInHall.Value : int.MaxValue)
+                .ThenBy(p => p.Name)
                 .ProjectTo<ProductionLineDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(ct);
 
             return productionLines;
-            
         }
     }
 }

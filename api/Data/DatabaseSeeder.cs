@@ -76,9 +76,12 @@ namespace SmartFactoryCMMS.Api.Data
             shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
             shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
 
-            // 4. Clean re-seed check: if old machines with FontAwesome icon names exist, remove old demo data to refresh with new structure
-            bool hasLegacyIcons = context.Machines.Any(m => m.Icon != null && m.Icon.StartsWith("fa-") && m.Icon != "fa-cogs");
-            if (hasLegacyIcons)
+            // 4. Clean re-seed check: if legacy data, missing TotalProduced, or missing line LastStatusChangedAt, refresh demo data
+            bool needsReseed = context.Machines.Any(m => m.Icon != null && m.Icon.StartsWith("fa-") && m.Icon != "fa-cogs")
+                               || context.Machines.Any(m => m.ProductionLineId.HasValue && m.TotalProduced == 0)
+                               || context.ProductionLines.Any(pl => pl.LastStatusChangedAt == null);
+
+            if (needsReseed)
             {
                 context.AlertThresholds.RemoveRange(context.AlertThresholds);
                 context.Incidents.RemoveRange(context.Incidents);
@@ -131,26 +134,32 @@ namespace SmartFactoryCMMS.Api.Data
             // 7. Production Lines
             var line1 = new ProductionLine
             {
-                Name = "L1: EV Battery Pack Assembly",
+                Name = "EV Battery Pack Assembly",
+                OrderInHall = 1,
                 Status = "Running",
                 CurrentProductId = productBattery.Id,
-                FactoryHallId = hall1.Id
+                FactoryHallId = hall1.Id,
+                LastStatusChangedAt = DateTime.UtcNow.AddDays(-4).AddHours(-12)
             };
 
             var line2 = new ProductionLine
             {
-                Name = "L2: Engine Block CNC Machining",
+                Name = "Engine Block CNC Machining",
+                OrderInHall = 2,
                 Status = "Warning",
                 CurrentProductId = productEngine.Id,
-                FactoryHallId = hall2.Id
+                FactoryHallId = hall2.Id,
+                LastStatusChangedAt = DateTime.UtcNow.AddHours(-18).AddMinutes(-30)
             };
 
             var line3 = new ProductionLine
             {
-                Name = "L3: Chassis Frame Welding & Coating",
+                Name = "Chassis Frame Welding & Coating",
+                OrderInHall = 3,
                 Status = "Halted",
                 CurrentProductId = productChassis.Id,
-                FactoryHallId = hall2.Id
+                FactoryHallId = hall2.Id,
+                LastStatusChangedAt = DateTime.UtcNow.AddHours(-2).AddMinutes(-15)
             };
 
             context.ProductionLines.AddRange(line1, line2, line3);
@@ -175,6 +184,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Unarchive",
                     OrderInLine = 1,
                     CycleTimeSeconds = 4.0,
+                    TotalProduced = 3420,
                     StaticProperties = "{\"NormTemp\": 35.0, \"BaseVib\": 1.2, \"NormPower\": 8.5}"
                 },
                 new Machine
@@ -192,6 +202,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Fireplace",
                     OrderInLine = 2,
                     CycleTimeSeconds = 6.0,
+                    TotalProduced = 3415,
                     StaticProperties = "{\"NormTemp\": 85.0, \"BaseVib\": 2.1, \"NormPower\": 42.0}"
                 },
                 new Machine
@@ -209,6 +220,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Cable",
                     OrderInLine = 3,
                     CycleTimeSeconds = 5.0,
+                    TotalProduced = 3412,
                     StaticProperties = "{\"NormTemp\": 48.0, \"BaseVib\": 1.0, \"NormPower\": 14.0}"
                 },
                 new Machine
@@ -226,6 +238,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Shower",
                     OrderInLine = 4,
                     CycleTimeSeconds = 5.5,
+                    TotalProduced = 3410,
                     StaticProperties = "{\"NormTemp\": 38.0, \"BaseVib\": 1.6, \"NormPower\": 12.0}"
                 },
                 new Machine
@@ -243,6 +256,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "BarcodeReader",
                     OrderInLine = 5,
                     CycleTimeSeconds = 4.5,
+                    TotalProduced = 3408,
                     StaticProperties = "{\"NormTemp\": 28.0, \"BaseVib\": 0.3, \"NormPower\": 3.0}"
                 },
                 new Machine
@@ -260,6 +274,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "PrecisionManufacturing",
                     OrderInLine = 6,
                     CycleTimeSeconds = 6.0,
+                    TotalProduced = 3405,
                     StaticProperties = "{\"NormTemp\": 52.0, \"BaseVib\": 2.4, \"NormPower\": 24.0}"
                 },
 
@@ -279,6 +294,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Repartition",
                     OrderInLine = 1,
                     CycleTimeSeconds = 5.0,
+                    TotalProduced = 1860,
                     StaticProperties = "{\"NormTemp\": 40.0, \"BaseVib\": 1.8, \"NormPower\": 9.5}"
                 },
                 new Machine
@@ -296,6 +312,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "fa-cogs",
                     OrderInLine = 2,
                     CycleTimeSeconds = 8.0,
+                    TotalProduced = 1852,
                     StaticProperties = "{\"NormTemp\": 74.0, \"BaseVib\": 4.5, \"NormPower\": 40.0}"
                 },
                 new Machine
@@ -313,6 +330,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Tune",
                     OrderInLine = 3,
                     CycleTimeSeconds = 6.5,
+                    TotalProduced = 1845,
                     StaticProperties = "{\"NormTemp\": 62.0, \"BaseVib\": 2.8, \"NormPower\": 26.0}"
                 },
                 new Machine
@@ -330,6 +348,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Compress",
                     OrderInLine = 4,
                     CycleTimeSeconds = 7.0,
+                    TotalProduced = 1840,
                     StaticProperties = "{\"NormTemp\": 56.0, \"BaseVib\": 4.2, \"NormPower\": 48.0}"
                 },
                 new Machine
@@ -347,6 +366,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "SmartScreen",
                     OrderInLine = 5,
                     CycleTimeSeconds = 5.0,
+                    TotalProduced = 1834,
                     StaticProperties = "{\"NormTemp\": 25.0, \"BaseVib\": 0.2, \"NormPower\": 2.5}"
                 },
 
@@ -366,6 +386,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "RvHookup",
                     OrderInLine = 1,
                     CycleTimeSeconds = 5.0,
+                    TotalProduced = 960,
                     StaticProperties = "{\"NormTemp\": 36.0, \"BaseVib\": 1.5, \"NormPower\": 8.0}"
                 },
                 new Machine
@@ -383,6 +404,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "ElectricCar",
                     OrderInLine = 2,
                     CycleTimeSeconds = 7.5,
+                    TotalProduced = 955,
                     StaticProperties = "{\"NormTemp\": 138.0, \"BaseVib\": 3.0, \"NormPower\": 58.0}"
                 },
                 new Machine
@@ -400,6 +422,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "ViewQuilt",
                     OrderInLine = 3,
                     CycleTimeSeconds = 9.0,
+                    TotalProduced = 950,
                     StaticProperties = "{\"NormTemp\": 62.0, \"BaseVib\": 0.9, \"NormPower\": 19.0}"
                 },
                 new Machine
@@ -417,6 +440,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Microwave",
                     OrderInLine = 4,
                     CycleTimeSeconds = 10.0,
+                    TotalProduced = 948,
                     StaticProperties = "{\"NormTemp\": 175.0, \"BaseVib\": 1.1, \"NormPower\": 72.0}"
                 },
                 new Machine
@@ -434,6 +458,7 @@ namespace SmartFactoryCMMS.Api.Data
                     Icon = "Scale",
                     OrderInLine = 5,
                     CycleTimeSeconds = 6.0,
+                    TotalProduced = 942,
                     StaticProperties = "{\"NormTemp\": 30.0, \"BaseVib\": 0.4, \"NormPower\": 3.8}"
                 },
 
@@ -450,6 +475,7 @@ namespace SmartFactoryCMMS.Api.Data
                     LastStatusChangedAt = DateTime.UtcNow.AddDays(-10),
                     FactoryHallId = hall1.Id,
                     Icon = "Air",
+                    TotalProduced = 0,
                     StaticProperties = "{\"NormTemp\": 76.0, \"BaseVib\": 6.8, \"NormPower\": 75.0}"
                 },
                 new Machine
@@ -464,6 +490,7 @@ namespace SmartFactoryCMMS.Api.Data
                     LastStatusChangedAt = DateTime.UtcNow.AddDays(-15),
                     FactoryHallId = hall1.Id,
                     Icon = "WindPower",
+                    TotalProduced = 0,
                     StaticProperties = "{\"NormTemp\": 14.0, \"BaseVib\": 1.6, \"NormPower\": 90.0}"
                 },
                 new Machine
@@ -478,6 +505,7 @@ namespace SmartFactoryCMMS.Api.Data
                     LastStatusChangedAt = DateTime.UtcNow.AddHours(-11),
                     FactoryHallId = hall2.Id,
                     Icon = "FilterAlt",
+                    TotalProduced = 0,
                     StaticProperties = "{\"NormTemp\": 44.0, \"BaseVib\": 3.2, \"NormPower\": 28.0}"
                 },
                 new Machine
@@ -492,6 +520,7 @@ namespace SmartFactoryCMMS.Api.Data
                     LastStatusChangedAt = DateTime.UtcNow.AddHours(-8),
                     FactoryHallId = hall2.Id,
                     Icon = "PowerInput",
+                    TotalProduced = 0,
                     StaticProperties = "{\"NormTemp\": 50.0, \"BaseVib\": 3.8, \"NormPower\": 38.0}"
                 }
             };

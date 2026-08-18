@@ -17,8 +17,8 @@ function App() {
 						<Route path="/machines" element={<MachineFleet />} />
 						<Route path="/machines/:id" element={<MachineDetails />} />
 						<Route path="/dashboard" element={<LiveDashboard />} />
-						<Route path="/production" element={<ProductionLinesMockupV2 />} />
-						<Route path="/production1" element={<ProductionLines />} />
+						<Route path="/production" element={<ProductionLines />} />
+						<Route path="/production1" element={<ProductionLinesMockupV2 />} />
 					</Routes>
 				</AppLayout>
 			</FactoryProvider>

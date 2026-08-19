@@ -14,13 +14,13 @@ interface FactoryProviderProps {
 }
 
 export default function FactoryProvider({ children }: FactoryProviderProps) {
-    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls()
+    const { data: halls = [], isLoading: isLoadingHalls } = useFactoryHalls()
     const [selectedHallId, setHallIdState] = useState<string | null>(() => {
-        return sessionStorage.getItem("selectedHallId")
+        return sessionStorage.getItem("selectedHallId");
     })
 
     const setSelectedHallId = (id: string | null) => {
-        if (id == null) {
+        if (!id) {
             sessionStorage.removeItem("selectedHallId")
             setHallIdState(null)
         }

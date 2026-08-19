@@ -22,13 +22,18 @@ namespace SmartFactoryCMMS.Api.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, CancellationToken ct = default)
+        public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, Guid? selectedHallId, CancellationToken ct = default)
         {
             IQueryable<Machine> query = ActiveMachines;
 
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(m => m.Name.Contains(search));
+            }
+
+            if (selectedHallId.HasValue)
+            {
+                query = query.Where(m => m.FactoryHallId == selectedHallId);
             }
 
             if (status.HasValue)

@@ -41,7 +41,7 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
                 {/* Przełącznik Hal */}
                 <Select
                     value={selectedHallId}
-                    onChange={(val: any) => setSelectedHallId(val)}
+                    onChange={(val) => setSelectedHallId(val)}
                     options={hallOptions}
                     icon={<Building2 className="w-4 h-4 text-slate-500" />}
                     disabled={isLoadingHalls}

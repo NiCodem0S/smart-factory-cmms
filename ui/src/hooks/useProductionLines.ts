@@ -4,7 +4,7 @@ import { fetchLinesByHallId } from "../services/productionLinesService"
 import { MachineProductionLineDto } from "../types/machine"
 import { fetchMachinesByProdLineId } from "../services/machineService"
 
-export default function useProductionLinesByHallsId(id: string | null) {
+export default function useProductionLinesByHallsId(id?: string | null) {
     const [lines, setLines] = useState<ProductionLineDto[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
@@ -42,7 +42,7 @@ export default function useProductionLinesByHallsId(id: string | null) {
     return { lines, isLoading, error, refetch: loadLines }
 }
 
-export function useMachinesByProductionHallId(id: string) {
+export function useMachinesByProductionHallId(id?: string | null) {
     const [machines, setMachines] = useState<MachineProductionLineDto[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)

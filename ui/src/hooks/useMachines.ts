@@ -3,7 +3,7 @@ import { MachineListDto, MachineStatus } from "../types/machine";
 import { PagedResult } from "../types/common";
 import { fetchMachines } from "../services/machineService";
 
-export function useMachines(page: number = 1, pageSize: number = 10, search?: string, status?: MachineStatus) {
+export function useMachines(page: number = 1, pageSize: number = 10, search?: string, status?: MachineStatus, selectedHallId?: string | null) {
 
     const [data, setData] = useState<PagedResult<MachineListDto> | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -14,7 +14,7 @@ export function useMachines(page: number = 1, pageSize: number = 10, search?: st
         setError(null)
 
         try {
-            const result = await fetchMachines(page, pageSize, search, status, signal);
+            const result = await fetchMachines(page, pageSize, search, status, selectedHallId, signal);
             setData(result)
         }
         catch (err: any) {
@@ -27,7 +27,7 @@ export function useMachines(page: number = 1, pageSize: number = 10, search?: st
             if (!signal?.aborted) setIsLoading(false)
         }
 
-    }, [page, pageSize, search, status]);
+    }, [page, pageSize, search, status, selectedHallId]);
 
     useEffect(() => {
 

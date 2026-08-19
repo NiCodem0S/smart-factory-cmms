@@ -7,7 +7,7 @@ namespace SmartFactoryCMMS.Api.Repositories.Abstract
 {
     public interface IMachineRepository
     {
-        Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, CancellationToken ct = default);
+        Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, Guid? selectedHallId, CancellationToken ct = default);
         Task<MachineDetailDto?> GetMachineDetailsAsync(Guid id, CancellationToken ct = default);
         Task<List<MachineProductionLineDto>> GetMachinesByProductionLineId(Guid id, CancellationToken ct = default);
         Task<List<TelemetryReadDto>> GetMachineTelemetryAsync(Guid id, int limit, CancellationToken ct = default);

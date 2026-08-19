@@ -7,6 +7,7 @@ export async function fetchMachines(
 	pageSize: number = 10,
 	search?: string,
 	status?: MachineStatus,
+	selectedHallId?: string | null,
 	signal?: AbortSignal,
 ): Promise<PagedResult<MachineListDto>> { // : return type
 	const response = await apiClient.get<PagedResult<MachineListDto>>('/Machines', {
@@ -15,6 +16,7 @@ export async function fetchMachines(
 			pageSize,
 			search: search || undefined,
 			status: status || undefined,
+			selectedHallId: selectedHallId || undefined
 		},
 		signal
 	})

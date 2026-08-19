@@ -1,4 +1,12 @@
-export type MachineStatus = 'Running' | 'Warning' | 'Error' | 'Maintenance' | 'Offline'
+export const machineStatuses = [
+	'Running',
+	'Warning',
+	'Error',
+	'Maintenance',
+	'Offline'
+] as const;
+
+export type MachineStatus = typeof machineStatuses[number];
 
 export interface MachineListDto {
 	id: string

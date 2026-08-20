@@ -65,7 +65,7 @@ export default function ProductionLines() {
                 {/*Production lines component section*/}
                 {!isLoading && !error && lines && (
                     lines.map((line) => (
-                        <ProductionLineCard key={line.id} line={line} />
+                        <ProductionLineCard key={line.id} line={line} onStatusChange={refetch} />
                     ))
                 )}
             </div>

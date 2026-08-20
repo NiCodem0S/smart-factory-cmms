@@ -1,24 +1,30 @@
-import { Play, Square, Settings, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Play, Square, Settings, Loader2, AlertCircle } from 'lucide-react';
 import { ProductionLineDto } from "../../types/production";
 import { useState, useEffect } from 'react';
-import { useMachinesByProductionHallId } from '../../hooks/useProductionLines';
+import { Link } from 'react-router-dom';
+import { useMachinesByProductionHallId, useProductionLineActions } from '../../hooks/useProductionLines';
 import MachineIcon from '../common/MachineIcon';
-import { MachineProductionLineDto, MachineStatus } from '../../types/machine';
+import { MachineProductionLineDto } from '../../types/machine';
 
 interface ProductionLineCardProps {
     line: ProductionLineDto
+    onStatusChange?: () => void
 }
 
 function formatUpTime(dateStr: string | null | undefined, status: string) {
-    if ((status != "Running" && status != "Warning") || !dateStr) return ' --- '
+    if (status === 'Halted' || !dateStr || (status !== 'Running' && status !== 'Warning')) {
+        return ' --- ';
+    }
 
-    const diffMs = Date.now() - new Date(dateStr).getTime();
-    const minutes = Math.floor(diffMs / (1000 * 60))
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
+    const diffMs = Math.max(0, Date.now() - new Date(dateStr).getTime());
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
     const remHours = hours % 24;
 
-    return minutes >= 60 ? (days > 0 ? `${days}d ${remHours}h` : `${hours}h`) : (`${minutes} minutes`)
+    return minutes >= 60
+        ? (days > 0 ? `${days}d ${remHours}h` : `${hours}h`)
+        : (minutes === 0 ? '0' : `${minutes} minutes`);
 }
 
 function getThroughPut(machines: MachineProductionLineDto[], lineStatus: string) {
@@ -98,60 +104,60 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
             <div className="flex flex-col items-center w-28 shrink-0 group cursor-pointer">
                 {/* Status Badge (Above Machine Icon) */}
                 <span
-                    className={`text-[9px] font-extrabold uppercase mb-3 px-2 py-0.5 rounded border leading-none ${
-                        machine.status === 'Running'
-                            ? 'text-green-700 bg-green-50 border-green-200'
-                            : machine.status === 'Warning'
-                                ? 'text-amber-700 bg-amber-50 border-amber-200'
-                                : machine.status === 'Error'
-                                    ? 'text-red-700 bg-red-50 border-red-200'
-                                    : 'text-slate-500 bg-slate-100 border-slate-200'
-                    }`}
+                    className={`text-[9px] font-extrabold uppercase mb-3 px-2 py-0.5 rounded border leading-none ${machine.status === 'Running'
+                        ? 'text-green-700 bg-green-50 border-green-200'
+                        : machine.status === 'Warning'
+                            ? 'text-amber-700 bg-amber-50 border-amber-200'
+                            : machine.status === 'Error'
+                                ? 'text-red-700 bg-red-50 border-red-200'
+                                : 'text-slate-500 bg-slate-100 border-slate-200'
+                        }`}
                 >
                     {machine.status}
                 </span>
 
-                {/* Machine Icon Card */}
-                <div
-                    className={`w-16 h-16 rounded-2xl bg-white border-2 shadow-md flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${
-                        machine.status === 'Running'
+                <Link
+                    to={`/machines/${machine.id}`}
+                    className="flex flex-col items-center w-full no-underline"
+                >
+                    {/* Machine Icon Card */}
+                    <div
+                        className={`w-16 h-16 rounded-2xl bg-white border-2 shadow-md flex items-center justify-center mb-2 transition-all group-hover:scale-105 ${machine.status === 'Running'
                             ? 'border-green-500 text-green-600 shadow-green-50'
                             : machine.status === 'Warning' || machine.status === 'Maintenance'
                                 ? 'border-amber-400 text-amber-500 ring-4 ring-amber-100'
                                 : machine.status === 'Error'
                                     ? 'border-red-500 text-red-600 ring-4 ring-red-100 bg-red-50'
                                     : 'border-slate-300 text-slate-400'
-                    }`}
-                >
-                    <MachineIcon name={machine.icon} />
-                </div>
+                            }`}
+                    >
+                        <MachineIcon name={machine.icon} />
+                    </div>
 
-                {/* Machine Name */}
-                <span className="font-bold text-xs text-slate-700 text-center leading-[16px]">
-                    {machine.name}
-                </span>
+                    {/* Machine Name */}
+                    <span className="font-bold text-xs text-slate-700 text-center leading-[16px]">
+                        {machine.name}
+                    </span>
+                </Link>
 
                 {/* Cycle Time Label */}
                 <span className="text-[10px] text-slate-400 font-mono mt-2">
                     CT: {machine.cycleTimeSeconds > 0 ? `${machine.cycleTimeSeconds}s` : 'N/A'}
                 </span>
 
-                {/* Minimalist Diamond Marker with Soft Glow Flare */}
                 <div className="mt-4 relative z-20 shrink-0">
                     <div
                         key={`diamond-${pulseKey}`}
-                        className={`w-2.5 h-2.5 rotate-45 border border-white shadow-xs shrink-0 transition-colors ${
-                            isHalted || isError
-                                ? 'bg-slate-400'
-                                : pulseKey > 0
-                                    ? 'bg-blue-600 animate-diamond-glow'
-                                    : 'bg-blue-600'
-                        }`}
+                        className={`w-2.5 h-2.5 rotate-45 border border-white shadow-xs shrink-0 transition-colors ${isHalted || isError
+                            ? 'bg-slate-400'
+                            : pulseKey > 0
+                                ? 'bg-blue-600 animate-diamond-glow'
+                                : 'bg-blue-600'
+                            }`}
                     />
                 </div>
             </div>
 
-            {/* Particle Segment connecting this Machine's diamond to the Next Machine's diamond */}
             {!isLast && (
                 <div className="flex-1 relative h-[3px] bg-blue-200 self-end mb-[3px] overflow-visible">
                     {particles.map((p) => (
@@ -169,9 +175,26 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
     );
 }
 
-export default function ProductionLineCard({ line }: ProductionLineCardProps) {
+export default function ProductionLineCard({ line, onStatusChange }: ProductionLineCardProps) {
 
     const { machines, isLoading: isLoadingMachines, error: errorMachines, refetch: reloadMachines } = useMachinesByProductionHallId(line.id)
+    const { haltLine, startLine, isActionLoading, actionError, clearStatus } = useProductionLineActions()
+
+    const handleHalt = async () => {
+        const ok = await haltLine(line.id);
+        if (ok) {
+            await reloadMachines();
+            onStatusChange?.();
+        }
+    };
+
+    const handleStart = async () => {
+        const ok = await startLine(line.id);
+        if (ok) {
+            await reloadMachines();
+            onStatusChange?.();
+        }
+    };
 
     const scrapRateStr = getScrapRate(machines, line.status);
     const scrapRateVal = parseFloat(scrapRateStr);
@@ -204,7 +227,7 @@ export default function ProductionLineCard({ line }: ProductionLineCardProps) {
                 >{/* Card Header */}
                     <div
                         className={`p-6 border-b flex flex-wrap justify-between items-center gap-4 
-                ${line.status === 'Halted' ? 'border-red-100 bg-red-50/40' : 'border-slate-100 bg-slate-50'}`}
+                        ${line.status === 'Halted' ? 'border-red-100 bg-red-50/40' : 'border-slate-100 bg-slate-50'}`}
                     >
                         <div className="flex items-center gap-4">
                             <div
@@ -253,12 +276,30 @@ export default function ProductionLineCard({ line }: ProductionLineCardProps) {
                             </div>
                             <div className="pl-4 border-l border-slate-200 flex gap-2">
                                 {line.status !== 'Halted' ? (
-                                    <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                        <Square className="w-4 h-4 fill-current" />
+                                    <button
+                                        onClick={handleHalt}
+                                        disabled={isActionLoading}
+                                        title="Halt production line"
+                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isActionLoading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                                        ) : (
+                                            <Square className="w-4 h-4 fill-current" />
+                                        )}
                                     </button>
                                 ) : (
-                                    <button className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                                        <Play className="w-4 h-4 fill-current" />
+                                    <button
+                                        onClick={handleStart}
+                                        disabled={isActionLoading}
+                                        title="Start production line"
+                                        className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isActionLoading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin text-green-500" />
+                                        ) : (
+                                            <Play className="w-4 h-4 fill-current" />
+                                        )}
                                     </button>
                                 )}
                                 <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
@@ -267,20 +308,37 @@ export default function ProductionLineCard({ line }: ProductionLineCardProps) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Action Error Banner */}
+                    {actionError && (
+                        <div className="px-6 py-2.5 bg-red-50 border-b border-red-200 text-red-700 flex items-center justify-between text-xs animate-fadeIn">
+                            <div className="flex items-center gap-2 font-medium">
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                                <span>{actionError}</span>
+                            </div>
+                            <button
+                                onClick={clearStatus}
+                                className="text-red-500 hover:text-red-800 font-bold px-1.5 py-0.5 rounded text-xs transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
+
                     {/* Pipeline Visualization Area */}
                     <div className="px-8 py-7 overflow-x-auto">
                         <div className="relative min-w-max pb-3">
                             {/* Main Conveyor Belt Background Line*/}
                             <div
                                 className={`absolute top-[72px] left-12 right-12 h-[10px] rounded-full z-0 
-                            ${line.status === 'Running'
+                                ${line.status === 'Running'
                                         ? 'bg-green-500 conveyor-belt border border-green-600'
                                         : line.status === 'Warning'
                                             ? 'bg-amber-400 conveyor-belt border border-amber-500'
                                             : 'conveyor-halted border border-red-300'
                                     }`}
                             />
-                            {/* Machines Row & Inter-Machine Cycle Flow */}
+                            {/* Machines Row and Inter-Machine Cycle Flow */}
                             <div className="relative flex items-start justify-between gap-2 z-10 px-4">
                                 {machines.map((m, id) => (
                                     <MachineFlowItem

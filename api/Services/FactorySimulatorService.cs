@@ -106,12 +106,14 @@ namespace SmartFactoryCMMS.Api.Services
                 // Check line status based on machine states
                 bool hasError = line.Machines.Any(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance);
                 bool hasWarning = line.Machines.Any(m => m.Status == MachineStatus.Warning);
+                bool hasRunning = line.Machines.Any(m => m.Status == MachineStatus.Running);
 
                 if (hasError)
                 {
                     if (line.Status != "Halted")
                     {
                         line.Status = "Halted";
+                        line.LastStatusChangedAt = DateTime.UtcNow;
                         dbChangesMade = true;
                     }
                     
@@ -125,12 +127,23 @@ namespace SmartFactoryCMMS.Api.Services
                         }
                     }
                 }
-                else if (line.Machines.Any(m => m.Status == MachineStatus.Running || m.Status == MachineStatus.Warning))
+                else if (hasRunning || hasWarning)
                 {
                     string targetStatus = hasWarning ? "Warning" : "Running";
                     if (line.Status != targetStatus)
                     {
                         line.Status = targetStatus;
+                        line.LastStatusChangedAt = DateTime.UtcNow;
+                        dbChangesMade = true;
+                    }
+                }
+                else
+                {
+                    // All machines are offline
+                    if (line.Status != "Halted")
+                    {
+                        line.Status = "Halted";
+                        line.LastStatusChangedAt = DateTime.UtcNow;
                         dbChangesMade = true;
                     }
                 }
@@ -163,7 +176,7 @@ namespace SmartFactoryCMMS.Api.Services
                 _machineTemperatures[machine.Id] = bTemp;
                 _machineVibrations[machine.Id] = bVib;
                 _isOverheating[machine.Id] = false;
-                _isOvervibrating[machine.Id] = false;
+                _isOvervibrating[machine.Id] = (machine.Status == MachineStatus.Warning);
             }
         }
 
@@ -209,22 +222,27 @@ namespace SmartFactoryCMMS.Api.Services
 
                 if (_isOvervibrating[machine.Id])
                 {
-                    currentVib += 0.5 + (_random.NextDouble() * 1.5);
+                    currentVib += 2.2 + (_random.NextDouble() * 1.0);
                 }
 
                 // Check Thresholds & Status transitions
                 if (currentTemp >= criticalTemp || currentVib >= criticalVib)
                 {
-                    machine.Status = MachineStatus.Error;
-                    _productionProgress[machine.Id] = 0;
-                    dbChangesMade = true;
-                    anyEventThisWindow = true;
+                    if (machine.Status != MachineStatus.Error)
+                    {
+                        machine.Status = MachineStatus.Error;
+                        machine.LastStatusChangedAt = DateTime.UtcNow;
+                        _productionProgress[machine.Id] = 0;
+                        dbChangesMade = true;
+                        anyEventThisWindow = true;
+                    }
                 }
                 else if (currentTemp >= warningTemp || currentVib >= warningVib)
                 {
                     if (machine.Status != MachineStatus.Warning)
                     {
                         machine.Status = MachineStatus.Warning;
+                        machine.LastStatusChangedAt = DateTime.UtcNow;
                         dbChangesMade = true;
                         anyEventThisWindow = true;
                     }
@@ -232,12 +250,14 @@ namespace SmartFactoryCMMS.Api.Services
                 else if (machine.Status == MachineStatus.Warning)
                 {
                     machine.Status = MachineStatus.Running;
+                    machine.LastStatusChangedAt = DateTime.UtcNow;
                     dbChangesMade = true;
                 }
 
                 if ((machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning) && _random.NextDouble() < failureProbability)
                 {
                     machine.Status = MachineStatus.Error;
+                    machine.LastStatusChangedAt = DateTime.UtcNow;
                     _productionProgress[machine.Id] = 0;
                     dbChangesMade = true;
                     anyEventThisWindow = true;

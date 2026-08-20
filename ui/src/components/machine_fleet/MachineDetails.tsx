@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Loader2, AlertCircle } from "lucide-react";
 import useMachineDetails from "../../hooks/useMachineDetails";
 import Header from "../layout/Header";
@@ -8,19 +8,21 @@ export default function MachineDetails() {
     const { id } = useParams<{ id: string }>();
     const { machine, isLoading, error } = useMachineDetails(id);
 
+    const navigate = useNavigate()
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             {/* Top Bar / Header */}
             <Header
                 leftContent={
                     <div className="flex items-center gap-4">
-                        <Link
-                            to="/machines"
+                        <button
+                            type="button"
+                            onClick={() => navigate(-1)}
                             className="text-slate-400 hover:text-blue-600 transition-colors"
-                            title="Back to Machine Fleet"
                         >
                             <ArrowLeft className="w-6 h-6" />
-                        </Link>
+                        </button>
                         <div>
                             <div className="text-xs text-slate-400 font-medium mb-0.5">
                                 Machine Fleet / Details

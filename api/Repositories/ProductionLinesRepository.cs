@@ -1,6 +1,8 @@
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Repositories;
+using SmartFactoryCMMS.Api.Helpers;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
@@ -41,6 +43,72 @@ namespace SmartFactoryCMMS.Api.Repositories
                 .ToListAsync(ct);
 
             return productionLines;
+        }
+
+        public async Task<bool> StopProductionLineAsync(Guid id, CancellationToken ct = default)
+        {
+            var line = await _context.ProductionLines
+                .Include(p => p.Machines)
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
+
+            if (line == null) return false;
+
+            var now = DateTime.UtcNow;
+            line.Status = "Halted";
+            line.LastStatusChangedAt = now;
+
+            foreach (var machine in line.Machines)
+            {
+                if (machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning)
+                {
+                    machine.Status = MachineStatus.Offline;
+                    machine.LastStatusChangedAt = now;
+                }
+            }
+
+            await _context.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<(bool Success, string Message, ProductionLineDto? Line)> StartProductionLineAsync(Guid id, CancellationToken ct = default)
+        {
+            var line = await _context.ProductionLines
+                .Include(p => p.Machines)
+                .FirstOrDefaultAsync(p => p.Id == id, ct);
+
+            if (line == null)
+            {
+                return (false, $"Production line {id} not found.", null);
+            }
+
+            if (!line.Machines.Any())
+            {
+                return (false, $"No machines assigned to production line '{line.Name}'.", null);
+            }
+
+            var faultedMachine = line.Machines.FirstOrDefault(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance);
+            if (faultedMachine != null)
+            {
+                return (false, $"Cannot start production line: Machine '{faultedMachine.Name}' is in {faultedMachine.Status} state. Resolve the machine issue first.", null);
+            }
+
+            var now = DateTime.UtcNow;
+            line.Status = "Running";
+            line.LastStatusChangedAt = now;
+
+            foreach (var machine in line.Machines)
+            {
+                if (machine.Status == MachineStatus.Offline)
+                {
+                    machine.Status = MachineStatus.Running;
+                    machine.LastStatusChangedAt = now;
+                }
+            }
+
+            await _context.SaveChangesAsync(ct);
+
+            var dto = _mapper.Map<ProductionLineDto>(line);
+            return (true, $"Production line '{line.Name}' started successfully.", dto);
         }
     }
 }

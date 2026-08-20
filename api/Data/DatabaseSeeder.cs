@@ -76,29 +76,17 @@ namespace SmartFactoryCMMS.Api.Data
             shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
             shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
 
-            // 4. Clean re-seed check: if legacy data, missing TotalProduced, or missing line LastStatusChangedAt, refresh demo data
-            bool needsReseed = context.Machines.Any(m => m.Icon != null && m.Icon.StartsWith("fa-") && m.Icon != "fa-cogs")
-                               || context.Machines.Any(m => m.ProductionLineId.HasValue && m.TotalProduced == 0)
-                               || context.ProductionLines.Any(pl => pl.LastStatusChangedAt == null);
-
-            if (needsReseed)
-            {
-                context.AlertThresholds.RemoveRange(context.AlertThresholds);
-                context.Incidents.RemoveRange(context.Incidents);
-                context.TelemetryRead.RemoveRange(context.TelemetryRead);
-                context.WorkOrders.RemoveRange(context.WorkOrders);
-                context.ProductionLogs.RemoveRange(context.ProductionLogs);
-                context.Machines.RemoveRange(context.Machines);
-                context.ProductionLines.RemoveRange(context.ProductionLines);
-                context.Products.RemoveRange(context.Products);
-                context.FactoryHalls.RemoveRange(context.FactoryHalls);
-                context.SaveChanges();
-            }
-
-            if (context.Machines.Any())
-            {
-                return;
-            }
+            // 4. Clean re-seed: wipe demo factory data so fresh initial states (L1 Running, L2 Warning with MC-12, L3 Halted) are restored
+            context.AlertThresholds.RemoveRange(context.AlertThresholds);
+            context.Incidents.RemoveRange(context.Incidents);
+            context.TelemetryRead.RemoveRange(context.TelemetryRead);
+            context.WorkOrders.RemoveRange(context.WorkOrders);
+            context.ProductionLogs.RemoveRange(context.ProductionLogs);
+            context.Machines.RemoveRange(context.Machines);
+            context.ProductionLines.RemoveRange(context.ProductionLines);
+            context.Products.RemoveRange(context.Products);
+            context.FactoryHalls.RemoveRange(context.FactoryHalls);
+            context.SaveChanges();
 
             // 5. Products
             var productBattery = new Product

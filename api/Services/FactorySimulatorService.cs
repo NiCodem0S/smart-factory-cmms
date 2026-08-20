@@ -139,8 +139,8 @@ namespace SmartFactoryCMMS.Api.Services
                 }
                 else
                 {
-                    // All machines are offline
-                    if (line.Status != "Halted")
+                    // All machines are offline (only if line has machines)
+                    if (line.Machines.Any() && line.Status != "Halted")
                     {
                         line.Status = "Halted";
                         line.LastStatusChangedAt = DateTime.UtcNow;

@@ -27,6 +27,18 @@ namespace SmartFactoryCMMS.Api.Controllers
             return Ok(productionLines);
         }
 
+        [HttpPost]
+        public async Task<ActionResult<ProductionLineDto>> CreateProductionLine([FromBody] CreateProductionLineDto dto, CancellationToken ct = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var created = await _productionLinesRepo.CreateProductionLineAsync(dto, ct);
+            return Ok(created);
+        }
+
         [HttpGet("{id}/machines")]
         public async Task<ActionResult<List<MachineProductionLineDto>>> GetProductionLineMachines(Guid id, CancellationToken ct = default)
         {

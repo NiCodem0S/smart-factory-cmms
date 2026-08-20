@@ -16,7 +16,8 @@ function formatUpTime(dateStr: string | null | undefined, status: string) {
         return ' --- ';
     }
 
-    const diffMs = Math.max(0, Date.now() - new Date(dateStr).getTime());
+    const normalizedDateStr = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : `${dateStr}Z`;
+    const diffMs = Math.max(0, Date.now() - new Date(normalizedDateStr).getTime());
     const minutes = Math.floor(diffMs / (1000 * 60));
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
@@ -24,7 +25,7 @@ function formatUpTime(dateStr: string | null | undefined, status: string) {
 
     return minutes >= 60
         ? (days > 0 ? `${days}d ${remHours}h` : `${hours}h`)
-        : (minutes === 0 ? '0' : `${minutes} minutes`);
+        : (minutes === 0 ? '0 minutes' : `${minutes} minutes`);
 }
 
 function getThroughPut(machines: MachineProductionLineDto[], lineStatus: string) {
@@ -327,29 +328,38 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
 
                     {/* Pipeline Visualization Area */}
                     <div className="px-8 py-7 overflow-x-auto">
-                        <div className="relative min-w-max pb-3">
-                            {/* Main Conveyor Belt Background Line*/}
-                            <div
-                                className={`absolute top-[72px] left-12 right-12 h-[10px] rounded-full z-0 
-                                ${line.status === 'Running'
-                                        ? 'bg-green-500 conveyor-belt border border-green-600'
-                                        : line.status === 'Warning'
-                                            ? 'bg-amber-400 conveyor-belt border border-amber-500'
-                                            : 'conveyor-halted border border-red-300'
-                                    }`}
-                            />
-                            {/* Machines Row and Inter-Machine Cycle Flow */}
-                            <div className="relative flex items-start justify-between gap-2 z-10 px-4">
-                                {machines.map((m, id) => (
-                                    <MachineFlowItem
-                                        key={m.id}
-                                        machine={m}
-                                        isLast={id === machines.length - 1}
-                                        lineStatus={line.status}
-                                    />
-                                ))}
+                        {machines.length > 0 ? (
+                            <div className="relative min-w-max pb-3">
+                                {/* Main Conveyor Belt Background Line*/}
+                                <div
+                                    className={`absolute top-[72px] left-12 right-12 h-[10px] rounded-full z-0 
+                                    ${line.status === 'Running'
+                                            ? 'bg-green-500 conveyor-belt border border-green-600'
+                                            : line.status === 'Warning'
+                                                ? 'bg-amber-400 conveyor-belt border border-amber-500'
+                                                : 'conveyor-halted border border-red-300'
+                                        }`}
+                                />
+                                {/* Machines Row and Inter-Machine Cycle Flow */}
+                                <div className="relative flex items-start justify-between gap-2 z-10 px-4">
+                                    {machines.map((m, id) => (
+                                        <MachineFlowItem
+                                            key={m.id}
+                                            machine={m}
+                                            isLast={id === machines.length - 1}
+                                            lineStatus={line.status}
+                                        />
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="py-8 px-4 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-center bg-slate-50/50">
+                                <p className="text-sm font-semibold text-slate-700">No machines assigned to this line</p>
+                                <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                                    Assign machines to this production line in the Machine Fleet tab or create new machines.
+                                </p>
+                            </div>
+                        )}
                     </div>
                     {/* Keyframes for Particle Travel, Conveyor Belt & Diamond Port Glow Animations */}
                     <style dangerouslySetInnerHTML={{

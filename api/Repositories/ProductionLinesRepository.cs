@@ -45,6 +45,24 @@ namespace SmartFactoryCMMS.Api.Repositories
             return productionLines;
         }
 
+        public async Task<ProductionLineDto> CreateProductionLineAsync(CreateProductionLineDto dto, CancellationToken ct = default)
+        {
+            var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(dto.FactoryHallId, ct);
+            if (hall == null)
+            {
+                throw new KeyNotFoundException($"Factory hall with ID {dto.FactoryHallId} does not exist.");
+            }
+
+            var line = _mapper.Map<ProductionLine>(dto);
+            line.Id = Guid.NewGuid();
+            line.LastStatusChangedAt = DateTime.UtcNow;
+
+            _context.ProductionLines.Add(line);
+            await _context.SaveChangesAsync(ct);
+
+            return _mapper.Map<ProductionLineDto>(line);
+        }
+
         public async Task<bool> StopProductionLineAsync(Guid id, CancellationToken ct = default)
         {
             var line = await _context.ProductionLines

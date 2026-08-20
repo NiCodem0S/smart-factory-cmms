@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { ProductionLineDto } from '../types/production'
+import { CreateProductionLineDto, ProductionLineDto } from '../types/production'
 
 export async function fetchLinesByHallId(
     factoryHallId?: string | null,
@@ -29,6 +29,17 @@ export async function startLineById(
     signal?: AbortSignal
 ): Promise<{ message: string; line?: ProductionLineDto }> {
     const response = await apiClient.post<{ message: string; line?: ProductionLineDto }>(`/ProductionLines/${lineId}/start`, null, {
+        signal
+    })
+
+    return response.data
+}
+
+export async function createProductionLine(
+    data: CreateProductionLineDto,
+    signal?: AbortSignal
+): Promise<ProductionLineDto> {
+    const response = await apiClient.post<ProductionLineDto>(`/ProductionLines`, data, {
         signal
     })
 

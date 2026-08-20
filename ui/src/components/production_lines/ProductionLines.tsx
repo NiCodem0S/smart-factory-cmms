@@ -4,13 +4,14 @@ import useProductionLinesByHallsId from "../../hooks/useProductionLines";
 import { useFactory } from "../../context/FactoryContext";
 import { AlertCircle, CheckCircle, Loader2, Plus } from "lucide-react";
 import ProductionLineCard from "./ProductionLineCard";
+import AddProductionLineModal from "./AddProductionLineModal";
 
 export default function ProductionLines() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const { selectedHallId } = useFactory();
-    const { lines, isLoading, error, refetch } = useProductionLinesByHallsId(selectedHallId)
+    const { lines, isLoading, error, refetch } = useProductionLinesByHallsId(selectedHallId);
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -69,7 +70,17 @@ export default function ProductionLines() {
                     ))
                 )}
             </div>
-        </div>
-    )
 
+            {/* Add Production Line Modal */}
+            <AddProductionLineModal
+                isOpen={isModalOpen}
+                initialHallId={selectedHallId}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={() => {
+                    refetch();
+                    setSuccessMessage("Production line created successfully!");
+                }}
+            />
+        </div>
+    );
 }

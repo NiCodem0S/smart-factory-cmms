@@ -28,6 +28,8 @@ export interface MachineDetailDto {
 	isActive: boolean
 	totalOperatingHours: number
 	lastStatusChangedAt: string | null
+	factoryHallId: string;
+	productionLineId: string | null;
 
 	// Production Tracking
 	icon: string
@@ -41,6 +43,7 @@ export interface MachineDetailDto {
 	latestTelemetry: TelemetryReadDto[]
 	recentIncidents: IncidentDto[]
 	activeAlerts: AlertDto[]
+	alertThresholds: AlertThresholdsDto[];
 }
 
 export interface MachineProductionLineDto {
@@ -140,4 +143,5 @@ export interface UpdateMachineDto {
 	normTemp: number
 	baseVib: number
 	normPower: number
+	alertThresholds?: CreateAlertThresholdsDto[];
 }

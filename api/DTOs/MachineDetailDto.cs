@@ -14,6 +14,8 @@ namespace SmartFactoryCMMS.Api.DTOs
         public bool IsActive { get; set; }
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
+        public Guid FactoryHallId { get; set; }
+        public Guid? ProductionLineId { get; set; }
 
         // Production Tracking
         public string? Icon { get; set; } = "PrecisionManufacturing"; // Default icon
@@ -27,5 +29,6 @@ namespace SmartFactoryCMMS.Api.DTOs
         public List<TelemetryReadDto> LatestTelemetry { get; set; } = new List<TelemetryReadDto>();  // Last 10
         public List<IncidentDto> RecentIncidents { get; set; } = new List<IncidentDto>();  // Last 5
         public List<AlertDto> ActiveAlerts { get; set; } = new List<AlertDto>();  // Active only
+        public List<CreateAlertThresholdDto> AlertThresholds { get; set; } = new();
     }
 }

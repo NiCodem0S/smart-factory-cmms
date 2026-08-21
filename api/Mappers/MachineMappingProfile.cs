@@ -43,7 +43,7 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom(src =>
                     string.IsNullOrEmpty(src.Icon) ? "PrecisionManufacturing" : src.Icon));
             
-            CreateMap<CreateAlertThresholdDto, AlertThreshold>();
+            CreateMap<CreateAlertThresholdDto, AlertThreshold>().ReverseMap();
             // TelemetryRead → TelemetryReadDto
             CreateMap<TelemetryRead, TelemetryReadDto>();
 

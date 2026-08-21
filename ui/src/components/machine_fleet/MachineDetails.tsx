@@ -1,14 +1,82 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, AlertCircle, ListTodo, Plus, SquarePen, CheckCircle } from "lucide-react";
 import useMachineDetails from "../../hooks/useMachineDetails";
 import Header from "../layout/Header";
 import StatusBadge from "../common/StatusBadge";
+import { MachineDetailDto } from "../../types/machine";
+import { useMemo, useState } from "react";
+import AddMachineModal from "./AddMachineModal";
+
+const PROPERTY_UNITS: Record<string, string> = {
+    NormTemp: '°C',
+    BaseVib: 'mm/s',
+    NormPower: 'kW',
+};
+
+function getPropertyUnit(key: string): string {
+    return PROPERTY_UNITS[key] || '';
+}
+
+function formatUpTime(dateStr: string | null | undefined, status: string) {
+    if (!dateStr || (status !== 'Running' && status !== 'Warning')) {
+        return ' --- ';
+    }
+
+    const normalizedDateStr = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : `${dateStr}Z`;
+    const diffMs = Math.max(0, Date.now() - new Date(normalizedDateStr).getTime());
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+
+    return minutes >= 60
+        ? (days > 0 ? `${days}d ${remHours}h` : `${hours}h`)
+        : (minutes === 0 ? '0 minutes' : `${minutes} minutes`);
+}
+
+function getScrapRate(machine: MachineDetailDto) {
+
+    const jitter = ((machine.totalProduced % 7) * 0.08);
+
+    if (machine.status === 'Error') {
+        const rate = (4.2 + jitter).toFixed(1);
+        return `${rate}%`;
+    }
+    if (machine.status === 'Warning') {
+        const rate = (2.3 + jitter).toFixed(1);
+        return `${rate}%`;
+    }
+    const rate = (0.6 + jitter).toFixed(1);
+
+    return `${rate}%`;
+}
+
+
 
 export default function MachineDetails() {
     const { id } = useParams<{ id: string }>();
-    const { machine, isLoading, error } = useMachineDetails(id);
+    const { machine, isLoading, error, refetch } = useMachineDetails(id);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const parsedProperties = useMemo(() => {
+        if (!machine?.staticProperties) return {}
+        try {
+            return JSON.parse(machine.staticProperties) as Record<string, any>
+        } catch (e) {
+            console.error("Failed to parse staticPropeties JSON:", e)
+            return {};
+        }
+    }, [machine?.staticProperties])
 
     const navigate = useNavigate()
+
+    const handleSuccess = () => {
+        refetch();
+        setSuccessMessage("Machine updated successfully!");
+        setTimeout(() => {
+            setSuccessMessage(null);
+        }, 4000);
+    };
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -40,15 +108,41 @@ export default function MachineDetails() {
                     </div>
                 }
                 rightContent={
-                    <button className="flex items-center px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm gap-2">
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        <span>Export PDF</span>
-                    </button>
+                    <>
+                        <button className="flex items-center px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm gap-2">
+                            <FileText className="w-4 h-4 text-slate-500" />
+                            <span>Export PDF</span>
+                        </button>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                        >
+                            <SquarePen className="w-4 h-4" />
+                            <span>Edit Machine</span>
+                        </button>
+                    </>
+
                 }
             />
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+                {/* Success Banner */}
+                {successMessage && (
+                    <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2 font-semibold text-sm">
+                            <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                            <span>{successMessage}</span>
+                        </div>
+                        <button
+                            onClick={() => setSuccessMessage(null)}
+                            className="text-green-700 hover:text-green-900 font-bold text-sm px-2 py-1 rounded"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 {isLoading && (
                     <div className="flex items-center justify-center py-20 text-slate-500 gap-3">
                         <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
@@ -189,12 +283,12 @@ export default function MachineDetails() {
                                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Production KPIs</h2>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">Operating Hours</span>
-                                            <span className="text-sm font-bold text-slate-800 font-mono">{machine.totalOperatingHours.toFixed(1)} h</span>
+                                            <span className="text-sm font-medium text-slate-600">Continuous Operation</span>
+                                            <span className="text-sm font-bold text-slate-800 font-mono">{formatUpTime(machine.lastStatusChangedAt, machine.status)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm font-medium text-slate-600">Cycle Time</span>
-                                            <span className="text-sm font-bold text-slate-800 font-mono">4.2s</span>
+                                            <span className="text-sm font-bold text-slate-800 font-mono">{machine.cycleTimeSeconds}s</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm font-medium text-slate-600">MTBF <span className="text-[10px] text-slate-400 font-normal ml-1">(Mean Time Btw Failures)</span></span>
@@ -202,11 +296,15 @@ export default function MachineDetails() {
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm font-medium text-slate-600">Scrap Rate</span>
-                                            <span className="text-sm font-bold text-red-500 font-mono">1.2%</span>
+                                            <span className="text-sm font-bold text-red-500 font-mono">{getScrapRate(machine)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm font-medium text-slate-600">Total Operating Hours</span>
+                                            <span className="text-sm font-bold text-slate-800 font-mono">{machine.totalOperatingHours}</span>
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t border-slate-50">
-                                            <span className="text-sm font-medium text-slate-600">Total Produced (24h)</span>
-                                            <span className="text-sm font-bold text-indigo-600 font-mono">3,450</span>
+                                            <span className="text-sm font-medium text-slate-600">Total Produced <span className="text-[10px] text-slate-400 font-normal ml-1">(Since last interruption)</span></span>
+                                            <span className="text-sm font-bold text-indigo-600 font-mono">{machine.totalProduced}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -214,7 +312,7 @@ export default function MachineDetails() {
                                 <div className="bg-slate-900 rounded-xl shadow-sm p-6 text-slate-300">
                                     <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
                                         <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center">
-                                            <span className="mr-2">⚡</span> Specific Properties
+                                            <span className="mr-2"><ListTodo className="w-5 h-5 text-amber-500" /></span> Specific Properties
                                         </h2>
                                         <span className="text-[10px] font-mono bg-slate-800 px-2 py-1 rounded text-slate-400">JSON</span>
                                     </div>
@@ -223,19 +321,24 @@ export default function MachineDetails() {
                                             <span className="text-slate-400">Category</span>
                                             <span className="font-mono font-bold text-white">{machine.category}</span>
                                         </div>
-                                        {/* TODO: Add dynamically parsed JSON properties here */}
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-slate-400">Joint Angle</span>
-                                            <span className="font-mono font-bold text-white text-base">112°</span>
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-slate-400">Current Task</span>
-                                            <span className="font-mono font-bold text-blue-400">WELDING_SEQ_4</span>
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-slate-400">Firmware Ver.</span>
-                                            <span className="font-mono font-bold text-white">v2.4.1</span>
-                                        </div>
+                                        {Object.keys(parsedProperties).length === 0 ? (
+                                            <div className="text-xs text-slate-500 italic py-1">No additional properties</div>
+                                        ) : (
+                                            Object.entries(parsedProperties).map(([key, value]) => (
+
+                                                <div key={key} className="flex justify-between items-end">
+                                                    <span className="text-slate-400">{key}</span>
+                                                    <span className="font-mono font-bold text-white text-base">
+                                                        {value}
+                                                        {getPropertyUnit(key) && (
+                                                            <span className="text-slate-400 text-s ml-1.5 font-normal">
+                                                                {getPropertyUnit(key)}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
 
@@ -282,6 +385,12 @@ export default function MachineDetails() {
                     </div>
                 )}
             </div>
+            <AddMachineModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handleSuccess}
+                initialData={machine}
+            />
         </div>
     );
 }

@@ -1,18 +1,20 @@
 import ReactDOM from "react-dom";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { CreateAlertThresholdsDto, CreateMachineDto } from "../../types/machine";
+import { CreateAlertThresholdsDto, CreateMachineDto, MachineDetailDto, UpdateMachineDto } from "../../types/machine";
 import useCreateMachine from "../../hooks/useCreateMachine";
 import { useMachinesByProductionHallId } from "../../hooks/useProductionLines";
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useFactoryHalls } from "../../hooks/useFactoryHalls";
 import useProductionLinesByHallsId from "../../hooks/useProductionLines";
 import { AVAILABLE_ICONS } from "../common/MachineIcon";
+import { updateMachine } from "../../services/machineService";
 
 interface AddMachineModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess?: () => void;
+    initialData?: MachineDetailDto | null;
 }
 
 interface FormValues extends Omit<CreateMachineDto, "alertThresholds"> {
@@ -22,8 +24,28 @@ interface FormValues extends Omit<CreateMachineDto, "alertThresholds"> {
     vibCritical: number;
 }
 
-export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachineModalProps) {
-    if (!isOpen) return null;
+const DEFAULT_FORM_VALUES: FormValues = {
+    name: "",
+    category: "",
+    serialNumber: "",
+    cycleTimeSeconds: 5.0,
+    orderInLine: 0,
+    normTemp: 60.0,
+    baseVib: 1.0,
+    normPower: 15.0,
+    status: "Offline",
+    factoryHallId: "",
+    productionLineId: null,
+    icon: "PrecisionManufacturing",
+    tempWarning: 75.0,
+    tempCritical: 90.0,
+    vibWarning: 4.0,
+    vibCritical: 6.0,
+}
+
+export default function AddMachineModal({ isOpen, onClose, onSuccess, initialData }: AddMachineModalProps) {
+
+    const isEditMode = Boolean(initialData);
 
     const {
         register,
@@ -33,21 +55,46 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
         setValue,
         formState: { errors },
     } = useForm<FormValues>({
-        defaultValues: {
-            cycleTimeSeconds: 5.0,
-            orderInLine: 0,
-            normTemp: 60.0,
-            baseVib: 1.0,
-            normPower: 15.0,
-            status: "Offline",
-            factoryHallId: "",
-            icon: "PrecisionManufacturing",
-            tempWarning: 75.0,
-            tempCritical: 90.0,
-            vibWarning: 4.0,
-            vibCritical: 6.0
-        }
+        defaultValues: DEFAULT_FORM_VALUES
     });
+
+    useEffect(() => {
+        if (!isOpen) return;
+        if (initialData) {
+            let staticProps: any = {};
+            try {
+                if (initialData.staticProperties) {
+                    staticProps = JSON.parse(initialData.staticProperties);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            const tempThresh = initialData.alertThresholds?.find(t => t.metricType === "Temperature");
+            const vibThresh = initialData.alertThresholds?.find(t => t.metricType === "Vibration");
+
+            reset({
+                name: initialData.name,
+                category: initialData.category,
+                serialNumber: initialData.serialNumber,
+                status: initialData.status,
+                cycleTimeSeconds: initialData.cycleTimeSeconds,
+                orderInLine: initialData.orderInLine,
+                icon: initialData.icon || "PrecisionManufacturing",
+                factoryHallId: (initialData as any).factoryHallId || "",
+                productionLineId: (initialData as any).productionLineId || null,
+                normTemp: staticProps.NormTemp ?? DEFAULT_FORM_VALUES.normTemp,
+                baseVib: staticProps.BaseVib ?? DEFAULT_FORM_VALUES.baseVib,
+                normPower: staticProps.NormPower ?? DEFAULT_FORM_VALUES.normPower,
+                tempWarning: tempThresh ? tempThresh.warningValue : DEFAULT_FORM_VALUES.tempWarning,
+                tempCritical: tempThresh ? tempThresh.criticalValue : DEFAULT_FORM_VALUES.tempCritical,
+                vibWarning: vibThresh ? vibThresh.warningValue : DEFAULT_FORM_VALUES.vibWarning,
+                vibCritical: vibThresh ? vibThresh.criticalValue : DEFAULT_FORM_VALUES.vibCritical,
+            });
+        } else {
+            reset(DEFAULT_FORM_VALUES);
+        }
+    }, [isOpen, initialData, reset]);
 
 
     const selectedHallId = watch("factoryHallId");
@@ -69,22 +116,42 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
             const alertThresholdsDtos: CreateAlertThresholdsDto[] = [
                 { metricType: "Temperature", warningValue: Number(formData.tempWarning), criticalValue: Number(formData.tempCritical) },
                 { metricType: "Vibration", warningValue: Number(formData.vibWarning), criticalValue: Number(formData.vibCritical) }
-            ]
-
-            const dto: CreateMachineDto = {
-                ...formData,
-                productionLineId: formData.productionLineId || null,
-                alertThresholds: alertThresholdsDtos
-            };
-
-            await execute(dto);
+            ];
+            if (isEditMode && initialData) {
+                const updateDto: UpdateMachineDto = {
+                    name: formData.name.trim(),
+                    category: formData.category,
+                    serialNumber: formData.serialNumber || null,
+                    status: formData.status,
+                    cycleTimeSeconds: Number(formData.cycleTimeSeconds),
+                    orderInLine: Number(formData.orderInLine),
+                    icon: formData.icon,
+                    factoryHallId: formData.factoryHallId,
+                    productionLineId: formData.productionLineId || null,
+                    normTemp: Number(formData.normTemp),
+                    baseVib: Number(formData.baseVib),
+                    normPower: Number(formData.normPower),
+                    alertThresholds: alertThresholdsDtos
+                };
+                await updateMachine(initialData.id, updateDto);
+            } else {
+                const createDto: CreateMachineDto = {
+                    ...formData,
+                    productionLineId: formData.productionLineId || null,
+                    alertThresholds: alertThresholdsDtos
+                };
+                await execute(createDto);
+            }
             reset();
             onSuccess?.();
             onClose();
         } catch (err) {
-            console.error(err);
+            console.error("Failed to save machine:", err);
         }
     };
+
+
+    if (!isOpen) return null;
 
     return ReactDOM.createPortal(
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -416,7 +483,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess }: AddMachi
                             disabled={isCreating}
                             className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-xs"
                         >
-                            {isCreating ? "Saving..." : "Add Machine"}
+                            {isCreating ? "Saving..." : "Save"}
                         </button>
                     </div>
                 </form>

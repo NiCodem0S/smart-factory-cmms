@@ -117,7 +117,9 @@ namespace SmartFactoryCMMS.Api.Repositories
 
         public async Task<Machine?> UpdateMachineAsync(Guid id, UpdateMachineDto dto)
         {
-            var machine = await _context.Machines.FirstOrDefaultAsync(m => m.IsActive && m.Id == id);
+            var machine = await _context.Machines
+                .Include(m => m.AlertThresholds)
+                .FirstOrDefaultAsync(m => m.IsActive && m.Id == id);
 
             if (machine == null) return null;
 
@@ -127,6 +129,26 @@ namespace SmartFactoryCMMS.Api.Repositories
             }
 
             _mapper.Map(dto, machine);
+
+            foreach (var thresholdDto in dto.AlertThresholds)
+            {
+                var existing = machine.AlertThresholds.FirstOrDefault(t => t.MetricType == thresholdDto.MetricType);
+                if (existing != null)
+                {
+                    existing.WarningValue = thresholdDto.WarningValue;
+                    existing.CriticalValue = thresholdDto.CriticalValue;
+                }
+                else
+                {
+                    machine.AlertThresholds.Add(new AlertThreshold
+                    {
+                        MetricType = thresholdDto.MetricType,
+                        WarningValue = thresholdDto.WarningValue,
+                        CriticalValue = thresholdDto.CriticalValue,
+                        MachineId = machine.Id
+                    });
+                }
+            }
 
             try
             {

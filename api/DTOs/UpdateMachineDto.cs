@@ -35,5 +35,7 @@ namespace SmartFactoryCMMS.Api.DTOs
         public double BaseVib { get; set; } = 1.0;
 
         public double NormPower { get; set; } = 15.0;
+
+        public List<CreateAlertThresholdDto> AlertThresholds { get; set; } = new();
     }
 }

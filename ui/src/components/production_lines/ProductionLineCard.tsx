@@ -190,6 +190,7 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
     };
 
     const handleStart = async () => {
+
         const ok = await startLine(line.id);
         if (ok) {
             await reloadMachines();

@@ -55,7 +55,6 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             var line = _mapper.Map<ProductionLine>(dto);
             line.Id = Guid.NewGuid();
-            line.LastStatusChangedAt = DateTime.UtcNow;
 
             _context.ProductionLines.Add(line);
             await _context.SaveChangesAsync(ct);
@@ -73,14 +72,12 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             var now = DateTime.UtcNow;
             line.Status = "Halted";
-            line.LastStatusChangedAt = now;
 
             foreach (var machine in line.Machines)
             {
                 if (machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning)
                 {
                     machine.Status = MachineStatus.Offline;
-                    machine.LastStatusChangedAt = now;
                 }
             }
 
@@ -112,14 +109,12 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             var now = DateTime.UtcNow;
             line.Status = "Running";
-            line.LastStatusChangedAt = now;
 
             foreach (var machine in line.Machines)
             {
                 if (machine.Status == MachineStatus.Offline)
                 {
                     machine.Status = MachineStatus.Running;
-                    machine.LastStatusChangedAt = now;
                 }
             }
 

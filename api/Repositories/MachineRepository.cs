@@ -123,11 +123,6 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             if (machine == null) return null;
 
-            if (machine.Status != dto.Status)
-            {
-                machine.LastStatusChangedAt = DateTime.UtcNow;
-            }
-
             _mapper.Map(dto, machine);
 
             foreach (var thresholdDto in dto.AlertThresholds)

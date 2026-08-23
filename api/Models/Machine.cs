@@ -8,7 +8,24 @@ namespace SmartFactoryCMMS.Api.Models
         public string Name { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string? SerialNumber { get; set; }
-        public MachineStatus Status { get; set; } = MachineStatus.Offline;
+        private MachineStatus _status = MachineStatus.Offline;
+        public MachineStatus Status 
+        { 
+            get => _status; 
+            set
+            {
+                if(_status != value)
+                {
+                    if ((_status == MachineStatus.Running || _status == MachineStatus.Warning) && LastStatusChangedAt.HasValue)
+                    {
+                        TotalOperatingHours += (DateTime.UtcNow - LastStatusChangedAt.Value).TotalHours;
+                    }
+                    _status = value;
+                    LastStatusChangedAt = DateTime.UtcNow;
+                }
+            }
+
+        }
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; } // JSON
         public bool IsActive { get; set; } = true;

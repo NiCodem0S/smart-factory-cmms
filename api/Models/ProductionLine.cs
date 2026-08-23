@@ -12,7 +12,17 @@ namespace SmartFactoryCMMS.Api.Models
 
         [Required]
         [MaxLength(50)]
-        public string Status { get; set; } = "Running"; // e.g. "Running", "Halted", "Maintenance"
+        private string _status = "Offline"  // e.g. "Running", "vzHalted", "Maintenance", "Warning"
+        public string Status 
+        { 
+            get => _status; 
+            set
+            {
+                _status = value;
+                LastStatusChangedAt = DateTime.UtcNow;
+            }
+        } 
+        
         public int? OrderInHall { get; set; }
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
 

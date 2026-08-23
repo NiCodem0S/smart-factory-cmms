@@ -50,6 +50,7 @@ namespace SmartFactoryCMMS.Api.Controllers
         public async Task<IActionResult> StopProductionLine(Guid id, CancellationToken ct = default)
         {
             var stopped = await _productionLinesRepo.StopProductionLineAsync(id, ct);
+            await Task.Delay(400);
             if (!stopped) return NotFound(new { message = $"Production line {id} not found." });
 
             return Ok(new { message = "Production line halted successfully." });
@@ -59,6 +60,8 @@ namespace SmartFactoryCMMS.Api.Controllers
         public async Task<IActionResult> StartProductionLine(Guid id, CancellationToken ct = default)
         {
             var result = await _productionLinesRepo.StartProductionLineAsync(id, ct);
+
+            await Task.Delay(1000);
 
             if (!result.Success)
             {

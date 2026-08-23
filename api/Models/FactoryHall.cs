@@ -12,5 +12,6 @@ namespace SmartFactoryCMMS.Api.Models
 
         public ICollection<ProductionLine> ProductionLines { get; set; } = new List<ProductionLine>();
         public ICollection<Machine> Machines { get; set; } = new List<Machine>();
+        public ICollection<User> AssignedUsers { get; set; } = new List<User>();
     }
 }

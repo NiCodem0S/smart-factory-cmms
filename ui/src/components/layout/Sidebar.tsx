@@ -1,5 +1,6 @@
-import { X, LayoutDashboard, Factory, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings } from 'lucide-react'
+import { X, LayoutDashboard, Factory, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings, LogOut } from 'lucide-react'
 import { NavLink, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 interface SidebarProps {
     isOpen: boolean;
@@ -7,6 +8,24 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+    const { user, logout } = useAuth();
+
+    const getInitials = (name: string) => {
+        if (!name) return 'U';
+        const parts = name.trim().split(' ');
+        if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+        return name.slice(0, 2).toUpperCase();
+    };
+
+    const formatRoleLabel = (role?: string) => {
+        switch (role) {
+            case 'SuperAdmin': return 'Super Admin';
+            case 'HallAdmin': return 'Hall Admin';
+            case 'Technician': return 'Technician';
+            default: return role || 'User';
+        }
+    };
+
     return (
         <>
             {isOpen && (
@@ -111,15 +130,29 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </a>
                 </nav>
 
-                {/* User Profile Footer */}
-                <div className="p-4 bg-slate-950 border-t border-slate-800 text-sm shrink-0">
-                    <div className="text-slate-500 text-xs mb-1">Logged in as:</div>
-                    <div className="font-bold text-white flex items-center">
-                        <div className="w-6 h-6 rounded-full bg-blue-600 text-center leading-6 text-xs mr-2 text-white font-bold">
-                            JD
+                {/* User Profile Footer & Logout */}
+                <div className="p-3.5 bg-slate-950 border-t border-slate-800 text-sm shrink-0 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-xs text-blue-400 font-bold shrink-0">
+                            {getInitials(user?.fullName || '')}
                         </div>
-                        <span className="text-xs">John Doe (Admin)</span>
+                        <div className="min-w-0">
+                            <div className="font-semibold text-white text-xs truncate">
+                                {user?.fullName || 'Guest User'}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-normal truncate mt-0.5">
+                                ({formatRoleLabel(user?.role)})
+                            </div>
+                        </div>
                     </div>
+
+                    <button
+                        onClick={logout}
+                        title="Sign Out"
+                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-900 rounded-lg transition-colors shrink-0"
+                    >
+                        <LogOut className="w-4 h-4" />
+                    </button>
                 </div>
             </aside>
         </>

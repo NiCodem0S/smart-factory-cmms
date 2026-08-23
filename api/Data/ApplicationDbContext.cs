@@ -40,7 +40,17 @@ namespace SmartFactoryCMMS.Api.Data
             .WithMany(fh => fh.Machines)
             .HasForeignKey(m => m.FactoryHallId)
             .OnDelete(DeleteBehavior.Restrict); // Nie usuwaj maszyn jak usuniesz hale
-}
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.Role)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.FactoryHall)
+            .WithMany(fh => fh.AssignedUsers)
+            .HasForeignKey(u => u.FactoryHallId)
+            .OnDelete(DeleteBehavior.SetNull); // Ustaw pole FactoryHallId uzytkownikow na Null
+        }
 
         public DbSet<FactoryHall> FactoryHalls { get; set; }
         public DbSet<Machine> Machines { get; set; }

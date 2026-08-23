@@ -115,5 +115,6 @@ namespace SmartFactoryCMMS.Api.Controllers
             var telemetryReads = await _machineRepository.GetMachineTelemetryAsync(id, limit);
             return Ok(telemetryReads);
         }
+
     }
 }

@@ -8,9 +8,10 @@ interface HeaderProps {
     leftContent?: ReactNode;
     rightContent?: ReactNode;
     children?: ReactNode;
+    showHallSelector?: boolean;
 }
 
-export default function Header({ onMenuClick, leftContent, rightContent, children }: HeaderProps) {
+export default function Header({ onMenuClick, leftContent, rightContent, children, showHallSelector = true }: HeaderProps) {
     const { selectedHallId, setSelectedHallId, halls, isLoadingHalls } = useFactory();
 
     const hallOptions = [
@@ -39,14 +40,15 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
             {/* Prawa strona nagłówka - zawsze renderowana */}
             <div className="flex items-center gap-3">
                 {/* Przełącznik Hal */}
-                <Select
-                    value={selectedHallId}
-                    onChange={(val) => setSelectedHallId(val)}
-                    options={hallOptions}
-                    icon={<Building2 className="w-4 h-4 text-slate-500" />}
-                    disabled={isLoadingHalls}
-                    headerTitle="Select Factory Hall"
-                />
+                {showHallSelector && (
+                    <Select
+                        value={selectedHallId}
+                        onChange={(val) => setSelectedHallId(val)}
+                        options={hallOptions}
+                        icon={<Building2 className="w-4 h-4 text-slate-500" />}
+                        disabled={isLoadingHalls}
+                        headerTitle="Select Factory Hall"
+                    />)}
 
                 {/* Opcjonalna zawartość przekazana z widoku (np. przycisk Add Machine) */}
                 {rightContent}

@@ -38,7 +38,23 @@ namespace SmartFactoryCMMS.Api.Data
             if (!context.WorkShifts.Any(s => s.Name == "Shift B (Afternoon)")) context.WorkShifts.Add(shiftB);
             if (!context.WorkShifts.Any(s => s.Name == "Shift C (Night)")) context.WorkShifts.Add(shiftC);
 
-            // 3. Seed users
+            // 3. Factory Halls (needed for assigning users to halls)
+            var hall1 = context.FactoryHalls.FirstOrDefault(h => h.Name.Contains("Hala Główna A"))
+                ?? new FactoryHall { Name = "Hala Główna A (Automotive & Battery Assembly)" };
+            var hall2 = context.FactoryHalls.FirstOrDefault(h => h.Name.Contains("Hala B"))
+                ?? new FactoryHall { Name = "Hala B (Obróbka Skrawaniem & Spawalnia)" };
+
+            if (!context.FactoryHalls.Any(h => h.Name.Contains("Hala Główna A"))) context.FactoryHalls.Add(hall1);
+            if (!context.FactoryHalls.Any(h => h.Name.Contains("Hala B"))) context.FactoryHalls.Add(hall2);
+            context.SaveChanges();
+
+            // Normalize legacy roles in raw SQL before EF queries UserRole enum
+            context.Database.ExecuteSqlRaw(@"
+                UPDATE [Users] SET [Role] = 'SuperAdmin' WHERE [Role] = 'Admin' OR [Role] IS NULL;
+            ");
+
+            // 4. Seed users with roles and hall assignments
+            // 4.1 SuperAdmin (Global access, no single hall attached)
             User? adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@smartfactory.com");
             if (adminUser == null)
             {
@@ -47,12 +63,67 @@ namespace SmartFactoryCMMS.Api.Data
                     FullName = "John Doe",
                     Email = "admin@smartfactory.com",
                     PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
-                    Role = "Admin",
+                    Role = UserRole.SuperAdmin,
+                    FactoryHallId = null,
                     IsActive = true
                 };
                 context.Users.Add(adminUser);
             }
+            else
+            {
+                adminUser.Role = UserRole.SuperAdmin;
+                adminUser.FactoryHallId = null;
+                adminUser.PasswordHash = passwordHasher.HashPassword(null!, seedPassword);
+                adminUser.IsActive = true;
+            }
 
+            // 4.2 HallAdmin for Hall 1
+            User? hall1Admin = context.Users.FirstOrDefault(u => u.Email == "kierownik.hala1@smartfactory.com");
+            if (hall1Admin == null)
+            {
+                hall1Admin = new User
+                {
+                    FullName = "Marek Mickiewicz",
+                    Email = "kierownik.hala1@smartfactory.com",
+                    PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
+                    Role = UserRole.HallAdmin,
+                    FactoryHallId = hall1.Id,
+                    IsActive = true
+                };
+                context.Users.Add(hall1Admin);
+            }
+            else
+            {
+                hall1Admin.Role = UserRole.HallAdmin;
+                hall1Admin.FactoryHallId = hall1.Id;
+                hall1Admin.PasswordHash = passwordHasher.HashPassword(null!, seedPassword);
+                hall1Admin.IsActive = true;
+            }
+
+            // 4.3 HallAdmin for Hall 2
+            User? hall2Admin = context.Users.FirstOrDefault(u => u.Email == "kierownik.hala2@smartfactory.com");
+            if (hall2Admin == null)
+            {
+                hall2Admin = new User
+                {
+                    FullName = "Piotr Nowak",
+                    Email = "kierownik.hala2@smartfactory.com",
+                    PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
+                    Role = UserRole.HallAdmin,
+                    FactoryHallId = hall2.Id,
+                    IsActive = true
+                };
+                context.Users.Add(hall2Admin);
+            }
+            else
+            {
+                hall2Admin.Role = UserRole.HallAdmin;
+                hall2Admin.FactoryHallId = hall2.Id;
+                hall2Admin.PasswordHash = passwordHasher.HashPassword(null!, seedPassword);
+                hall2Admin.IsActive = true;
+            }
+
+            // 4.4 Technician for Hall 1
             User? technicianUser = context.Users.FirstOrDefault(u => u.Email == "technician@smartfactory.com");
             if (technicianUser == null)
             {
@@ -61,10 +132,41 @@ namespace SmartFactoryCMMS.Api.Data
                     FullName = "Anna Smith",
                     Email = "technician@smartfactory.com",
                     PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
-                    Role = "Technician",
+                    Role = UserRole.Technician,
+                    FactoryHallId = hall1.Id,
                     IsActive = true
                 };
                 context.Users.Add(technicianUser);
+            }
+            else
+            {
+                technicianUser.Role = UserRole.Technician;
+                technicianUser.FactoryHallId = hall1.Id;
+                technicianUser.PasswordHash = passwordHasher.HashPassword(null!, seedPassword);
+                technicianUser.IsActive = true;
+            }
+
+            // 4.5 Technician for Hall 2
+            User? technicianUser2 = context.Users.FirstOrDefault(u => u.Email == "technician.hala2@smartfactory.com");
+            if (technicianUser2 == null)
+            {
+                technicianUser2 = new User
+                {
+                    FullName = "Tomasz Wiśniewski",
+                    Email = "technician.hala2@smartfactory.com",
+                    PasswordHash = passwordHasher.HashPassword(null!, seedPassword),
+                    Role = UserRole.Technician,
+                    FactoryHallId = hall2.Id,
+                    IsActive = true
+                };
+                context.Users.Add(technicianUser2);
+            }
+            else
+            {
+                technicianUser2.Role = UserRole.Technician;
+                technicianUser2.FactoryHallId = hall2.Id;
+                technicianUser2.PasswordHash = passwordHasher.HashPassword(null!, seedPassword);
+                technicianUser2.IsActive = true;
             }
 
             context.SaveChanges();
@@ -76,8 +178,8 @@ namespace SmartFactoryCMMS.Api.Data
             shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
             shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
 
-            // 4. Seed factory infrastructure if not already seeded
-            if (!context.FactoryHalls.Any())
+            // 5. Seed factory infrastructure if not already seeded
+            if (!context.ProductionLines.Any())
             {
             var productBattery = new Product
             {
@@ -101,12 +203,6 @@ namespace SmartFactoryCMMS.Api.Data
             };
 
             context.Products.AddRange(productBattery, productEngine, productChassis);
-            context.SaveChanges();
-
-            // 6. Factory Halls
-            var hall1 = new FactoryHall { Name = "Hala Główna A (Automotive & Battery Assembly)" };
-            var hall2 = new FactoryHall { Name = "Hala B (Obróbka Skrawaniem & Spawalnia)" };
-            context.FactoryHalls.AddRange(hall1, hall2);
             context.SaveChanges();
 
             // 7. Production Lines

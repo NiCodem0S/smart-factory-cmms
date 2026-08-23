@@ -157,6 +157,7 @@ export default function MachineDetails() {
         <div className="flex flex-col h-full overflow-hidden">
             {/* Top Bar / Header */}
             <Header
+                showHallSelector={false}
                 leftContent={
                     <div className="flex items-center gap-4">
                         <button

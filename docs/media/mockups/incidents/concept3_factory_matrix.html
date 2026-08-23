@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Matrix Incident View - SmartFactory CMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800 bg-slate-100">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800">
+            <span class="text-xl font-bold text-white tracking-wider">🏭 Smart<span class="text-blue-500">Factory</span></span>
+        </div>
+        <nav class="flex-1 py-4 space-y-1">
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-gauge-high mr-3 w-5 text-slate-500"></i> Live Dashboard
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-industry mr-3 w-5 text-slate-500"></i> Machine Fleet
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-arrows-split-up-and-left mr-3 w-5 text-slate-500"></i> Production Lines
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500 font-bold text-sm">
+                <i class="fa-solid fa-network-wired mr-3 w-5 text-blue-400"></i> Factory Matrix Alarms
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Body -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-xs">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-blue-600"></i> Line Hierarchy & Incident Matrix
+                </h1>
+                <p class="text-xs text-slate-500">Spatial plant overview mapping active alarms to affected lines and stations</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-bold border border-red-200 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> 2 Lines Impaired
+                </span>
+                <span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold border border-emerald-200">
+                    1 Line Nominal (100%)
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Area -->
+        <div class="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
+            
+            <!-- HALL 1 CONTAINER -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate-900 text-base">Hala Główna A (Battery Assembly & Utilities)</h2>
+                            <p class="text-xs text-slate-400">1 Production Line · 10 Total Machines · 1 Utility Warning</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">
+                        Status: 94% Operational
+                    </span>
+                </div>
+
+                <!-- Line 1 Breakdown -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="font-bold text-sm text-slate-800">Line 1: EV Battery Pack Assembly</span>
+                            <span class="text-[10px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-bold">ALL 6 STATIONS RUNNING</span>
+                        </div>
+                        <span class="text-xs font-mono text-slate-500">Throughput: 120 units/hr</span>
+                    </div>
+
+                    <!-- Flow Diagram -->
+                    <div class="grid grid-cols-6 gap-3">
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Infeed CF-01</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">35°C · 1.2mm/s</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Welder LW-02</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">85°C · 2.1mm/s</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Bonder WB-03</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">48°C · 1.0mm/s</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Dispenser TD-04</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">38°C · 1.6mm/s</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Scanner QC-05</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">28°C · 0.3mm/s</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs text-center">
+                            <div class="text-[9px] font-extrabold text-emerald-600 uppercase mb-1">Running</div>
+                            <div class="text-xs font-bold text-slate-700 truncate">Robot TR-06</div>
+                            <div class="text-[10px] font-mono text-slate-400 mt-1">52°C · 2.4mm/s</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HALL 2 CONTAINER (WITH ACTIVE INCIDENTS) -->
+            <div class="bg-white rounded-2xl border-2 border-red-200 shadow-md p-6 space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate-900 text-base">Hala B (Obróbka Skrawaniem & Spawalnia)</h2>
+                            <p class="text-xs text-red-500 font-semibold">2 Active Incidents · Line 3 Halted · Line 2 Degraded</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full border border-red-300">
+                        Status: 61% Degraded
+                    </span>
+                </div>
+
+                <!-- Line 2: Engine Block (Warning) -->
+                <div class="bg-amber-50/50 rounded-xl p-4 border border-amber-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span class="font-bold text-sm text-slate-800">Line 2: Engine Block CNC Machining</span>
+                            <span class="text-[10px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-300 font-bold">STATION #2 VIBRATION WARNING</span>
+                        </div>
+                        <button class="text-xs font-bold text-blue-600 hover:underline">View Incident Details ➔</button>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-3">
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <div class="text-[9px] font-bold text-emerald-600 uppercase mb-1">OK</div>
+                            <div class="text-xs font-bold text-slate-700">Loader RL-11</div>
+                        </div>
+                        <!-- Fault Station -->
+                        <div class="bg-amber-100 p-3 rounded-lg border-2 border-amber-500 shadow-sm text-center relative animate-pulse">
+                            <span class="absolute -top-2 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1.5 rounded-full">!</span>
+                            <div class="text-[9px] font-black text-amber-800 uppercase mb-1">WARNING</div>
+                            <div class="text-xs font-bold text-slate-900">Milling MC-12</div>
+                            <div class="text-[10px] font-mono font-bold text-amber-700 mt-1">4.5 mm/s (High)</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <div class="text-[9px] font-bold text-emerald-600 uppercase mb-1">OK</div>
+                            <div class="text-xs font-bold text-slate-700">Drilling RD-13</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <div class="text-[9px] font-bold text-emerald-600 uppercase mb-1">OK</div>
+                            <div class="text-xs font-bold text-slate-700">Press HP-14</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 text-center">
+                            <div class="text-[9px] font-bold text-emerald-600 uppercase mb-1">OK</div>
+                            <div class="text-xs font-bold text-slate-700">Scanner CMM-15</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line 3: Chassis Frame (Critical / Halted) -->
+                <div class="bg-red-50 rounded-xl p-4 border-2 border-red-400">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                            <span class="font-bold text-sm text-slate-900">Line 3: Chassis Frame Welding & Coating</span>
+                            <span class="text-[10px] font-mono bg-red-600 text-white px-2 py-0.5 rounded font-bold">LINE HALTED (STATION #2 THERMAL FAULT)</span>
+                        </div>
+                        <button class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">
+                            Triage Incident
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-3">
+                        <div class="bg-white/80 p-3 rounded-lg border border-slate-300 text-center opacity-70">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">OFFLINE</div>
+                            <div class="text-xs font-bold text-slate-700">Carrier SC-21</div>
+                        </div>
+                        <!-- CRITICAL FAULT STATION -->
+                        <div class="bg-red-600 text-white p-3 rounded-lg border-2 border-red-800 shadow-md text-center">
+                            <div class="text-[9px] font-black uppercase tracking-wider mb-1 bg-red-800/80 rounded py-0.5">CRITICAL FAULT</div>
+                            <div class="text-xs font-black truncate">Spot Welder SW-22</div>
+                            <div class="text-[10px] font-mono font-bold mt-1 text-red-100">138.0°C (Limit: 115°C)</div>
+                        </div>
+                        <div class="bg-white/80 p-3 rounded-lg border border-slate-300 text-center opacity-70">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">OFFLINE</div>
+                            <div class="text-xs font-bold text-slate-700">Coating DC-23</div>
+                        </div>
+                        <div class="bg-white/80 p-3 rounded-lg border border-slate-300 text-center opacity-70">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">OFFLINE</div>
+                            <div class="text-xs font-bold text-slate-700">Oven TO-24</div>
+                        </div>
+                        <div class="bg-white/80 p-3 rounded-lg border border-slate-300 text-center opacity-70">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">OFFLINE</div>
+                            <div class="text-xs font-bold text-slate-700">Scanner US-25</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Command Center - SmartFactory CMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes pulse-border-red {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+            50% { border-color: rgba(239, 68, 68, 1); box-shadow: 0 0 12px rgba(239, 68, 68, 0.25); }
+        }
+        .alarm-critical-card { animation: pulse-border-red 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800 bg-slate-100">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800 justify-between">
+            <span class="text-xl font-black text-white tracking-wider flex items-center gap-2">
+                <span class="text-blue-500 text-2xl">🏭</span> Smart<span class="text-blue-500">CMMS</span>
+            </span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-red-500/20 text-red-400 border border-red-500/30 rounded font-bold">LIVE</span>
+        </div>
+        <nav class="flex-1 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Operations</div>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-gauge-high mr-3 w-5 text-slate-500"></i> Live Dashboard
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-industry mr-3 w-5 text-slate-500"></i> Machine Fleet
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-arrows-split-up-and-left mr-3 w-5 text-slate-500"></i> Production Lines
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 bg-blue-600 bg-opacity-10 text-blue-400 border-r-4 border-blue-500 font-bold text-sm">
+                <i class="fa-solid fa-triangle-exclamation mr-3 w-5 text-red-400"></i> Incident Central
+                <span class="ml-auto bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">3 Active</span>
+            </a>
+            <div class="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">Maintenance</div>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-clipboard-list mr-3 w-5 text-slate-500"></i> Work Orders
+            </a>
+            <a href="#" class="flex items-center px-6 py-3 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
+                <i class="fa-solid fa-chart-line mr-3 w-5 text-slate-500"></i> Analytics & MTTR
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800 bg-slate-900/50 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-sm">JD</div>
+            <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold text-white truncate">John Doe</div>
+                <div class="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Chief Dispatcher
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area (Light Theme) -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-100">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0 shadow-xs">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 text-xl shadow-2xs shrink-0">
+                    <i class="fa-solid fa-tower-broadcast animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-snug">Incident Command & War Room</h1>
+                    <p class="text-xs text-slate-500 leading-tight">Real-time alarm triage, live telemetry snapshot correlation & emergency dispatch</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Factory Hall Selector -->
+                <div class="relative">
+                    <select class="appearance-none bg-white border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold pl-9 pr-8 py-2 rounded-lg shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="">All Factory Halls</option>
+                        <option value="hall-1">Hala Główna A (Automotive & Battery)</option>
+                        <option value="hall-2">Hala B (Obróbka Skrawaniem & Spawalnia)</option>
+                    </select>
+                    <i class="fa-solid fa-building text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none"></i>
+                    <i class="fa-solid fa-chevron-down text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none"></i>
+                </div>
+
+                <!-- Export Button -->
+                <button class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-2 shadow-xs transition-colors">
+                    <i class="fa-solid fa-download text-slate-500"></i> Export
+                </button>
+            </div>
+        </header>
+
+        <!-- Two-Pane Command Workstation (Light Mode) -->
+        <div class="flex-1 flex min-h-0 overflow-hidden p-6 gap-6">
+            
+            <!-- Left Pane: Live Incident Queue -->
+            <div class="w-1/2 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                
+                <!-- Queue Subheader & Filter -->
+                <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-900">Live Incident Stream</span>
+                        <span class="px-2 py-0.5 text-[10px] bg-slate-200 text-slate-700 rounded-md font-mono font-bold">14 Total</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" placeholder="Filter machine, code..." class="bg-white border border-slate-300 text-xs px-3 py-1.5 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 w-44">
+                        <select class="bg-white border border-slate-300 text-xs px-2.5 py-1.5 rounded-lg text-slate-700 font-medium">
+                            <option>All Severities</option>
+                            <option>Critical Only</option>
+                            <option>Active Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Stream List -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                    
+                    <!-- Incident Item 1 (Selected / Active Critical) -->
+                    <div class="p-4 bg-red-50/80 border-l-4 border-red-600 hover:bg-red-100/70 transition-colors cursor-pointer relative">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-red-600 text-white font-black text-[10px] rounded uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                                    <i class="fa-solid fa-triangle-exclamation animate-bounce"></i> CRITICAL
+                                </span>
+                                <span class="text-xs font-bold text-slate-900">Robotic Spot Welder SW-22</span>
+                                <span class="text-[10px] font-mono bg-white text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-semibold">Hala B / Line 3</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-red-600 font-bold">14m ago (20:38)</span>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-800 mt-2 leading-relaxed">
+                            Critical Fault: Thermal runaway in welding transformer (138.4°C / Max 115.0°C). Line 3 Halted automatically.
+                        </p>
+                        <div class="flex items-center justify-between mt-3 text-[11px] text-slate-500">
+                            <div class="flex items-center gap-3">
+                                <span><i class="fa-solid fa-microchip text-slate-400 mr-1"></i> SW22-2022</span>
+                                <span class="text-amber-700 font-semibold"><i class="fa-solid fa-clock mr-1"></i> SLA Expiring: 16m</span>
+                            </div>
+                            <span class="px-2 py-0.5 bg-red-200 text-red-800 rounded text-[10px] font-extrabold border border-red-300">
+                                UNACKNOWLEDGED
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Incident Item 2 (Active Critical) -->
+                    <div class="p-4 bg-white border-l-4 border-red-500 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-red-100 text-red-700 font-black text-[10px] rounded uppercase border border-red-200">CRITICAL</span>
+                                <span class="text-xs font-bold text-slate-900">Central Screw Compressor AC-01</span>
+                                <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">Hala 1 / Utility</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-slate-500">42m ago (20:10)</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2">Vibration limit critical spike (6.8 mm/s). Main rotor bearing harmonic oscillation detected.</p>
+                        <div class="flex items-center justify-between mt-3 text-[11px] text-slate-500">
+                            <span class="text-blue-600 font-semibold"><i class="fa-solid fa-user-gear mr-1"></i> Tech Anna Smith assigned</span>
+                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-200">WO-204 DISPATCHED</span>
+                        </div>
+                    </div>
+
+                    <!-- Incident Item 3 (Active Warning) -->
+                    <div class="p-4 bg-white border-l-4 border-amber-500 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-black text-[10px] rounded uppercase border border-amber-200">WARNING</span>
+                                <span class="text-xs font-bold text-slate-900">5-Axis CNC Milling Center MC-12</span>
+                                <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">Hala B / Line 2</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-slate-500">1h 12m ago</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2">Coolant delivery pressure degraded by 28%. Spindle temperature trending upward.</p>
+                        <div class="flex items-center justify-between mt-3 text-[11px] text-slate-500">
+                            <span><i class="fa-solid fa-tag text-slate-400 mr-1"></i> Predictive Alert</span>
+                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200">ACKNOWLEDGED</span>
+                        </div>
+                    </div>
+
+                    <!-- Incident Item 4 (Resolved) -->
+                    <div class="p-4 bg-slate-50/50 border-l-4 border-slate-300 opacity-75 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-slate-200 text-slate-700 font-bold text-[10px] rounded uppercase">RESOLVED</span>
+                                <span class="text-xs font-bold text-slate-700">Laser Cell Welder LW-02</span>
+                                <span class="text-[10px] font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Hala 1 / Line 1</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-slate-400">4h ago</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">Optical laser lens protective glass contamination warning. Cleaned and recalibrated.</p>
+                    </div>
+
+                    <!-- Incident Item 5 (Archived) -->
+                    <div class="p-4 bg-slate-50/30 border-l-4 border-slate-200 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 font-bold text-[10px] rounded uppercase">ARCHIVED</span>
+                                <span class="text-xs font-bold text-slate-600">BMS Wire Bonder WB-03</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-slate-400">Yesterday</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Wire feeder tension fluctuation resolved by wire spool re-feed.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Pane: Forensic Diagnostic & Actions (Light Mode) -->
+            <div class="w-1/2 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                
+                <!-- Selected Incident Header -->
+                <div class="p-4 bg-gradient-to-r from-red-50 via-white to-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 bg-red-600 text-white font-black text-xs rounded uppercase tracking-wider shadow-2xs">INC-2026-089</span>
+                            <span class="text-sm font-bold text-slate-900">Robotic Spot Welder SW-22</span>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            Triggered: <span class="text-slate-800 font-mono font-semibold">Today, 20:38:12 UTC</span> · Machine Status: <span class="text-red-600 font-bold uppercase">Error / Line Halted</span>
+                        </div>
+                    </div>
+                    <button class="bg-white hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 shadow-2xs transition-colors">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-1 text-slate-400"></i> Machine Details
+                    </button>
+                </div>
+
+                <!-- Forensic Diagnostic Body -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+                    
+                    <!-- Fault Trigger Banner -->
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
+                        <h3 class="text-xs font-bold text-red-800 uppercase tracking-wider mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-red-600"></i> Root Trigger Diagnostics
+                        </h3>
+                        <p class="text-xs text-red-950 font-medium leading-relaxed">
+                            Transformer temperature sensor registered <strong class="text-red-700 font-mono text-sm">138.4°C</strong>, breaching critical safety threshold (<span class="font-mono">115.0°C</span>) by <strong class="text-red-700 font-mono">+23.4°C</strong>. Secondary safety interlock tripped line contactor to prevent thermal coil burnout.
+                        </p>
+                    </div>
+
+                    <!-- Telemetry Snapshot at Failure -->
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Telemetry Snapshot at T-0s</h4>
+                            <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">Data Frozen</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-3 font-mono">
+                            <div class="bg-white p-3 rounded-lg border-2 border-red-400 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Temp</div>
+                                <div class="text-lg font-black text-red-600">138.4°C</div>
+                                <div class="text-[9px] text-red-500 font-semibold">Limit: 115.0°C</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Vibration</div>
+                                <div class="text-lg font-black text-amber-600">3.0 mm/s</div>
+                                <div class="text-[9px] text-slate-400">Limit: 4.5 mm/s</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Power Load</div>
+                                <div class="text-lg font-black text-slate-800">58.0 kW</div>
+                                <div class="text-[9px] text-slate-400">Peak: 72.0 kW</div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 uppercase font-sans font-bold">Ping</div>
+                                <div class="text-lg font-black text-blue-600">14 ms</div>
+                                <div class="text-[9px] text-emerald-600 font-semibold">Normal</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Downstream Line Impact -->
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-network-wired text-blue-600"></i> Downstream Line Impact
+                        </h4>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="px-2 py-0.5 bg-red-100 text-red-700 border border-red-200 rounded font-bold">Line 3 Halted</span>
+                            <span class="text-slate-600">➔ 4 adjacent stations waiting (SC-21, DC-23, TO-24, US-25)</span>
+                        </div>
+                        <div class="text-xs text-amber-700 mt-2 font-mono font-medium">Estimated Downtime Cost: ~450 PLN / minute</div>
+                    </div>
+
+                    <!-- Action Console -->
+                    <div class="space-y-3 pt-2">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Triage & Dispatch Actions</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all">
+                                <i class="fa-solid fa-check-double"></i> Acknowledge Incident
+                            </button>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all">
+                                <i class="fa-solid fa-wrench"></i> Create Work Order
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

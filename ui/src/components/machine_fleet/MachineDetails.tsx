@@ -1,10 +1,11 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, AlertCircle, ListTodo, Plus, SquarePen, CheckCircle } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, FileText, Loader2, AlertCircle, ListTodo, SquarePen, CheckCircle, ListOrdered, Activity, RotateCcw, ShieldCheck, TrendingDown, Timer, Boxes, PackageCheck } from "lucide-react";
 import useMachineDetails from "../../hooks/useMachineDetails";
+import useUpdateThresholds from "../../hooks/useUpdateThresholds";
 import Header from "../layout/Header";
 import StatusBadge from "../common/StatusBadge";
-import { MachineDetailDto } from "../../types/machine";
-import { useMemo, useState } from "react";
+import { CreateAlertThresholdsDto, MachineDetailDto } from "../../types/machine";
+import { useMemo, useState, useEffect } from "react";
 import AddMachineModal from "./AddMachineModal";
 
 const PROPERTY_UNITS: Record<string, string> = {
@@ -12,6 +13,24 @@ const PROPERTY_UNITS: Record<string, string> = {
     BaseVib: 'mm/s',
     NormPower: 'kW',
 };
+
+const ORDER_LABELS: Record<number, string> = {
+    1: 'st',
+    2: 'nd',
+    3: 'rd'
+}
+
+function getMTBF() {
+
+}
+
+function handleScheduleMaintenace() {
+
+}
+
+function getOrderLabel(key: number): string {
+    return ORDER_LABELS[key] || 'th';
+}
 
 function getPropertyUnit(key: string): string {
     return PROPERTY_UNITS[key] || '';
@@ -51,13 +70,54 @@ function getScrapRate(machine: MachineDetailDto) {
     return `${rate}%`;
 }
 
-
+function getTotalOperatingHours(machine: MachineDetailDto): string {
+    const baseHours = machine.totalOperatingHours || 0;
+    if ((machine.status === 'Running' || machine.status === 'Warning') && machine.lastStatusChangedAt) {
+        const dateStr = machine.lastStatusChangedAt;
+        const normalizedDateStr = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : `${dateStr}Z`;
+        const diffMs = Math.max(0, Date.now() - new Date(normalizedDateStr).getTime());
+        const elapsedHours = diffMs / (1000 * 60 * 60);
+        return `${(baseHours + elapsedHours).toFixed(0)}h`;
+    }
+    return `${baseHours.toFixed(0)}h`;
+}
 
 export default function MachineDetails() {
     const { id } = useParams<{ id: string }>();
     const { machine, isLoading, error, refetch } = useMachineDetails(id);
+    const { execute, isSaving, errorThresholds } = useUpdateThresholds()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    const [tempWarning, setTempWarning] = useState<number | string>(70);
+    const [tempCritical, setTempCritical] = useState<number | string>(85);
+    const [vibWarning, setVibWarning] = useState<number | string>(2.0);
+    const [vibCritical, setVibCritical] = useState<number | string>(3.5);
+
+    const handleThresholds = async () => {
+        if (!machine) return;
+
+        const thresholdsToSave: CreateAlertThresholdsDto[] = [
+            {
+                metricType: "Temperature",
+                warningValue: Number(tempWarning),
+                criticalValue: Number(tempCritical)
+            },
+            {
+                metricType: "Vibration",
+                warningValue: Number(vibWarning),
+                criticalValue: Number(vibCritical)
+            }
+        ]
+
+        try {
+            await execute(machine.id, thresholdsToSave);
+            refetch();
+            setSuccessMessage("Alert thresholds updated successfully")
+            setTimeout(() => setSuccessMessage(null), 4000);
+        } catch (err) { }
+    }
+
     const parsedProperties = useMemo(() => {
         if (!machine?.staticProperties) return {}
         try {
@@ -77,6 +137,21 @@ export default function MachineDetails() {
             setSuccessMessage(null);
         }, 4000);
     };
+
+    useEffect(() => {
+        if (machine?.alertThresholds) {
+            const temp = machine.alertThresholds.find(t => t.metricType === "Temperature");
+            if (temp) {
+                setTempWarning(temp.warningValue);
+                setTempCritical(temp.criticalValue);
+            }
+            const vib = machine.alertThresholds.find(t => t.metricType === "Vibration");
+            if (vib) {
+                setVibWarning(vib.warningValue);
+                setVibCritical(vib.criticalValue);
+            }
+        }
+    }, [machine?.alertThresholds]); //Uruchomi się gdy baza odpowie i ten obiekt przestanie byc pusty
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -121,7 +196,6 @@ export default function MachineDetails() {
                             <span>Edit Machine</span>
                         </button>
                     </>
-
                 }
             />
 
@@ -150,7 +224,7 @@ export default function MachineDetails() {
                     </div>
                 )}
 
-                {error && (
+                {error || errorThresholds && (
                     <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3">
                         <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
                         <span className="text-sm font-semibold">{error}</span>
@@ -283,27 +357,52 @@ export default function MachineDetails() {
                                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Production KPIs</h2>
                                     <div className="space-y-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">Continuous Operation</span>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <ListOrdered className="w-4 h-4 text-slate-600 shrink-0" />
+                                                <span>Order in Line</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-600 font-mono">{machine.orderInLine}{getOrderLabel(machine.orderInLine)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <Activity className="w-4 h-4 text-slate-800 shrink-0" />
+                                                <span>Continuous Operation</span>
+                                            </div>
                                             <span className="text-sm font-bold text-slate-800 font-mono">{formatUpTime(machine.lastStatusChangedAt, machine.status)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">Cycle Time</span>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <RotateCcw className="w-4 h-4 text-slate-800 shrink-0" />
+                                                <span>Cycle Time</span>
+                                            </div>
                                             <span className="text-sm font-bold text-slate-800 font-mono">{machine.cycleTimeSeconds}s</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">MTBF <span className="text-[10px] text-slate-400 font-normal ml-1">(Mean Time Btw Failures)</span></span>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <ShieldCheck className="w-4 h-4 text-slate-800 shrink-0" />
+                                                <span>MTBF <span className="text-[10px] text-slate-400 font-normal ml-1">(Mean Time Btw Failures)</span></span>
+                                            </div>
                                             <span className="text-sm font-bold text-slate-800 font-mono">45d 12h</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">Scrap Rate</span>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <TrendingDown className="w-4 h-4 text-red-500 shrink-0" />
+                                                <span>Scrap Rate</span>
+                                            </div>
                                             <span className="text-sm font-bold text-red-500 font-mono">{getScrapRate(machine)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm font-medium text-slate-600">Total Operating Hours</span>
-                                            <span className="text-sm font-bold text-slate-800 font-mono">{machine.totalOperatingHours}</span>
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <Timer className="w-4 h-4 text-slate-800 shrink-0" />
+                                                <span>Total Operating Hours</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-800 font-mono">{getTotalOperatingHours(machine)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center pt-2 border-t border-slate-50">
-                                            <span className="text-sm font-medium text-slate-600">Total Produced <span className="text-[10px] text-slate-400 font-normal ml-1">(Since last interruption)</span></span>
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                                                <PackageCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+                                                <span>Total Produced <span className="text-[10px] text-slate-400 font-normal ml-1">(Since last interruption)</span></span>
+                                            </div>
                                             <span className="text-sm font-bold text-indigo-600 font-mono">{machine.totalProduced}</span>
                                         </div>
                                     </div>
@@ -351,11 +450,11 @@ export default function MachineDetails() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-yellow-600 uppercase mb-1">Warning</label>
-                                                    <input type="number" defaultValue="70" className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+                                                    <input type="number" value={tempWarning} onChange={(e) => setTempWarning(e.target.value)} step="0.1" className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-red-600 uppercase mb-1">Critical</label>
-                                                    <input type="number" defaultValue="85" className="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500" />
+                                                    <input type="number" value={tempCritical} onChange={(e) => setTempCritical(e.target.value)} className="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500" />
                                                 </div>
                                             </div>
                                         </div>
@@ -365,17 +464,20 @@ export default function MachineDetails() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-yellow-600 uppercase mb-1">Warning</label>
-                                                    <input type="number" defaultValue="2.0" step="0.1" className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
+                                                    <input type="number" value={vibWarning} onChange={(e) => setVibWarning(e.target.value)} step="0.1" className="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-[10px] font-bold text-red-600 uppercase mb-1">Critical</label>
-                                                    <input type="number" defaultValue="3.5" step="0.1" className="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500" />
+                                                    <input type="number" value={vibCritical} onChange={(e) => setVibCritical(e.target.value)} className="w-full px-3 py-1.5 border border-red-300 rounded text-sm font-bold text-red-700 outline-none focus:ring-1 focus:ring-red-500" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <button className="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded transition-colors mt-2">
-                                            Save Thresholds
+                                        <button
+                                            disabled={isSaving}
+                                            onClick={() => handleThresholds()}
+                                            className="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded transition-colors mt-2">
+                                            {isSaving ? "Saving..." : "Save Thresholds"}
                                         </button>
                                     </div>
                                 </div>

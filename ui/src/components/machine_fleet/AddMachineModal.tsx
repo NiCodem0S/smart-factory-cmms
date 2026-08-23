@@ -360,8 +360,9 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                                         min: 0,
                                         validate: (value) => {
                                             if (!selectedLineId) return true;
-                                            const exists = lineMachines.some(m => m.orderInLine === Number(value))
-                                            return !exists || `Index ${value} is already used by another machine on this line`
+                                            const machine = lineMachines.find(m => m.orderInLine === Number(value))
+                                            if (machine?.orderInLine == value) return true;
+                                            return !machine || `Index ${value} is already used by another machine on this line`
                                         }
                                     })}
                                     className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 bg-white ${errors.orderInLine ? "border-red-500 focus:ring-red-500" : "border-slate-300 focus:ring-blue-500"

@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto, MachineProductionLineDto } from '../types/machine'
+import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto, MachineProductionLineDto, CreateAlertThresholdsDto } from '../types/machine'
 import { PagedResult } from '../types/common'
 
 export async function fetchMachines(
@@ -59,5 +59,12 @@ export async function updateMachine(
 	dto: UpdateMachineDto
 ): Promise<void> {
 	await apiClient.put(`/Machines/${id}`, dto)
+}
+
+export async function updateMachineTresholds(
+	machineId: string,
+	tresholds: CreateAlertThresholdsDto[]
+): Promise<void> {
+	await apiClient.put(`/Machines/${machineId}/tresholds`, tresholds)
 }
 

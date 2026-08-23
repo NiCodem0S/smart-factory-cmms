@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
-using SmartFactoryCMMS.Api.Helpers.Enums;
-using AutoMapper.QueryableExtensions;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -83,6 +83,38 @@ namespace SmartFactoryCMMS.Api.Repositories
             return machines;
         }
 
+        public async Task<bool> UpdateMachineTresholds(List<CreateAlertThresholdDto> alertThresholdDtos, Guid machineId, CancellationToken ct = default)
+        {
+            var machineExists = await _context.Machines.AnyAsync(m => m.Id == machineId && m.IsActive, ct);
+            if (!machineExists) return false;
+
+            var existingTresholds = await _context.AlertThresholds.Where(a => a.MachineId == machineId).ToListAsync(ct);
+            
+            foreach(var dto in alertThresholdDtos)
+            {
+                var existing = existingTresholds.FirstOrDefault(t => t.MetricType == dto.MetricType);
+                if(existing != null)
+                {
+                    existing.WarningValue = dto.WarningValue;
+                    existing.CriticalValue = dto.CriticalValue;
+                }
+                else
+                {
+                    _context.AlertThresholds.Add(new AlertThreshold
+                    {
+                        MachineId = machineId,
+                        MetricType = dto.MetricType,
+                        WarningValue = dto.WarningValue,
+                        CriticalValue = dto.CriticalValue
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync(ct);
+            return true;
+
+        }
+
         public async Task<Machine?> FindMachineByIdAsync(Guid id, CancellationToken ct = default)
         {
             var machine = await _context.Machines.FindAsync(id, ct);
@@ -98,13 +130,13 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             if (machine == null) return new List<TelemetryReadDto>();
 
-            var telemetryReads = await _context.Set<TelemetryRead>()
+            var telemetryReads = _context.Set<TelemetryRead>()
                 .Where(t => t.MachineId == id)
                 .OrderByDescending(t => t.Timestamp)
-                .Take(limit)
-                .ToListAsync(ct);
+                .Take(limit);
 
-            return _mapper.Map<List<TelemetryReadDto>>(telemetryReads);
+            //    return _mapper.Map<List<TelemetryReadDto>>(telemetryReads);
+            return await telemetryReads.ProjectTo<TelemetryReadDto>(_mapper.ConfigurationProvider).ToListAsync(ct);
         }
 
         public async Task<Machine> CreateMachineAsync(Machine machine)

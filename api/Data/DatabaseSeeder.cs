@@ -76,19 +76,9 @@ namespace SmartFactoryCMMS.Api.Data
             shiftB = context.WorkShifts.First(s => s.Name == "Shift B (Afternoon)");
             shiftC = context.WorkShifts.First(s => s.Name == "Shift C (Night)");
 
-            // 4. Clean re-seed: wipe demo factory data so fresh initial states (L1 Running, L2 Warning with MC-12, L3 Halted) are restored
-            context.AlertThresholds.RemoveRange(context.AlertThresholds);
-            context.Incidents.RemoveRange(context.Incidents);
-            context.TelemetryRead.RemoveRange(context.TelemetryRead);
-            context.WorkOrders.RemoveRange(context.WorkOrders);
-            context.ProductionLogs.RemoveRange(context.ProductionLogs);
-            context.Machines.RemoveRange(context.Machines);
-            context.ProductionLines.RemoveRange(context.ProductionLines);
-            context.Products.RemoveRange(context.Products);
-            context.FactoryHalls.RemoveRange(context.FactoryHalls);
-            context.SaveChanges();
-
-            // 5. Products
+            // 4. Seed factory infrastructure if not already seeded
+            if (!context.FactoryHalls.Any())
+            {
             var productBattery = new Product
             {
                 Name = "EV Battery Module 75kWh",
@@ -695,6 +685,7 @@ namespace SmartFactoryCMMS.Api.Data
 
             context.ProductionLogs.AddRange(productionLogs);
             context.SaveChanges();
+            }
         }
     }
 }

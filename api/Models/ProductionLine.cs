@@ -12,7 +12,7 @@ namespace SmartFactoryCMMS.Api.Models
 
         [Required]
         [MaxLength(50)]
-        private string _status = "Offline"  // e.g. "Running", "vzHalted", "Maintenance", "Warning"
+        private string _status = "Offline";  // e.g. "Running", "vzHalted", "Maintenance", "Warning"
         public string Status 
         { 
             get => _status; 

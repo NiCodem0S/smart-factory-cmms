@@ -10,6 +10,7 @@ namespace SmartFactoryCMMS.Api.Mappers
         public MachineMappingProfile() 
         {
             CreateMap<UpdateMachineDto, Machine>()
+                .ForMember(dest => dest.AlertThresholds, opt => opt.Ignore())
                 .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
                     JsonSerializer.Serialize(new { src.NormTemp, src.BaseVib, src.NormPower })))
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom((src, dest) =>
@@ -43,7 +44,7 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom(src =>
                     string.IsNullOrEmpty(src.Icon) ? "PrecisionManufacturing" : src.Icon));
             
-            CreateMap<CreateAlertThresholdDto, AlertThreshold>().ReverseMap();
+            CreateMap<CreateAlertThresholdDto, AlertThreshold>().ReverseMap(); //Mapowanie dziala w obie strony
             // TelemetryRead → TelemetryReadDto
             CreateMap<TelemetryRead, TelemetryReadDto>();
 
@@ -52,7 +53,7 @@ namespace SmartFactoryCMMS.Api.Mappers
 
             CreateMap<Incident, AlertDto>()
                 .ForMember(dest => dest.Acknowledged,
-                    opt => opt.MapFrom(src => src.Status != "Active"));                
+                    opt => opt.MapFrom(src => src.Status != "Active"));      
         }
     }
 }

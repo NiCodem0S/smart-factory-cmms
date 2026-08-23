@@ -74,6 +74,18 @@ namespace SmartFactoryCMMS.Api.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id}/tresholds")]
+        public async Task<IActionResult> UpdateMachineTresholds(
+            [FromRoute] Guid id,
+            [FromBody] List<CreateAlertThresholdDto> dtos,
+            CancellationToken ct = default)
+        {
+            var success = await _machineRepository.UpdateMachineTresholds(dtos, id, ct);
+            if (!success) return NotFound(new { message = $"Machine {id} not found." });
+
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMachine(Guid id)
         {

@@ -80,16 +80,17 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
     const isHalted = lineStatus === 'Halted';
     const isError = machine.status === 'Error' || machine.status === 'Offline';
     const [pulseKey, setPulseKey] = useState<number>(0);
-    const [particles, setParticles] = useState<{ id: number }[]>([]);
+    const [particles, setParticles] = useState<{ id: string }[]>([]);
 
     useEffect(() => {
         if (isHalted || isError || machine.cycleTimeSeconds <= 0) return;
 
         const emit = () => {
             const now = Date.now();
+            const uniqueParticleId = `${machine.id}-${now}-${Math.random().toString(36).slice(2, 7)}`;
             setPulseKey(now);
             if (!isLast) {
-                setParticles((prev) => [...prev.slice(-3), { id: now }]);
+                setParticles((prev) => [...prev.slice(-3), { id: uniqueParticleId }]);
             }
         };
 
@@ -97,7 +98,7 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
 
         const interval = setInterval(emit, machine.cycleTimeSeconds * 1000);
         return () => clearInterval(interval);
-    }, [machine.cycleTimeSeconds, isHalted, isError, isLast]);
+    }, [machine.cycleTimeSeconds, isHalted, isError, isLast, machine.id]);
 
     return (
         <div className="flex items-center flex-1">
@@ -148,7 +149,7 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
 
                 <div className="mt-4 relative z-20 shrink-0">
                     <div
-                        key={`diamond-${pulseKey}`}
+                        key={`diamond-${machine.id}-${pulseKey}`}
                         className={`w-2.5 h-2.5 rotate-45 border border-white shadow-xs shrink-0 transition-colors ${isHalted || isError
                             ? 'bg-slate-400'
                             : pulseKey > 0

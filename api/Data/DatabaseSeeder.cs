@@ -597,28 +597,82 @@ namespace SmartFactoryCMMS.Api.Data
             context.WorkOrders.AddRange(workOrders);
             context.SaveChanges();
 
-            // 11. Incidents
+            // 11. Incidents (at least 8 incidents per machine)
             var incidents = new List<Incident>();
-
-            foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Warning || m.Status == MachineStatus.Maintenance))
+            var incidentTemplates = new (string Message, string Severity)[]
             {
-                string severity = machine.Status == MachineStatus.Error ? "Critical" : "Warning";
-                string incidentStatus = machine.Status == MachineStatus.Error || machine.Status == MachineStatus.Warning ? "Active" : "Resolved";
+                ("Operating temperature exceeded warning threshold", "Warning"),
+                ("Vibration spike detected on primary spindle bearing", "Warning"),
+                ("Network latency timeout / telemetry packet drop detected", "Warning"),
+                ("Coolant circulation pressure below nominal level", "Warning"),
+                ("Feed rate deviation / minor material jam detected", "Warning"),
+                ("Servo motor overload protection trip", "Critical"),
+                ("Emergency stop (E-Stop) triggered on station", "Critical"),
+                ("Safety barrier light curtain interrupted", "Warning"),
+                ("Hydraulic pressure fluctuation during cycle", "Warning"),
+                ("Optical inspection sensor calibration drift", "Warning")
+            };
 
-                string msg = machine.Status == MachineStatus.Error
-                    ? $"Critical Fault on {machine.Name}: Overload protection trip detected."
-                    : (machine.Status == MachineStatus.Warning
-                        ? $"Warning on {machine.Name}: Vibration exceeded warning threshold."
-                        : $"Maintenance Notice: Filter replacement scheduled for {machine.Name}.");
+            foreach (var machine in machines)
+            {
+                int incidentCount = 8 + (Math.Abs(machine.Name.GetHashCode()) % 3); // 8, 9 or 10 incidents
 
-                incidents.Add(new Incident
+                for (int i = 0; i < incidentCount; i++)
                 {
-                    MachineId = machine.Id,
-                    TriggeredAt = DateTime.UtcNow.AddHours(-random.Next(1, 12)),
-                    Message = msg,
-                    Severity = severity,
-                    Status = incidentStatus
-                });
+                    var template = incidentTemplates[(i + Math.Abs(machine.Name.GetHashCode())) % incidentTemplates.Length];
+                    string severity;
+                    string incidentStatus;
+                    DateTime triggeredAt;
+                    string msg;
+
+                    if (i == 0)
+                    {
+                        if (machine.Status == MachineStatus.Error)
+                        {
+                            severity = "Critical";
+                            incidentStatus = "Active";
+                            triggeredAt = DateTime.UtcNow.AddMinutes(-35);
+                            msg = $"Critical Fault on {machine.Name}: Overload protection trip detected.";
+                        }
+                        else if (machine.Status == MachineStatus.Warning)
+                        {
+                            severity = "Warning";
+                            incidentStatus = "Active";
+                            triggeredAt = DateTime.UtcNow.AddHours(-2);
+                            msg = $"Warning on {machine.Name}: Vibration exceeded warning threshold.";
+                        }
+                        else if (machine.Status == MachineStatus.Maintenance)
+                        {
+                            severity = "Warning";
+                            incidentStatus = "Resolved";
+                            triggeredAt = DateTime.UtcNow.AddHours(-11);
+                            msg = $"Maintenance Notice: Filter replacement scheduled for {machine.Name}.";
+                        }
+                        else
+                        {
+                            severity = template.Severity;
+                            incidentStatus = "Resolved";
+                            triggeredAt = DateTime.UtcNow.AddDays(-1).AddHours(-random.Next(1, 10));
+                            msg = $"{template.Message} on {machine.Name}.";
+                        }
+                    }
+                    else
+                    {
+                        severity = template.Severity;
+                        incidentStatus = i < 4 ? "Resolved" : "Archived";
+                        triggeredAt = DateTime.UtcNow.AddDays(-(i * 3 + random.Next(0, 3))).AddHours(-random.Next(1, 20));
+                        msg = $"{template.Message} on {machine.Name}.";
+                    }
+
+                    incidents.Add(new Incident
+                    {
+                        MachineId = machine.Id,
+                        TriggeredAt = triggeredAt,
+                        Message = msg,
+                        Severity = severity,
+                        Status = incidentStatus
+                    });
+                }
             }
 
             context.Incidents.AddRange(incidents);
@@ -685,6 +739,55 @@ namespace SmartFactoryCMMS.Api.Data
 
             context.ProductionLogs.AddRange(productionLogs);
             context.SaveChanges();
+            }
+
+            // Ensure any existing database with fewer than 8 incidents per machine is backfilled
+            var existingMachines = context.Machines.ToList();
+            if (existingMachines.Any())
+            {
+                var newIncidents = new List<Incident>();
+                var rand = new Random(100);
+                var incidentTemplates = new (string Message, string Severity)[]
+                {
+                    ("Operating temperature exceeded warning threshold", "Warning"),
+                    ("Vibration spike detected on primary spindle bearing", "Warning"),
+                    ("Network latency timeout / telemetry packet drop detected", "Warning"),
+                    ("Coolant circulation pressure below nominal level", "Warning"),
+                    ("Feed rate deviation / minor material jam detected", "Warning"),
+                    ("Servo motor overload protection trip", "Critical"),
+                    ("Emergency stop (E-Stop) triggered on station", "Critical"),
+                    ("Safety barrier light curtain interrupted", "Warning"),
+                    ("Hydraulic pressure fluctuation during cycle", "Warning"),
+                    ("Optical inspection sensor calibration drift", "Warning")
+                };
+
+                foreach (var m in existingMachines)
+                {
+                    int existingCount = context.Incidents.Count(inc => inc.MachineId == m.Id);
+                    if (existingCount < 8)
+                    {
+                        int toAdd = 8 - existingCount;
+                        for (int i = 0; i < toAdd; i++)
+                        {
+                            int idx = existingCount + i;
+                            var template = incidentTemplates[(idx + Math.Abs(m.Name.GetHashCode())) % incidentTemplates.Length];
+                            newIncidents.Add(new Incident
+                            {
+                                MachineId = m.Id,
+                                TriggeredAt = DateTime.UtcNow.AddDays(-(idx * 3 + rand.Next(1, 4))).AddHours(-rand.Next(1, 20)),
+                                Message = $"{template.Message} on {m.Name}.",
+                                Severity = template.Severity,
+                                Status = idx < 4 ? "Resolved" : "Archived"
+                            });
+                        }
+                    }
+                }
+
+                if (newIncidents.Any())
+                {
+                    context.Incidents.AddRange(newIncidents);
+                    context.SaveChanges();
+                }
             }
         }
     }

@@ -15,10 +15,7 @@ function App() {
 		<BrowserRouter>
 			<AuthProvider>
 				<Routes>
-					{/* Public Authentication Route */}
 					<Route path="/login" element={<AuthPage />} />
-
-					{/* Protected CMMS Workspace Routes */}
 					<Route
 						path="/*"
 						element={

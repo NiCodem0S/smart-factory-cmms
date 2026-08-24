@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
-    Lock, 
-    Mail, 
-    Eye, 
-    EyeOff, 
-    ArrowRight, 
-    AlertCircle, 
+import {
+    Lock,
+    Mail,
+    Eye,
+    EyeOff,
+    ArrowRight,
+    AlertCircle,
     Loader2,
     KeyRound
 } from 'lucide-react';
 
-export const AuthPage: React.FC = () => {
+export const AuthPage = () => {
     const { login, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -60,7 +60,7 @@ export const AuthPage: React.FC = () => {
     return (
         <div className="min-h-screen w-full bg-slate-100 flex flex-col justify-center items-center p-4">
             <div className="w-full max-w-md space-y-6">
-                
+
                 {/* Brand Logo & Header */}
                 <div className="text-center space-y-2">
                     <div className="inline-flex items-center justify-center gap-2.5 mb-1">
@@ -69,17 +69,17 @@ export const AuthPage: React.FC = () => {
                             Smart<span className="text-blue-600">Factory</span>
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium">
-                        Intelligent Industrial Telemetry & Maintenance Platform
+                    <p className="text-xs text-slate-500 font-medium ml-5">
+                        Computerized Maintenance Management System
                     </p>
                 </div>
 
                 {/* Main Auth Card (Clean White) */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-                    
+
                     <div className="border-b border-slate-100 pb-4">
                         <h2 className="text-base font-bold text-slate-900">Sign In to CMMS</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Enter your workstation credentials below</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Enter your role credentials below</p>
                     </div>
 
                     {/* Error Banner */}
@@ -92,7 +92,7 @@ export const AuthPage: React.FC = () => {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        
+
                         {/* Email */}
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Email Address</label>
@@ -142,7 +142,7 @@ export const AuthPage: React.FC = () => {
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                                 <>
-                                    <span>Sign In to Dashboard</span>
+                                    <span>Sign In</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </>
                             )}
@@ -161,7 +161,7 @@ export const AuthPage: React.FC = () => {
                         </span>
                         <span className="text-slate-400 font-mono">Password: TestPassword123!</span>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             type="button"

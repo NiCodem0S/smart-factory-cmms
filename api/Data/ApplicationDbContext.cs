@@ -50,6 +50,9 @@ namespace SmartFactoryCMMS.Api.Data
             .WithMany(fh => fh.AssignedUsers)
             .HasForeignKey(u => u.FactoryHallId)
             .OnDelete(DeleteBehavior.SetNull); // Ustaw pole FactoryHallId uzytkownikow na Null
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.TokenHash);
         }
 
         public DbSet<FactoryHall> FactoryHalls { get; set; }
@@ -65,5 +68,6 @@ namespace SmartFactoryCMMS.Api.Data
         public DbSet<MachinePrediction> MachinePredictions { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductionLine> ProductionLines { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }

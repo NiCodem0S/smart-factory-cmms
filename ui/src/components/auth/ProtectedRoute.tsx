@@ -1,15 +1,15 @@
-import React from 'react';
+import { ReactElement } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types/auth';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-    children: React.ReactElement;
+    children: ReactElement;
     allowedRoles?: UserRole[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
     const { isAuthenticated, isLoading, user } = useAuth();
     const location = useLocation();
 

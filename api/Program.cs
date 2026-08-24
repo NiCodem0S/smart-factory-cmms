@@ -120,6 +120,7 @@ builder.Services.AddScoped<IProductionLinesRepository, ProductionLinesRepository
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 // Paging options from configuration
 builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));

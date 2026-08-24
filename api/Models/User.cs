@@ -17,5 +17,6 @@ namespace SmartFactoryCMMS.Api.Models
         public FactoryHall? FactoryHall { get; set; }
 
         public ICollection<WorkOrder> AssignedWorkOrders { get; set; } = new List<WorkOrder>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

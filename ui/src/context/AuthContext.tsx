@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginCredentials, RegisterCredentials } from '../types/auth';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, LoginCredentials } from '../types/auth';
 import { authService } from '../services/authService';
 
 interface AuthContextType {
@@ -11,9 +11,13 @@ interface AuthContextType {
     logout: () => void;
 }
 
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(() => {
         const savedUser = localStorage.getItem('cmms_user');
         return savedUser ? JSON.parse(savedUser) : null;

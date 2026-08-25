@@ -17,18 +17,56 @@ namespace SmartFactoryCMMS.Api.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IConfiguration _config;
         private readonly IMapper _mapper;
+
+        private const string RefreshTokenCookieName = "cmms_refresh_token";
 
         public AuthController(
             IUserRepository userRepository,
             IJwtTokenService jwtTokenService,
             IPasswordHasher<User> passwordHasher,
+            IRefreshTokenService refreshTokenService,
+            IConfiguration config,
             IMapper mapper)
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
             _passwordHasher = passwordHasher;
+            _refreshTokenService = refreshTokenService;
+            _config = config;
             _mapper = mapper;
+        }
+
+        private void SetRefreshTokenCookie(string refreshToken)
+        {
+            if (!int.TryParse(_config["Jwt:RefreshTokenExpiryInDays"], out var expiryDays) || expiryDays <= 0)
+            {
+                throw new InvalidOperationException("Configuration error: 'Jwt:RefreshTokenExpiryInDays' is missing or invalid in appsettings.json.");
+            }
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Path = "/api/auth",
+                Expires = DateTimeOffset.UtcNow.AddDays(expiryDays)
+            };
+
+            Response.Cookies.Append(RefreshTokenCookieName, refreshToken, cookieOptions);
+        }
+
+        private void DeleteRefreshTokenCookie()
+        {
+            Response.Cookies.Delete(RefreshTokenCookieName, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Path = "/api/auth"
+            });
         }
 
         [HttpPost("login")]
@@ -49,6 +87,15 @@ namespace SmartFactoryCMMS.Api.Controllers
             }
 
             var token = _jwtTokenService.GenerateToken(user);
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.UserAgent.ToString();
+
+            var rawRefreshToken = _refreshTokenService.GenerateRawToken();
+            await _refreshTokenService.CreateRefreshTokenAsync(user.Id, rawRefreshToken, ipAddress, userAgent, ct);
+
+            SetRefreshTokenCookie(rawRefreshToken);
+
             var userDto = _mapper.Map<UserDto>(user);
 
             return Ok(new LoginResponseDto
@@ -56,6 +103,49 @@ namespace SmartFactoryCMMS.Api.Controllers
                 Token = token,
                 User = userDto
             });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<LoginResponseDto>> Refresh(CancellationToken ct)
+        {
+            if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out var rawRefreshToken) || string.IsNullOrEmpty(rawRefreshToken))
+            {
+                return Unauthorized(new { message = "Refresh token is missing. " });
+            }
+
+            var ipAdress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.UserAgent.ToString();
+
+            var (success, newRawToken, user, errorMessage) = await _refreshTokenService.RotateRefreshTokenAsync(
+                rawRefreshToken, ipAdress, userAgent, ct);
+
+            if(!success || user == null || newRawToken == null)
+            {
+                DeleteRefreshTokenCookie();
+                return Unauthorized(new { message = errorMessage ?? "Failed to refresh token." });
+            }
+
+            SetRefreshTokenCookie(newRawToken);
+
+            var newAccessToken = _jwtTokenService.GenerateToken(user);
+            var userDto = _mapper.Map<UserDto>(user);
+            return Ok(new LoginResponseDto
+            {
+                Token = newAccessToken,
+                User = userDto
+            });
+
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(CancellationToken ct = default)
+        {
+            if (Request.Cookies.TryGetValue(RefreshTokenCookieName, out var rawRefreshToken) && !string.IsNullOrEmpty(rawRefreshToken))
+            {
+                await _refreshTokenService.RevokeRefreshTokenAsync(rawRefreshToken, ct);
+            }
+            DeleteRefreshTokenCookie();
+            return Ok(new { message = "Logged out successfully." });
         }
 
         [Authorize]

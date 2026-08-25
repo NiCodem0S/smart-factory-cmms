@@ -37,7 +37,11 @@ namespace SmartFactoryCMMS.Api.Services
             string? userAgent,
             CancellationToken ct = default)
         {
-            var expiryDays = int.TryParse(_config["Jwt:RefreshTokenExpiryInDays"], out var days) && days > 0 ? days : 7;
+            if (!int.TryParse(_config["Jwt:RefreshTokenExpiryInDays"], out var expiryDays) || expiryDays <= 0)
+            {
+                throw new InvalidOperationException("Configuration error: 'Jwt:RefreshTokenExpiryInDays' is missing or invalid in appsettings.json.");
+            }
+
             var tokenHash = HashToken(rawToken);
             var refreshToken = new RefreshToken
             {

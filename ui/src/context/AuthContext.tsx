@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, LoginCredentials } from '../types/auth';
 import { authService } from '../services/authService';
+import { setAccessToken, setOnSessionExpired } from '../services/apiClient';
 
 interface AuthContextType {
     user: User | null;
@@ -8,62 +9,62 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     login: (credentials: LoginCredentials) => Promise<void>;
-    logout: () => void;
-}
-
-interface AuthProviderProps {
-    children: ReactNode;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: AuthProviderProps) {
-    const [user, setUser] = useState<User | null>(() => {
-        const savedUser = localStorage.getItem('cmms_user');
-        return savedUser ? JSON.parse(savedUser) : null;
-    });
-    const [token, setToken] = useState<string | null>(() => {
-        return localStorage.getItem('cmms_token');
-    });
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
+    const logout = useCallback(async () => {
+        try {
+            await authService.logout();
+        } catch (err) {
+            console.error("Logout error:", err);
+        } finally {
+            setUser(null);
+            setToken(null);
+            setAccessToken(null);
+        }
+    }, []);
+
+    // Rejestrujemy callback dla interceptora (gdy refresh token wygaśnie w tle)
     useEffect(() => {
-        const verifyAuth = async () => {
-            const storedToken = localStorage.getItem('cmms_token');
-            if (storedToken) {
-                try {
-                    const currentUser = await authService.getMe();
-                    setUser(currentUser);
-                    localStorage.setItem('cmms_user', JSON.stringify(currentUser));
-                } catch {
-                    localStorage.removeItem('cmms_token');
-                    localStorage.removeItem('cmms_user');
-                    setUser(null);
-                    setToken(null);
-                }
-            } else {
+        setOnSessionExpired(() => {
+            setUser(null);
+            setToken(null);
+            setAccessToken(null);
+        });
+    }, []);
+
+    // Ciche logowanie (Silent Refresh) przy starcie aplikacji (F5)
+    useEffect(() => {
+        const initAuth = async () => {
+            try {
+                const data = await authService.refreshToken();
+                setUser(data.user);
+                setToken(data.token);
+                setAccessToken(data.token);
+            } catch {
                 setUser(null);
                 setToken(null);
+                setAccessToken(null);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
-        verifyAuth();
+        initAuth();
     }, []);
 
     const login = async (credentials: LoginCredentials) => {
         const response = await authService.login(credentials);
-        localStorage.setItem('cmms_token', response.token);
-        localStorage.setItem('cmms_user', JSON.stringify(response.user));
-        setToken(response.token);
         setUser(response.user);
-    };
-
-    const logout = () => {
-        localStorage.removeItem('cmms_token');
-        localStorage.removeItem('cmms_user');
-        setUser(null);
-        setToken(null);
+        setToken(response.token);
+        setAccessToken(response.token);
     };
 
     return (
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             {children}
         </AuthContext.Provider>
     );
-};
+}
 
 export const useAuth = () => {
     const context = useContext(AuthContext);

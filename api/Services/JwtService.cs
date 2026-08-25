@@ -22,7 +22,10 @@ namespace SmartFactoryCMMS.Api.Services
                 ?? throw new InvalidOperationException("JWT SecretKey is not configured in appsettings.json.");
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
-            var expiryInHours = double.TryParse(_configuration["Jwt:ExpiryInHours"], out var hours) ? hours : 1.0;
+            if (!double.TryParse(_configuration["Jwt:AccessTokenExpiryInMinutes"], out var expiryInMinutes) || expiryInMinutes <= 0)
+            {
+                throw new InvalidOperationException("Configuration error: 'Jwt:AccessTokenExpiryInMinutes' is missing or invalid in appsettings.json.");
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -43,7 +46,7 @@ namespace SmartFactoryCMMS.Api.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(expiryInHours),
+                Expires = DateTime.UtcNow.AddMinutes(expiryInMinutes),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = credentials

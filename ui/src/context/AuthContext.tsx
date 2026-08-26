@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    // Rejestrujemy callback dla interceptora (gdy refresh token wygaśnie w tle)
     useEffect(() => {
         setOnSessionExpired(() => {
             setUser(null);
@@ -40,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    // Ciche logowanie (Silent Refresh) przy starcie aplikacji (F5)
     useEffect(() => {
         const initAuth = async () => {
             try {

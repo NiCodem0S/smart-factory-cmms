@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductionLinesController : ControllerBase

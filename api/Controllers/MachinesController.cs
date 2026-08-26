@@ -1,16 +1,18 @@
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
-using SmartFactoryCMMS.Api.Models;
-using AutoMapper;
 using SmartFactoryCMMS.Api.DTOs;
-using SmartFactoryCMMS.Api.Repositories.Abstract;
-using System.Linq;
 using SmartFactoryCMMS.Api.Filters;
 using SmartFactoryCMMS.Api.Helpers.Enums;
+using SmartFactoryCMMS.Api.Models;
+using SmartFactoryCMMS.Api.Repositories.Abstract;
+using System.Linq;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MachinesController : ControllerBase

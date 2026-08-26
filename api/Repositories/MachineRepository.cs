@@ -6,6 +6,7 @@ using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
+using SmartFactoryCMMS.Api.Services.Abstract;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -13,17 +14,24 @@ namespace SmartFactoryCMMS.Api.Repositories
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IUserContext _userContext;
 
         private IQueryable<Machine> ActiveMachines => _context.Machines.Where(m => m.IsActive);
 
-        public MachineRepository(ApplicationDbContext context, IMapper mapper)
+        public MachineRepository(ApplicationDbContext context, IMapper mapper, IUserContext userContext)
         {
             _context = context;
             _mapper = mapper;
+            _userContext = userContext;
         }
 
         public async Task<PagedResult<MachineListDto>> GetMachinesAsync(int page, int pageSize, string? search, MachineStatus? status, Guid? selectedHallId, CancellationToken ct = default)
         {
+            if (!_userContext.IsSuperAdmin)
+            {
+                selectedHallId = _userContext.FactoryHallId;
+            }
+
             IQueryable<Machine> query = ActiveMachines;
 
             if (!string.IsNullOrEmpty(search))
@@ -66,6 +74,11 @@ namespace SmartFactoryCMMS.Api.Repositories
             var machine = await ActiveMachines
                 .ProjectTo<MachineDetailDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(m => m.Id == id, ct);
+
+            if (machine != null && !_userContext.HasAccessToHall(machine.FactoryHallId))
+            {
+                return null;
+            }
 
             if (machine == null) return null;
 

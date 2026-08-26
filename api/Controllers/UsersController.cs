@@ -6,6 +6,7 @@ using SmartFactoryCMMS.Api.Repositories.Abstract;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
+    [Authorize(Roles = nameof(UserRole.SuperAdmin))]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase

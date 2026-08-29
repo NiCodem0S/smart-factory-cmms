@@ -1,6 +1,7 @@
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import { FactoryHallDto } from "../types/factory";
 import { useFactoryHalls } from "../hooks/useFactoryHalls";
+import { useAuth } from "./AuthContext"
 
 export interface FactoryContextType { //typ obiektu kontekstu który otrzyma kazdy komponent owinienty w provider
     selectedHallId: string | null,
@@ -14,10 +15,29 @@ interface FactoryProviderProps {
 }
 
 export default function FactoryProvider({ children }: FactoryProviderProps) {
+
     const { data: halls = [], isLoading: isLoadingHalls } = useFactoryHalls()
     const [selectedHallId, setHallIdState] = useState<string | null>(() => {
         return sessionStorage.getItem("selectedHallId");
     })
+
+    const { user } = useAuth();
+    const isSuperAdmin = user?.role === "SuperAdmin";
+
+    useEffect(() => {
+        if (!user) {
+            setHallIdState(null);
+            sessionStorage.removeItem("selectedHallId");
+            return;
+        }
+        if (!isSuperAdmin) {
+            const hallId = user.factoryHallId || (halls.length > 0 ? halls[0].id : null);
+            setHallIdState(hallId);
+            if (hallId) {
+                sessionStorage.setItem("selectedHallId", hallId);
+            }
+        }
+    }, [user, isSuperAdmin, halls]);
 
     const setSelectedHallId = (id: string | null) => {
         if (!id) {

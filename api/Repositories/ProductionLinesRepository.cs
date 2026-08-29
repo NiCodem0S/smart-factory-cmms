@@ -8,6 +8,7 @@ using AutoMapper;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using SmartFactoryCMMS.Api.Data;
 using AutoMapper.QueryableExtensions;
+using SmartFactoryCMMS.Api.Services.Abstract;
 
 namespace SmartFactoryCMMS.Api.Repositories
 {
@@ -16,37 +17,44 @@ namespace SmartFactoryCMMS.Api.Repositories
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IFactoryHallRepository _factoryHallsRepo;
+        private readonly IUserContext _userContext;
 
-        public ProductionLinesRepository(ApplicationDbContext context, IMapper mapper, IFactoryHallRepository factoryHallsRepo)
+        public ProductionLinesRepository(ApplicationDbContext context, IMapper mapper, IFactoryHallRepository factoryHallsRepo, IUserContext userContext)
         {
             _context = context;
             _mapper = mapper;
             _factoryHallsRepo = factoryHallsRepo;
+            _userContext = userContext;
         }
 
         public async Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId, CancellationToken ct = default)
         {
+            if (!_userContext.IsSuperAdmin)
+            {
+                hallsId = _userContext.FactoryHallId;
+                if (!hallsId.HasValue) return new List<ProductionLineDto>();
+            }
             IQueryable<ProductionLine> query = _context.ProductionLines;
-
             if (hallsId.HasValue)
             {
                 var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value, ct);
                 if (hall == null) return null;
-
                 query = query.Where(p => p.FactoryHallId == hallsId);
             }
-
             var productionLines = await query
                 .OrderBy(p => p.OrderInHall.HasValue ? p.OrderInHall.Value : int.MaxValue)
                 .ThenBy(p => p.Name)
                 .ProjectTo<ProductionLineDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(ct);
-
             return productionLines;
         }
 
         public async Task<ProductionLineDto> CreateProductionLineAsync(CreateProductionLineDto dto, CancellationToken ct = default)
         {
+            if (!_userContext.HasAccessToHall(dto.FactoryHallId))
+            {
+                throw new UnauthorizedAccessException("You cannot create production lines in a hall you are not assigned to.");
+            }
             var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(dto.FactoryHallId, ct);
             if (hall == null)
             {
@@ -70,7 +78,11 @@ namespace SmartFactoryCMMS.Api.Repositories
 
             if (line == null) return false;
 
-            var now = DateTime.UtcNow;
+            if (!_userContext.HasAccessToHall(line.FactoryHallId))
+            {
+                return false;
+            }
+
             line.Status = "Halted";
 
             foreach (var machine in line.Machines)
@@ -94,6 +106,11 @@ namespace SmartFactoryCMMS.Api.Repositories
             if (line == null)
             {
                 return (false, $"Production line {id} not found.", null);
+            }
+
+            if (!_userContext.HasAccessToHall(line.FactoryHallId))
+            {
+                return (false, "You cannot start production lines in a hall you are not assigned to.", null);
             }
 
             if (!line.Machines.Any())

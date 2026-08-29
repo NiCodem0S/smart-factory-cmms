@@ -8,6 +8,7 @@ import { useFactory } from "../../context/FactoryContext";
 import SelectV2, { SelectOption } from "../common/SelectV2";
 import { Search, AlertCircle, Loader2, Eye, Plus, CheckCircle, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const statusOptions: SelectOption<MachineStatus | undefined>[] = [
     { value: undefined, label: "All Statuses" },
@@ -25,6 +26,9 @@ export default function MachineFleet() {
     const [statusFilter, setStatusFilter] = useState<MachineStatus | undefined>(undefined)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    const { user } = useAuth();
+    const canManage = user?.role === 'SuperAdmin' || user?.role === 'HallAdmin';
 
     const { data, isLoading, error, refetch } = useMachines(page, 10, search, statusFilter, selectedHallId);
 

@@ -28,7 +28,7 @@ namespace SmartFactoryCMMS.Api.Controllers
 
             return Ok(productionLines);
         }
-
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
         [HttpPost]
         public async Task<ActionResult<ProductionLineDto>> CreateProductionLine([FromBody] CreateProductionLineDto dto, CancellationToken ct = default)
         {
@@ -47,7 +47,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             var machines = await _machineRepository.GetMachinesByProductionLineId(id, ct);
             return Ok(machines);
         }
-
+        
         [HttpPost("{id}/halt")]
         public async Task<IActionResult> StopProductionLine(Guid id, CancellationToken ct = default)
         {

@@ -53,6 +53,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             return Ok(machineDetailDto);
         }
 
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
         [HttpPost]
         public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
@@ -63,6 +64,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             return CreatedAtAction(nameof(GetMachineDetails), new { id = machine.Id }, machineDetailDto);
         }
 
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMachine([FromRoute] Guid id, [FromBody] UpdateMachineDto dto)
         {
@@ -87,7 +89,7 @@ namespace SmartFactoryCMMS.Api.Controllers
 
             return NoContent();
         }
-
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteMachine(Guid id)
         {
@@ -100,7 +102,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             
             return NoContent();
         }
-
+        
         [HttpGet("{id}/telemetry")]
         [PagingValidation(LimitArgumentName = "limit", MaxLimit = 1000)]
         public async Task<ActionResult<List<TelemetryReadDto>>> GetMachineTelemetry(

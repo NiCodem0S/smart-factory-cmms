@@ -1,28 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Play, Square, Settings, Plus } from 'lucide-react';
 
-import TireRepairIcon from '@mui/icons-material/TireRepair';
-import WindPowerIcon from '@mui/icons-material/WindPower';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import SmartScreenIcon from '@mui/icons-material/SmartScreen';
-import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
-import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
-import ScaleIcon from '@mui/icons-material/Scale';
-import RvHookupIcon from '@mui/icons-material/RvHookup';
-import RoomPreferencesIcon from '@mui/icons-material/RoomPreferences';
-import RepartitionIcon from '@mui/icons-material/Repartition';
-import PowerInputIcon from '@mui/icons-material/PowerInput';
-import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
-import MicrowaveIcon from '@mui/icons-material/Microwave';
-import MemoryIcon from '@mui/icons-material/Memory';
-import FireplaceIcon from '@mui/icons-material/Fireplace';
-import FactoryIcon from '@mui/icons-material/Factory';
-import ElectricCarIcon from '@mui/icons-material/ElectricCar';
-import CableIcon from '@mui/icons-material/Cable';
-import BrunchDiningIcon from '@mui/icons-material/BrunchDining';
-import BarcodeReaderIcon from '@mui/icons-material/BarcodeReader';
-import RouterIcon from '@mui/icons-material/Router';
-import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import {
+  TireRepair as TireRepairIcon,
+  WindPower as WindPowerIcon,
+  UnfoldLess as UnfoldLessIcon,
+  SmartScreen as SmartScreenIcon,
+  SettingsEthernet as SettingsEthernetIcon,
+  SettingsInputComponent as SettingsInputComponentIcon,
+  Scale as ScaleIcon,
+  RvHookup as RvHookupIcon,
+  RoomPreferences as RoomPreferencesIcon,
+  Repartition as RepartitionIcon,
+  PowerInput as PowerInputIcon,
+  PrecisionManufacturing as PrecisionManufacturingIcon,
+  Microwave as MicrowaveIcon,
+  Memory as MemoryIcon,
+  Fireplace as FireplaceIcon,
+  Factory as FactoryIcon,
+  ElectricCar as ElectricCarIcon,
+  Cable as CableIcon,
+  BrunchDining as BrunchDiningIcon,
+  BarcodeReader as BarcodeReaderIcon,
+  Router as RouterIcon,
+  Unarchive as UnarchiveIcon,
+} from '@mui/icons-material';
 
 interface MachineItem {
   id: number;

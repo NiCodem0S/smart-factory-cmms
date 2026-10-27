@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -124,6 +125,8 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<IUserContext, UserContext>();
+builder.Services.AddSingleton<RedisConnectionProvider>();
+builder.Services.AddHealthChecks().AddCheck<RedisHealthCheck>("simulation-redis");
 
 // Paging options from configuration
 builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));
@@ -150,6 +153,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/simulation-redis")
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "SuperAdmin,HallAdmin" });
 
 using (var scope = app.Services.CreateScope())
 {

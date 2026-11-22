@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260807110907_Add Machine-AlertTresholds relation")]
     partial class AddMachineAlertTresholdsrelation
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

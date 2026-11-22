@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260818135828_AddOrderInHallToProductionLine")]
     partial class AddOrderInHallToProductionLine
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

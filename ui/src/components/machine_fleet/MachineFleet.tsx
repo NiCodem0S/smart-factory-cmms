@@ -51,7 +51,7 @@ export default function MachineFleet() {
                 }
 
                 rightContent={
-                    <button
+                    canManage && <button
                         onClick={() => setIsModalOpen(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2"
                     >

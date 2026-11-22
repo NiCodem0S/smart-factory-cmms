@@ -9,6 +9,7 @@ import { useFactoryHalls } from "../../hooks/useFactoryHalls";
 import useProductionLinesByHallsId from "../../hooks/useProductionLines";
 import { AVAILABLE_ICONS } from "../common/MachineIcon";
 import { updateMachine } from "../../services/machineService";
+import { simulationError, simulationService } from '../../services/simulationService';
 
 interface AddMachineModalProps {
     isOpen: boolean;
@@ -46,6 +47,9 @@ const DEFAULT_FORM_VALUES: FormValues = {
 export default function AddMachineModal({ isOpen, onClose, onSuccess, initialData }: AddMachineModalProps) {
 
     const isEditMode = Boolean(initialData);
+    const [profileVersion, setProfileVersion] = useState<number | null>(null);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
 
     const {
         register,
@@ -96,6 +100,20 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
         }
     }, [isOpen, initialData, reset]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        let active = true;
+        setSaveError(null); setProfileVersion(null);
+        if (initialData) simulationService.profile(initialData.id).then(profile => {
+            if (!active) return;
+            setValue('normTemp', profile.normalTemperature);
+            setValue('baseVib', profile.baseVibration);
+            setValue('normPower', profile.normalPowerKw);
+            setProfileVersion(profile.version);
+        }).catch(error => { if (active) setSaveError(simulationError(error)); });
+        return () => { active = false; };
+    }, [isOpen, initialData, setValue]);
+
 
     const selectedHallId = watch("factoryHallId");
     const selectedLineId = watch("productionLineId");
@@ -112,6 +130,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
     const handleFormSubmit: SubmitHandler<FormValues> = async (formData) => {
+        setSaving(true); setSaveError(null);
         try {
             const alertThresholdsDtos: CreateAlertThresholdsDto[] = [
                 { metricType: "Temperature", warningValue: Number(formData.tempWarning), criticalValue: Number(formData.tempCritical) },
@@ -119,10 +138,10 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
             ];
             if (isEditMode && initialData) {
                 const updateDto: UpdateMachineDto = {
+                    simulationProfileVersion: profileVersion ?? undefined,
                     name: formData.name.trim(),
                     category: formData.category,
                     serialNumber: formData.serialNumber || null,
-                    status: formData.status,
                     cycleTimeSeconds: Number(formData.cycleTimeSeconds),
                     orderInLine: Number(formData.orderInLine),
                     icon: formData.icon,
@@ -137,6 +156,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
             } else {
                 const createDto: CreateMachineDto = {
                     ...formData,
+                    status: 'Offline',
                     productionLineId: formData.productionLineId || null,
                     alertThresholds: alertThresholdsDtos
                 };
@@ -146,8 +166,8 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
             onSuccess?.();
             onClose();
         } catch (err) {
-            console.error("Failed to save machine:", err);
-        }
+            setSaveError(simulationError(err));
+        } finally { setSaving(false); }
     };
 
 
@@ -160,7 +180,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                 <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">
-                            Add New Machine
+                            {isEditMode ? 'Edit Machine' : 'Add New Machine'}
                         </h2>
                         <p className="text-xs text-slate-500">Configure machine identity, location, operating specs, and alert thresholds</p>
                     </div>
@@ -173,9 +193,9 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                     </button>
                 </div>
 
-                {error && (
+                {(saveError || error) && (
                     <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                        {error}
+                        {saveError || error}
                     </div>
                 )}
 
@@ -257,8 +277,9 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-600 mb-1">Initial Status</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">Machine status</label>
                                 <select
+                                    disabled
                                     {...register("status", { required: true })}
                                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                                 >
@@ -268,6 +289,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                                     <option value="Maintenance">Maintenance</option>
                                     <option value="Offline">Offline</option>
                                 </select>
+                                <p className="mt-1 text-xs text-slate-500">Start, shutdown and maintenance actions are available in the simulation panel.</p>
                             </div>
 
                             <div>
@@ -379,7 +401,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                         {/* Norm Temp, Base Vib, Norm Power (3 Symmetrical Columns) */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-600 mb-1">Norm Temp (°C)</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">Nominal temperature (°C)</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -389,7 +411,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-600 mb-1">Base Vib (mm/s)</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">Nominal vibration (mm/s)</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -399,7 +421,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-600 mb-1">Norm Power (kW)</label>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">Nominal power (kW)</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -410,6 +432,7 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                         </div>
                     </div>
 
+                    {isEditMode && <p className="text-xs text-slate-500">Nominal values update the active simulation profile and Specific Properties together. Additional parameters are available in Machine Simulation.</p>}
                     {/* SECTION 3: Alert Thresholds */}
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/80 space-y-3">
                         <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2">
@@ -481,10 +504,10 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                         </button>
                         <button
                             type="submit"
-                            disabled={isCreating}
+                            disabled={isCreating || saving || (isEditMode && profileVersion === null)}
                             className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-xs"
                         >
-                            {isCreating ? "Saving..." : "Save"}
+                            {isCreating || saving ? 'Saving…' : isEditMode && profileVersion === null ? 'Loading profile…' : 'Save'}
                         </button>
                     </div>
                 </form>

@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260803210819_AddOperatingHoursToMachineDetails")]
     partial class AddOperatingHoursToMachineDetails
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

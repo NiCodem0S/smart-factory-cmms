@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260805210043_AddProductionLines")]
     partial class AddProductionLines
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

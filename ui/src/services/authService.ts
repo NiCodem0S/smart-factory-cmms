@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient, refreshSession } from './apiClient';
 import { AuthResponse, LoginCredentials, User } from '../types/auth';
 
 export const authService = {
@@ -8,8 +8,7 @@ export const authService = {
     },
 
     async refreshToken(): Promise<AuthResponse> {
-        const response = await apiClient.post<AuthResponse>('/auth/refresh')
-        return response.data
+        return refreshSession()
     },
 
     async logout(): Promise<void> {

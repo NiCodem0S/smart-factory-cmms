@@ -3,7 +3,7 @@ import { FactoryHallDto } from "../types/factory";
 import { useFactoryHalls } from "../hooks/useFactoryHalls";
 import { useAuth } from "./AuthContext"
 
-export interface FactoryContextType { //typ obiektu kontekstu który otrzyma kazdy komponent owinienty w provider
+export interface FactoryContextType { // Context shared by components inside the provider
     selectedHallId: string | null,
     setSelectedHallId: (id: string | null) => void
     halls: FactoryHallDto[]

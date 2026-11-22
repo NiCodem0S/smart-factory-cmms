@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260522104624_EnumRefactor_MachineStatus")]
     partial class EnumRefactor_MachineStatus
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

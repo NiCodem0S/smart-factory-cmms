@@ -38,6 +38,7 @@ public sealed class RedisConnectionProvider : IAsyncDisposable
 
             var options = ConfigurationOptions.Parse(connectionString);
             options.AbortOnConnectFail = false;
+            options.BacklogPolicy = BacklogPolicy.FailFast;
             _connection = await ConnectionMultiplexer.ConnectAsync(options);
             return _connection;
         }

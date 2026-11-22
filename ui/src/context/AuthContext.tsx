@@ -40,22 +40,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
+        let active = true;
         const initAuth = async () => {
             try {
                 const data = await authService.refreshToken();
+                if (!active) return;
                 setUser(data.user);
                 setToken(data.token);
                 setAccessToken(data.token);
             } catch {
+                if (!active) return;
                 setUser(null);
                 setToken(null);
                 setAccessToken(null);
             } finally {
-                setIsLoading(false);
+                if (active) setIsLoading(false);
             }
         };
 
         initAuth();
+        return () => { active = false; };
     }, []);
 
     const login = async (credentials: LoginCredentials) => {

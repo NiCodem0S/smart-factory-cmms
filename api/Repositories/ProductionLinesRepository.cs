@@ -1,144 +1,58 @@
-using SmartFactoryCMMS.Api.Models;
-using SmartFactoryCMMS.Api.DTOs;
-using SmartFactoryCMMS.Api.Repositories;
-using SmartFactoryCMMS.Api.Helpers;
-using SmartFactoryCMMS.Api.Helpers.Enums;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
-using SmartFactoryCMMS.Api.Repositories.Abstract;
-using SmartFactoryCMMS.Api.Data;
 using AutoMapper.QueryableExtensions;
+using Microsoft.EntityFrameworkCore;
+using SmartFactoryCMMS.Api.Data;
+using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Models;
+using SmartFactoryCMMS.Api.Repositories.Abstract;
+using SmartFactoryCMMS.Api.Services;
 using SmartFactoryCMMS.Api.Services.Abstract;
+using SmartFactoryCMMS.Api.Simulation;
 
-namespace SmartFactoryCMMS.Api.Repositories
+namespace SmartFactoryCMMS.Api.Repositories;
+
+public class ProductionLinesRepository(ApplicationDbContext db, IMapper mapper, IFactoryHallRepository halls,
+    IUserContext user, SimulationOrchestrator runtime) : IProductionLinesRepository
 {
-    public class ProductionLinesRepository : IProductionLinesRepository
+    public async Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId, CancellationToken ct = default)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
-        private readonly IFactoryHallRepository _factoryHallsRepo;
-        private readonly IUserContext _userContext;
-
-        public ProductionLinesRepository(ApplicationDbContext context, IMapper mapper, IFactoryHallRepository factoryHallsRepo, IUserContext userContext)
+        if (!user.IsSuperAdmin)
         {
-            _context = context;
-            _mapper = mapper;
-            _factoryHallsRepo = factoryHallsRepo;
-            _userContext = userContext;
+            hallsId = user.FactoryHallId;
+            if (!hallsId.HasValue) return new();
         }
-
-        public async Task<List<ProductionLineDto>?> GetProductionLinesByHallsId(Guid? hallsId, CancellationToken ct = default)
+        var query = db.ProductionLines.AsQueryable();
+        if (hallsId.HasValue)
         {
-            if (!_userContext.IsSuperAdmin)
-            {
-                hallsId = _userContext.FactoryHallId;
-                if (!hallsId.HasValue) return new List<ProductionLineDto>();
-            }
-            IQueryable<ProductionLine> query = _context.ProductionLines;
-            if (hallsId.HasValue)
-            {
-                var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(hallsId.Value, ct);
-                if (hall == null) return null;
-                query = query.Where(p => p.FactoryHallId == hallsId);
-            }
-            var productionLines = await query
-                .OrderBy(p => p.OrderInHall.HasValue ? p.OrderInHall.Value : int.MaxValue)
-                .ThenBy(p => p.Name)
-                .ProjectTo<ProductionLineDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(ct);
-            return productionLines;
+            if (await halls.GetFactoryHallByIdAsync(hallsId.Value, ct) is null) return null;
+            query = query.Where(l => l.FactoryHallId == hallsId);
         }
+        return await query.OrderBy(l => l.OrderInHall ?? int.MaxValue).ThenBy(l => l.Name)
+            .ProjectTo<ProductionLineDto>(mapper.ConfigurationProvider).ToListAsync(ct);
+    }
 
-        public async Task<ProductionLineDto> CreateProductionLineAsync(CreateProductionLineDto dto, CancellationToken ct = default)
-        {
-            if (!_userContext.HasAccessToHall(dto.FactoryHallId))
-            {
-                throw new UnauthorizedAccessException("You cannot create production lines in a hall you are not assigned to.");
-            }
-            var hall = await _factoryHallsRepo.GetFactoryHallByIdAsync(dto.FactoryHallId, ct);
-            if (hall == null)
-            {
-                throw new KeyNotFoundException($"Factory hall with ID {dto.FactoryHallId} does not exist.");
-            }
+    public async Task<ProductionLineDto> CreateProductionLineAsync(CreateProductionLineDto dto, CancellationToken ct = default)
+    {
+        var actor = SimulationActor.From(user);
+        actor.RequireAdmin(); actor.RequireHall(dto.FactoryHallId);
+        if (await halls.GetFactoryHallByIdAsync(dto.FactoryHallId, ct) is null)
+            throw new SimulationRequestException(404, "Factory hall not found.");
+        var line = mapper.Map<ProductionLine>(dto);
+        line.Id = Guid.NewGuid(); line.Status = ProductionLinePolicy.Halted;
+        db.ProductionLines.Add(line);
+        await db.SaveChangesAsync(ct);
+        return mapper.Map<ProductionLineDto>(line);
+    }
 
-            var line = _mapper.Map<ProductionLine>(dto);
-            line.Id = Guid.NewGuid();
+    public async Task<bool> StopProductionLineAsync(Guid id, CancellationToken ct = default)
+    {
+        await runtime.SetLineAsync(id, SimulationActor.From(user), start: false, ct);
+        return true;
+    }
 
-            _context.ProductionLines.Add(line);
-            await _context.SaveChangesAsync(ct);
-
-            return _mapper.Map<ProductionLineDto>(line);
-        }
-
-        public async Task<bool> StopProductionLineAsync(Guid id, CancellationToken ct = default)
-        {
-            var line = await _context.ProductionLines
-                .Include(p => p.Machines)
-                .FirstOrDefaultAsync(p => p.Id == id, ct);
-
-            if (line == null) return false;
-
-            if (!_userContext.HasAccessToHall(line.FactoryHallId))
-            {
-                return false;
-            }
-
-            line.Status = "Halted";
-
-            foreach (var machine in line.Machines)
-            {
-                if (machine.Status == MachineStatus.Running || machine.Status == MachineStatus.Warning)
-                {
-                    machine.Status = MachineStatus.Offline;
-                }
-            }
-
-            await _context.SaveChangesAsync(ct);
-            return true;
-        }
-
-        public async Task<(bool Success, string Message, ProductionLineDto? Line)> StartProductionLineAsync(Guid id, CancellationToken ct = default)
-        {
-            var line = await _context.ProductionLines
-                .Include(p => p.Machines)
-                .FirstOrDefaultAsync(p => p.Id == id, ct);
-
-            if (line == null)
-            {
-                return (false, $"Production line {id} not found.", null);
-            }
-
-            if (!_userContext.HasAccessToHall(line.FactoryHallId))
-            {
-                return (false, "You cannot start production lines in a hall you are not assigned to.", null);
-            }
-
-            if (!line.Machines.Any())
-            {
-                return (false, $"No machines assigned to production line '{line.Name}'.", null);
-            }
-
-            var faultedMachine = line.Machines.FirstOrDefault(m => m.Status == MachineStatus.Error || m.Status == MachineStatus.Maintenance);
-            if (faultedMachine != null)
-            {
-                return (false, $"Cannot start production line: Machine '{faultedMachine.Name}' is in {faultedMachine.Status} state. Resolve the machine issue first.", null);
-            }
-
-            var now = DateTime.UtcNow;
-            line.Status = "Running";
-
-            foreach (var machine in line.Machines)
-            {
-                if (machine.Status == MachineStatus.Offline)
-                {
-                    machine.Status = MachineStatus.Running;
-                }
-            }
-
-            await _context.SaveChangesAsync(ct);
-
-            var dto = _mapper.Map<ProductionLineDto>(line);
-            return (true, $"Production line '{line.Name}' started successfully.", dto);
-        }
+    public async Task<(bool Success, string Message, ProductionLineDto? Line)> StartProductionLineAsync(Guid id, CancellationToken ct = default)
+    {
+        var line = await runtime.SetLineAsync(id, SimulationActor.From(user), start: true, ct);
+        return (true, "Production line started.", mapper.Map<ProductionLineDto>(line));
     }
 }

@@ -9,8 +9,8 @@ export function useMachines(page: number = 1, pageSize: number = 10, search?: st
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadData = useCallback(async (signal?: AbortSignal) => {
-        setIsLoading(true)
+    const loadData = useCallback(async (signal?: AbortSignal, background = false) => {
+        if (!background) setIsLoading(true)
         setError(null)
 
         try {
@@ -34,9 +34,11 @@ export function useMachines(page: number = 1, pageSize: number = 10, search?: st
         const controller = new AbortController();
 
         loadData(controller.signal)
+        const timer = setInterval(() => void loadData(controller.signal, true), 5000)
 
         return () => {
             controller.abort()
+            clearInterval(timer)
         }
 
     }, [loadData])

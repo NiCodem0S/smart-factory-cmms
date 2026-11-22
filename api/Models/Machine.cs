@@ -29,6 +29,11 @@ namespace SmartFactoryCMMS.Api.Models
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; } // JSON
         public bool IsActive { get; set; } = true;
+        // Persisted request to run the simulation, not the actual worker state.
+        public bool SimulationEnabled { get; set; } = false;
+        public DateTimeOffset? AutomaticRepairAtUtc { get; set; }
+        public SimulationProfile? SimulationProfile { get; set; }
+        public SimulationCheckpoint? SimulationCheckpoint { get; set; }
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
         

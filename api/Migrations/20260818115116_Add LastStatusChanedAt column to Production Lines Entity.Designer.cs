@@ -15,7 +15,7 @@ namespace SmartFactoryCMMS.Api.Migrations
     [Migration("20260818115116_Add LastStatusChanedAt column to Production Lines Entity")]
     partial class AddLastStatusChanedAtcolumntoProductionLinesEntity
     {
-        /// <inheritdoc />
+        
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

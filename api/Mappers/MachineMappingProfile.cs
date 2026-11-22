@@ -10,9 +10,13 @@ namespace SmartFactoryCMMS.Api.Mappers
         public MachineMappingProfile() 
         {
             CreateMap<UpdateMachineDto, Machine>()
+                .ForMember(dest => dest.AutomaticRepairAtUtc, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationEnabled, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationProfile, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationCheckpoint, opt => opt.Ignore())
                 .ForMember(dest => dest.AlertThresholds, opt => opt.Ignore())
-                .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
-                    JsonSerializer.Serialize(new { src.NormTemp, src.BaseVib, src.NormPower })))
+                .ForMember(dest => dest.StaticProperties, opt => opt.Ignore())
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom((src, dest) =>
                     string.IsNullOrEmpty(src.Icon) ? dest.Icon ?? "PrecisionManufacturing" : src.Icon));
 
@@ -39,6 +43,11 @@ namespace SmartFactoryCMMS.Api.Mappers
                 opt => opt.MapFrom(src => src.Incidents.Where(i => i.Status == "Active")));
 
             CreateMap<CreateMachineDto, Machine>()
+                .ForMember(dest => dest.AutomaticRepairAtUtc, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationEnabled, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationProfile, opt => opt.Ignore())
+                .ForMember(dest => dest.SimulationCheckpoint, opt => opt.Ignore())
                 .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
                     JsonSerializer.Serialize(new { src.NormTemp, src.BaseVib, src.NormPower})))
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom(src =>
@@ -47,6 +56,7 @@ namespace SmartFactoryCMMS.Api.Mappers
             CreateMap<CreateAlertThresholdDto, AlertThreshold>().ReverseMap(); //Mapowanie dziala w obie strony
             // TelemetryRead → TelemetryReadDto
             CreateMap<TelemetryRead, TelemetryReadDto>();
+            CreateMap<SimulationProfile, SimulationProfileDto>();
 
             // Incident → IncidentDto
             CreateMap<Incident, IncidentDto>();

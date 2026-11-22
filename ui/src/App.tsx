@@ -3,6 +3,7 @@ import AppLayout from './components/layout/AppLayout'
 import LiveDashboard from './components/live_dashboard/LiveDashboard'
 import MachineFleet from './components/machine_fleet/MachineFleet'
 import MachineDetails from './components/machine_fleet/MachineDetails'
+import SimulationPage from './components/simulation/SimulationPage'
 import ProductionLines from './components/production_lines/ProductionLines'
 import ProductionLinesMockupV2 from './components/production_lines/ProductionLinesMockupV2'
 import FactoryProvider from './context/FactoryContext'
@@ -26,6 +27,7 @@ function App() {
 											<Route path="/" element={<Navigate to="/machines" replace />} />
 											<Route path="/machines" element={<MachineFleet />} />
 											<Route path="/machines/:id" element={<MachineDetails />} />
+											<Route path="/simulation" element={<SimulationPage />} />
 											<Route path="/dashboard" element={<LiveDashboard />} />
 											<Route path="/production" element={<ProductionLines />} />
 											<Route path="/production1" element={<ProductionLinesMockupV2 />} />

@@ -14,5 +14,6 @@ namespace SmartFactoryCMMS.Api.Models
         public string? SlackWebhookUrl { get; set; }
         public int RawTelemetryRetentionDays { get; set; } = 30;
         public bool EnableEmailAlerts { get; set; } = true;
+        public bool? SimulationAutomationEnabled { get; set; }
     }
 }

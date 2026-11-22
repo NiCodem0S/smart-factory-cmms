@@ -8,10 +8,10 @@ export default function useMachineDetails(id: string | undefined) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadMachine = useCallback(async (signal?: AbortSignal) => {
+    const loadMachine = useCallback(async (signal?: AbortSignal, background = false) => {
         if (!id) return
 
-        setIsLoading(true)
+        if (!background) setIsLoading(true)
         setError(null)
 
         try {

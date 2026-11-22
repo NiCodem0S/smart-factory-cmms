@@ -8,6 +8,13 @@ namespace SmartFactoryCMMS.Api.DTOs
         public decimal? Vibration { get; set; }
         public decimal? PowerLoadKw { get; set; }
         public int? NetworkLatencyMs { get; set; }
-        public DateTime Timestamp { get; set; }
+        private DateTime _timestamp;
+        // SQL datetime2 loses Kind; telemetry timestamps are stored in UTC.
+        public DateTime Timestamp
+        {
+            get => _timestamp;
+            set => _timestamp = value.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(value, DateTimeKind.Utc) : value.ToUniversalTime();
+        }
     }
 }

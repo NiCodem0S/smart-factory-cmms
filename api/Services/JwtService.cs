@@ -46,7 +46,7 @@ namespace SmartFactoryCMMS.Api.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddSeconds(10),
+                Expires = DateTime.UtcNow.AddMinutes(expiryInMinutes),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = credentials

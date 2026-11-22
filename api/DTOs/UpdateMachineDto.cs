@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using SmartFactoryCMMS.Api.Helpers.Enums;
+using SmartFactoryCMMS.Api.Validation;
 
 namespace SmartFactoryCMMS.Api.DTOs
 {
@@ -16,9 +17,9 @@ namespace SmartFactoryCMMS.Api.DTOs
         [StringLength(127)]
         public string? SerialNumber { get; set; }
 
-        [Required]
-        public MachineStatus Status { get; set; } = MachineStatus.Offline;
+        public MachineStatus? Status { get; set; }
 
+        [FiniteRange(0.001)]
         public double CycleTimeSeconds { get; set; } = 5.0;
 
         public int OrderInLine { get; set; } = 0;
@@ -30,11 +31,17 @@ namespace SmartFactoryCMMS.Api.DTOs
 
         public Guid? ProductionLineId { get; set; }
 
+        [FiniteRange(-273.15, 2000)]
         public double NormTemp { get; set; } = 60.0;
 
+        [FiniteRange(0, 1000000)]
         public double BaseVib { get; set; } = 1.0;
 
+        [FiniteRange(0, 1000000)]
         public double NormPower { get; set; } = 15.0;
+
+        [Range(1, long.MaxValue)]
+        public long? SimulationProfileVersion { get; set; }
 
         public List<CreateAlertThresholdDto> AlertThresholds { get; set; } = new();
     }

@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace SmartFactoryCMMS.Api.Migrations
 {
-    /// <inheritdoc />
+    
     public partial class AddOperatingHoursToMachineDetails : Migration
     {
-        /// <inheritdoc />
+        
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
@@ -25,7 +25,7 @@ namespace SmartFactoryCMMS.Api.Migrations
                 defaultValue: 0.0);
         }
 
-        /// <inheritdoc />
+        
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

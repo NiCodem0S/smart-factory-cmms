@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useMachinesByProductionHallId, useProductionLineActions } from '../../hooks/useProductionLines';
 import MachineIcon from '../common/MachineIcon';
+import { useAuth } from '../../context/AuthContext';
 import { MachineProductionLineDto } from '../../types/machine';
 
 interface ProductionLineCardProps {
@@ -50,7 +51,7 @@ function getScrapRate(machines: MachineProductionLineDto[], lineStatus: string) 
 
     const totalParts = machines.reduce((acc, m) => acc + m.totalProduced, 0);
 
-    // Mała wariacja w zakresie 0.1% - 0.5% zmieniająca się co kilka sztuk:
+    // Small variation of 0.1% to 0.5%, changing every few parts:
     const jitter = ((totalParts % 7) * 0.08);
 
     // 1. Awaria / Zatrzymanie linii (4.2% - 4.7%)
@@ -58,7 +59,7 @@ function getScrapRate(machines: MachineProductionLineDto[], lineStatus: string) 
         const rate = (4.2 + jitter).toFixed(1);
         return `${rate}%`;
     }
-    // 2. Ostrzeżenie / Wibracje / Przegrzanie (2.3% - 2.8%)
+    // 2. Warning / vibration / overheating (2.3% to 2.8%)
     if (lineStatus === 'Warning' || machines.some(m => m.status === 'Warning')) {
         const rate = (2.3 + jitter).toFixed(1);
         return `${rate}%`;
@@ -178,6 +179,8 @@ function MachineFlowItem({ machine, isLast, lineStatus }: MachineFlowItemProps) 
 }
 
 export default function ProductionLineCard({ line, onStatusChange }: ProductionLineCardProps) {
+    const { user } = useAuth();
+    const canManage = user?.role === 'SuperAdmin' || user?.role === 'HallAdmin';
 
     const { machines, isLoading: isLoadingMachines, error: errorMachines, refetch: reloadMachines } = useMachinesByProductionHallId(line.id)
     const { haltLine, startLine, isActionLoading, actionError, clearStatus } = useProductionLineActions()
@@ -277,7 +280,7 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
                                 <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Produced</div>
                                 <div className="font-bold text-blue-600 font-mono text-base">{getDailyOutput(machines)}</div>
                             </div>
-                            <div className="pl-4 border-l border-slate-200 flex gap-2">
+                            <div className={`pl-4 border-l border-slate-200 flex gap-2 ${canManage ? '' : 'hidden'}`}>
                                 {line.status !== 'Halted' ? (
                                     <button
                                         onClick={handleHalt}

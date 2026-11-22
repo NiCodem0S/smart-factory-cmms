@@ -1,18 +1,19 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Loader2, AlertCircle, ListTodo, SquarePen, CheckCircle, ListOrdered, Activity, RotateCcw, ShieldCheck, TrendingDown, Timer, Boxes, PackageCheck } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, AlertCircle, SquarePen, CheckCircle, ListOrdered, Activity, RotateCcw, ShieldCheck, TrendingDown, Timer, PackageCheck } from "lucide-react";
 import useMachineDetails from "../../hooks/useMachineDetails";
 import useUpdateThresholds from "../../hooks/useUpdateThresholds";
 import Header from "../layout/Header";
+import SimulationDrawer from '../simulation/SimulationDrawer';
+import TelemetryHistoryChart from '../simulation/TelemetryHistoryChart';
+import { useSimulationMachine } from '../../hooks/useSimulationMachine';
+import { telemetryTimestamp } from '../../utils/telemetrySeries';
+import SimulationProperties from '../simulation/SimulationProperties';
+import SimulationCondition from '../simulation/SimulationCondition';
 import StatusBadge from "../common/StatusBadge";
 import { CreateAlertThresholdsDto, MachineDetailDto } from "../../types/machine";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import AddMachineModal from "./AddMachineModal";
-
-const PROPERTY_UNITS: Record<string, string> = {
-    NormTemp: '°C',
-    BaseVib: 'mm/s',
-    NormPower: 'kW',
-};
+import { useAuth } from '../../context/AuthContext';
 
 const ORDER_LABELS: Record<number, string> = {
     1: 'st',
@@ -20,20 +21,8 @@ const ORDER_LABELS: Record<number, string> = {
     3: 'rd'
 }
 
-function getMTBF() {
-
-}
-
-function handleScheduleMaintenace() {
-
-}
-
 function getOrderLabel(key: number): string {
     return ORDER_LABELS[key] || 'th';
-}
-
-function getPropertyUnit(key: string): string {
-    return PROPERTY_UNITS[key] || '';
 }
 
 function formatUpTime(dateStr: string | null | undefined, status: string) {
@@ -53,23 +42,6 @@ function formatUpTime(dateStr: string | null | undefined, status: string) {
         : (minutes === 0 ? '0 minutes' : `${minutes} minutes`);
 }
 
-function getScrapRate(machine: MachineDetailDto) {
-
-    const jitter = ((machine.totalProduced % 7) * 0.08);
-
-    if (machine.status === 'Error') {
-        const rate = (4.2 + jitter).toFixed(1);
-        return `${rate}%`;
-    }
-    if (machine.status === 'Warning') {
-        const rate = (2.3 + jitter).toFixed(1);
-        return `${rate}%`;
-    }
-    const rate = (0.6 + jitter).toFixed(1);
-
-    return `${rate}%`;
-}
-
 function getTotalOperatingHours(machine: MachineDetailDto): string {
     const baseHours = machine.totalOperatingHours || 0;
     if ((machine.status === 'Running' || machine.status === 'Warning') && machine.lastStatusChangedAt) {
@@ -84,10 +56,27 @@ function getTotalOperatingHours(machine: MachineDetailDto): string {
 
 export default function MachineDetails() {
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuth();
+    const canManage = user?.role === 'SuperAdmin' || user?.role === 'HallAdmin';
     const { machine, isLoading, error, refetch } = useMachineDetails(id);
+    const { machine: simulation, error: simulationError, refresh: refreshSimulation, connectionStatus } = useSimulationMachine(id ?? '');
+    const live = simulation?.machineId === id ? simulation : null;
+    const latestSaved = machine?.latestTelemetry.reduce((latest, sample) =>
+        !latest || telemetryTimestamp(sample.timestamp) > telemetryTimestamp(latest.timestamp) ? sample : latest,
+        null as MachineDetailDto['latestTelemetry'][number] | null);
+    const currentTelemetry = live?.state ?? latestSaved;
+    const value = (number: number | null | undefined) => typeof number === 'number' && Number.isFinite(number)
+        ? number.toLocaleString('en-GB', { maximumFractionDigits: 2 }) : '—';
     const { execute, isSaving, errorThresholds } = useUpdateThresholds()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const observedStatus = useRef<string | undefined>(undefined);
+    useEffect(() => {
+        if (!live || isModalOpen) return;
+        const key = `${live.machineId}/${live.machineStatus}`;
+        if (observedStatus.current !== undefined && observedStatus.current !== key) void refetch(undefined, true);
+        observedStatus.current = key;
+    }, [live?.machineId, live?.machineStatus, isModalOpen, refetch]);
 
     const [tempWarning, setTempWarning] = useState<number | string>(70);
     const [tempCritical, setTempCritical] = useState<number | string>(85);
@@ -132,12 +121,14 @@ export default function MachineDetails() {
 
     const handleSuccess = () => {
         refetch();
+        void refreshSimulation();
         setSuccessMessage("Machine updated successfully!");
         setTimeout(() => {
             setSuccessMessage(null);
         }, 4000);
     };
 
+    const thresholdKey = JSON.stringify(machine?.alertThresholds);
     useEffect(() => {
         if (machine?.alertThresholds) {
             const temp = machine.alertThresholds.find(t => t.metricType === "Temperature");
@@ -151,7 +142,7 @@ export default function MachineDetails() {
                 setVibCritical(vib.criticalValue);
             }
         }
-    }, [machine?.alertThresholds]); //Uruchomi się gdy baza odpowie i ten obiekt przestanie byc pusty
+    }, [thresholdKey]);
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -175,7 +166,7 @@ export default function MachineDetails() {
                                 <h1 className="text-xl font-bold text-slate-800">
                                     {machine ? machine.name : "Loading..."}
                                 </h1>
-                                {machine && <StatusBadge status={machine.status} />}
+                                {machine && <StatusBadge status={live?.machineStatus ?? machine.status} />}
                                 <span className="text-xs font-mono text-slate-400">
                                     ID: {machine?.serialNumber || id}
                                 </span>
@@ -190,6 +181,7 @@ export default function MachineDetails() {
                             <span>Export PDF</span>
                         </button>
                         <button
+                            disabled={!canManage}
                             onClick={() => setIsModalOpen(true)}
                             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-sm transition-colors flex items-center gap-2"
                         >
@@ -225,10 +217,10 @@ export default function MachineDetails() {
                     </div>
                 )}
 
-                {error || errorThresholds && (
+                {(error || errorThresholds || simulationError) && (
                     <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3">
                         <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                        <span className="text-sm font-semibold">{error}</span>
+                        <span className="text-sm font-semibold">{error || errorThresholds || simulationError}</span>
                     </div>
                 )}
 
@@ -238,88 +230,35 @@ export default function MachineDetails() {
                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Current Temp</div>
-                                <div className="text-3xl font-bold text-slate-800">-- <span className="text-base text-slate-400">°C</span></div>
+                                <div className="text-3xl font-bold text-slate-800">{value(currentTelemetry?.temperature)} <span className="text-base text-slate-400">°C</span></div>
                             </div>
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Vibration</div>
-                                <div className="text-3xl font-bold text-slate-800">-- <span className="text-base text-slate-400">mm/s</span></div>
+                                <div className="text-3xl font-bold text-slate-800">{value(currentTelemetry?.vibration)} <span className="text-base text-slate-400">mm/s</span></div>
                             </div>
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Energy Load</div>
-                                <div className="text-3xl font-bold text-yellow-600">-- <span className="text-base text-yellow-500">kW</span></div>
+                                <div className="text-3xl font-bold text-yellow-600">{value(currentTelemetry?.powerLoadKw)} <span className="text-base text-yellow-500">kW</span></div>
                             </div>
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Network Ping</div>
-                                <div className="text-3xl font-bold text-blue-600">-- <span className="text-base text-blue-400">ms</span></div>
+                                <div className="text-3xl font-bold text-blue-600">{value(currentTelemetry && 'networkLatencyMs' in currentTelemetry ? currentTelemetry.networkLatencyMs : null)} <span className="text-base text-blue-400">ms</span></div>
                             </div>
                         </div>
 
+                        {!live?.state && latestSaved && <p className="text-xs text-slate-500">
+                            Last saved reading: {new Date(telemetryTimestamp(latestSaved.timestamp)).toLocaleString('en-GB')}. Live telemetry is unavailable.
+                        </p>}
+
                         {/* 2. Main Grid */}
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-3">
 
                             {/* Left Side (Charts, Analytics, Incidents) */}
-                            <div className="xl:col-span-2 space-y-6">
+                            <div className="2xl:col-span-2 space-y-6">
 
-                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div>
-                                            <h2 className="text-lg font-bold text-slate-800">Telemetry History</h2>
-                                            <p className="text-xs text-slate-500">Live data stream (last 60 seconds)</p>
-                                        </div>
-                                        <div className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
-                                            <button className="px-3 py-1 text-xs font-bold bg-white text-slate-800 rounded shadow-sm">Live</button>
-                                            <button className="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-800">1H</button>
-                                            <button className="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-800">24H</button>
-                                        </div>
-                                    </div>
-                                    <div className="h-[300px] w-full relative bg-slate-50 rounded border border-slate-100 flex items-center justify-center">
-                                        {/* To do: Recharts chart here */}
-                                        <span className="text-slate-400 font-medium">Chart Area Placeholder</span>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Predictive Analytics</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                                        <div className="flex flex-col items-center justify-center md:col-span-1 pt-2">
-                                            {/* Health Gauge Mockup */}
-                                            <div className="relative w-[180px] h-[90px] overflow-hidden">
-                                                <div
-                                                    className="absolute top-0 left-0 w-[180px] h-[180px] rounded-full transition-all duration-700 ease-out"
-                                                    style={{ background: 'conic-gradient(from 270deg, #22c55e 0deg, #22c55e 158.4deg, #f1f5f9 158.4deg, #f1f5f9 180deg, transparent 180deg)' }}
-                                                ></div>
-                                                <div className="absolute top-[15px] left-[15px] w-[150px] h-[150px] bg-white rounded-full"></div>
-                                                <div className="absolute bottom-0 w-full text-center leading-none">
-                                                    <span className="text-[40px] font-black text-green-500 transition-colors duration-500">88<span className="text-xl">%</span></span>
-                                                </div>
-                                            </div>
-                                            <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mt-3">Machine Health</div>
-                                        </div>
-
-                                        <div className="md:col-span-2 md:border-l border-slate-100 md:pl-8 space-y-4">
-                                            <div>
-                                                <h4 className="text-xs font-bold text-green-600 uppercase tracking-wider mb-1">Status: Optimal</h4>
-                                                <p className="text-xs text-slate-500 leading-relaxed">Component wear is currently within normal operational limits. Vibration analysis shows minimal degradation on primary bearings.</p>
-                                            </div>
-                                            <div className="pt-4 border-t border-slate-100">
-                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                                    <div>
-                                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Est. Remaining Useful Life</div>
-                                                        <div className="text-3xl font-bold text-slate-800">412 <span className="text-base text-slate-400 font-medium">hours</span></div>
-                                                        <p className="text-xs text-slate-500 mt-1 flex items-center">
-                                                            <span className="w-2 h-2 rounded-full bg-yellow-400 mr-1.5"></span> Next predicted failure: Main Servo
-                                                        </p>
-                                                    </div>
-
-                                                    <button className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition-colors flex items-center border border-blue-200 shadow-sm shrink-0">
-                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                        Schedule Maintenance
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <TelemetryHistoryChart key={machine.id} machineId={machine.id} state={live?.state ?? null}
+                                    tickIntervalMs={live?.profile?.tickIntervalMs} connectionStatus={connectionStatus} />
+                                <SimulationCondition machine={live} />
 
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                                     <div className="p-6 border-b border-slate-100">
@@ -335,16 +274,12 @@ export default function MachineDetails() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
-                                                <tr>
-                                                    <td className="px-6 py-4 font-mono text-slate-500 text-xs">Today, 08:14</td>
-                                                    <td className="px-6 py-4 text-slate-700">Network connection lost for 12 seconds.</td>
-                                                    <td className="px-6 py-4"><span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded">Resolved</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="px-6 py-4 font-mono text-slate-500 text-xs">Yesterday, 14:30</td>
-                                                    <td className="px-6 py-4 text-slate-700">Vibration spike (warning threshold reached).</td>
-                                                    <td className="px-6 py-4"><span className="text-slate-500 font-bold text-xs bg-slate-100 px-2 py-1 rounded">Archived</span></td>
-                                                </tr>
+                                                {machine.recentIncidents.map(incident => <tr key={incident.id}>
+                                                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{new Date(telemetryTimestamp(incident.triggeredAt)).toLocaleString('en-GB')}</td>
+                                                    <td className="max-w-md whitespace-normal px-6 py-4 text-slate-700">{incident.message}</td>
+                                                    <td className="px-6 py-4"><span className={`rounded px-2 py-1 text-xs font-bold ${incident.status === 'Active' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>{incident.status}</span></td>
+                                                </tr>)}
+                                                {machine.recentIncidents.length === 0 && <tr><td colSpan={3} className="px-6 py-4 text-slate-500">No recorded incidents.</td></tr>}
                                             </tbody>
                                         </table>
                                     </div>
@@ -353,6 +288,8 @@ export default function MachineDetails() {
 
                             {/* Right Side (KPIs, Properties, Config) */}
                             <div className="space-y-6">
+
+                                <SimulationProperties machine={live} properties={parsedProperties} />
 
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                                     <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Production KPIs</h2>
@@ -383,14 +320,14 @@ export default function MachineDetails() {
                                                 <ShieldCheck className="w-4 h-4 text-slate-800 shrink-0" />
                                                 <span>MTBF <span className="text-[10px] text-slate-400 font-normal ml-1">(Mean Time Btw Failures)</span></span>
                                             </div>
-                                            <span className="text-sm font-bold text-slate-800 font-mono">45d 12h</span>
+                                            <span className="text-sm font-bold text-slate-800 font-mono">—</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
                                                 <TrendingDown className="w-4 h-4 text-red-500 shrink-0" />
                                                 <span>Scrap Rate</span>
                                             </div>
-                                            <span className="text-sm font-bold text-red-500 font-mono">{getScrapRate(machine)}</span>
+                                            <span className="text-sm font-bold text-red-500 font-mono">—</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -402,43 +339,10 @@ export default function MachineDetails() {
                                         <div className="flex justify-between items-center">
                                             <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
                                                 <PackageCheck className="w-4 h-4 text-indigo-600 shrink-0" />
-                                                <span>Total Produced <span className="text-[10px] text-slate-400 font-normal ml-1">(Since last interruption)</span></span>
+                                                <span>Total Produced <span className="text-[10px] text-slate-400 font-normal ml-1">(Lifetime count)</span></span>
                                             </div>
-                                            <span className="text-sm font-bold text-indigo-600 font-mono">{machine.totalProduced}</span>
+                                            <span className="text-sm font-bold text-indigo-600 font-mono">{live?.state?.totalProduced ?? machine.totalProduced}</span>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-slate-900 rounded-xl shadow-sm p-6 text-slate-300">
-                                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                                        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center">
-                                            <span className="mr-2"><ListTodo className="w-5 h-5 text-amber-500" /></span> Specific Properties
-                                        </h2>
-                                        <span className="text-[10px] font-mono bg-slate-800 px-2 py-1 rounded text-slate-400">JSON</span>
-                                    </div>
-                                    <div className="space-y-3 text-sm">
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-slate-400">Category</span>
-                                            <span className="font-mono font-bold text-white">{machine.category}</span>
-                                        </div>
-                                        {Object.keys(parsedProperties).length === 0 ? (
-                                            <div className="text-xs text-slate-500 italic py-1">No additional properties</div>
-                                        ) : (
-                                            Object.entries(parsedProperties).map(([key, value]) => (
-
-                                                <div key={key} className="flex justify-between items-end">
-                                                    <span className="text-slate-400">{key}</span>
-                                                    <span className="font-mono font-bold text-white text-base">
-                                                        {value}
-                                                        {getPropertyUnit(key) && (
-                                                            <span className="text-slate-400 text-s ml-1.5 font-normal">
-                                                                {getPropertyUnit(key)}
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            ))
-                                        )}
                                     </div>
                                 </div>
 
@@ -475,7 +379,7 @@ export default function MachineDetails() {
                                         </div>
 
                                         <button
-                                            disabled={isSaving}
+                                            disabled={!canManage || isSaving}
                                             onClick={() => handleThresholds()}
                                             className="w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded transition-colors mt-2">
                                             {isSaving ? "Saving..." : "Save Thresholds"}
@@ -488,6 +392,8 @@ export default function MachineDetails() {
                     </div>
                 )}
             </div>
+            {live && <SimulationDrawer key={live.machineId} machine={live} connectionStatus={connectionStatus}
+                onChange={() => { void refreshSimulation(); void refetch(undefined, true); }} />}
             <AddMachineModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

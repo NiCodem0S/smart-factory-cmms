@@ -9,6 +9,9 @@ using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Repositories.Abstract;
 using System.Linq;
+using SmartFactoryCMMS.Api.Services;
+using SmartFactoryCMMS.Api.Services.Abstract;
+using SmartFactoryCMMS.Api.Simulation;
 
 namespace SmartFactoryCMMS.Api.Controllers
 {
@@ -19,11 +22,15 @@ namespace SmartFactoryCMMS.Api.Controllers
     {
         private readonly IMachineRepository _machineRepository;
         private readonly IMapper _mapper;
+        private readonly SimulationOrchestrator _simulation;
+        private readonly IUserContext _user;
 
-        public MachinesController(IMachineRepository machineRepository, IMapper mapper)
+        public MachinesController(IMachineRepository machineRepository, IMapper mapper, SimulationOrchestrator simulation, IUserContext user)
         {
             _machineRepository = machineRepository;
             _mapper = mapper;
+            _simulation = simulation;
+            _user = user;
         }
 
         [HttpGet]
@@ -78,6 +85,7 @@ namespace SmartFactoryCMMS.Api.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
         [HttpPut("{id}/tresholds")]
         public async Task<IActionResult> UpdateMachineTresholds(
             [FromRoute] Guid id,
@@ -103,6 +111,45 @@ namespace SmartFactoryCMMS.Api.Controllers
             return NoContent();
         }
         
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
+        [HttpPost("{id}/start")]
+        public async Task<IActionResult> StartMachine(Guid id, CancellationToken ct)
+        {
+            await _simulation.StartAsync(id, SimulationActor.From(_user), startMachine: true, ct);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
+        [HttpPost("{id}/stop")]
+        public async Task<IActionResult> StopMachine(Guid id, CancellationToken ct)
+        {
+            await _simulation.StopAsync(id, SimulationActor.From(_user), stopMachine: true, ct);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
+        [HttpPost("{id}/maintenance")]
+        public async Task<IActionResult> Maintenance(Guid id, CancellationToken ct)
+        {
+            await _simulation.MaintenanceAsync(id, SimulationActor.From(_user), complete: false, ct);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
+        [HttpPost("{id}/repair")]
+        public async Task<IActionResult> Repair(Guid id, CancellationToken ct)
+        {
+            await _simulation.MaintenanceAsync(id, SimulationActor.From(_user), complete: true, ct);
+            return NoContent();
+        }
+
+        [HttpGet("{id}/telemetry/series")]
+        public async Task<ActionResult<TelemetrySeriesDto>> GetMachineTelemetrySeries(Guid id,
+            [FromQuery] int windowMinutes = 1, CancellationToken ct = default)
+        {
+            return Ok(await _machineRepository.GetMachineTelemetrySeriesAsync(id, windowMinutes, ct));
+        }
+
         [HttpGet("{id}/telemetry")]
         [PagingValidation(LimitArgumentName = "limit", MaxLimit = 1000)]
         public async Task<ActionResult<List<TelemetryReadDto>>> GetMachineTelemetry(

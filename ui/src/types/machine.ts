@@ -131,10 +131,11 @@ export interface CreateAlertThresholdsDto {
 }
 
 export interface UpdateMachineDto {
+	simulationProfileVersion?: number
 	name: string
 	category: string
 	serialNumber: string | null
-	status: MachineStatus
+	status?: MachineStatus
 	cycleTimeSeconds: number
 	orderInLine: number
 	icon?: string

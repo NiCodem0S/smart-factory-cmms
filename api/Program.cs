@@ -13,8 +13,12 @@ using SmartFactoryCMMS.Api.Repositories.Abstract;
 using SmartFactoryCMMS.Api.Services;
 using SmartFactoryCMMS.Api.Services.Abstract;
 using Serilog;
+using SmartFactoryCMMS.Api.Simulation;
+using SmartFactoryCMMS.Api.Hubs;
 
 Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
     .WriteTo.File(
         path: "Logs/cmms-log-.txt",
@@ -87,6 +91,15 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.HttpContext.Request.Path.StartsWithSegments("/hubs/telemetry") &&
+                context.Request.Query.TryGetValue("access_token", out var token)) context.Token = token;
+            return Task.CompletedTask;
+        }
+    };
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -127,6 +140,22 @@ builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<IUserContext, UserContext>();
 builder.Services.AddSingleton<RedisConnectionProvider>();
 builder.Services.AddHealthChecks().AddCheck<RedisHealthCheck>("simulation-redis");
+builder.Services.AddSingleton<ISimulationStateStore, RedisSimulationStateStore>();
+builder.Services.AddSingleton<SimulationDiagnostics>();
+builder.Services.AddSingleton<TelemetryChannel>();
+builder.Services.AddScoped<ISimulationCheckpointStore, SimulationCheckpointStore>();
+builder.Services.AddSignalR().AddJsonProtocol(o =>
+    o.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+builder.Services.AddSingleton<SimulationOrchestrator>();
+builder.Services.AddHostedService<TelemetryPersister>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<SimulationOrchestrator>());
+builder.Services.AddHostedService<SimulationAutomationService>();
+builder.Services.AddHostedService<SimulationCheckpointService>();
+builder.Services.AddHostedService<TelemetryRetentionService>();
+builder.Services.AddOptions<SmartFactoryCMMS.Api.Configuration.SimulationOptions>()
+    .Bind(builder.Configuration.GetSection(SmartFactoryCMMS.Api.Configuration.SimulationOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // Paging options from configuration
 builder.Services.Configure<SmartFactoryCMMS.Api.Configuration.PagingOptions>(builder.Configuration.GetSection("Paging"));
@@ -153,6 +182,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TelemetryHub>("/hubs/telemetry", options => options.CloseOnAuthenticationExpiration = true);
 app.MapHealthChecks("/health/simulation-redis")
     .RequireAuthorization(new AuthorizeAttribute { Roles = "SuperAdmin,HallAdmin" });
 
@@ -163,6 +193,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         DatabaseSeeder.Seed(context);
+        SimulationProfileSeeder.Seed(context);
     }
     catch (Exception ex)
     {

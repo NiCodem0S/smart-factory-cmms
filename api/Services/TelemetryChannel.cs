@@ -7,24 +7,29 @@ namespace SmartFactoryCMMS.Api.Services
     {
         private readonly Channel<TelemetryRead> _channel;
 
-        public TelemetryChannel()
+        public TelemetryChannel(SimulationDiagnostics diagnostics)
         {
             var options = new BoundedChannelOptions(10000)
             {
-                FullMode = BoundedChannelFullMode.DropOldest
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleReader = true
             };
 
-            _channel = Channel.CreateBounded<TelemetryRead>(options);
+            _channel = Channel.CreateBounded<TelemetryRead>(options, _ => diagnostics.Drop());
         }
 
-        public async ValueTask AddTelemetryAsync(TelemetryRead telemetry, CancellationToken ct = default)
+        public ValueTask AddTelemetryAsync(TelemetryRead telemetry, CancellationToken ct = default)
         {
-            await _channel.Writer.WriteAsync(telemetry, ct);
+            return _channel.Writer.WriteAsync(telemetry, ct);
         }
 
         public IAsyncEnumerable<TelemetryRead> ReadAllAsync(CancellationToken ct = default)
         {
             return _channel.Reader.ReadAllAsync(ct);
         }
+
+        public int Count => _channel.Reader.CanCount ? _channel.Reader.Count : 0;
+        public bool TryRead(out TelemetryRead? value) => _channel.Reader.TryRead(out value);
+        public void Complete() => _channel.Writer.TryComplete();
     }
 }

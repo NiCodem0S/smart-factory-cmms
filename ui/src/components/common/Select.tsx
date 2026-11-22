@@ -40,7 +40,7 @@ export default function Select<T = string | null>({
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Zamykanie przy kliknięciu poza komponentem
+    // Close when clicking outside the component
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -75,7 +75,7 @@ export default function Select<T = string | null>({
 
     return (
         <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
-            {/* Przycisk wyzwalający */}
+            {/* Dropdown trigger */}
             <button
                 type="button"
                 onClick={() => !disabled && setIsOpen((prev) => !prev)}

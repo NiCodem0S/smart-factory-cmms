@@ -12,6 +12,8 @@ namespace SmartFactoryCMMS.Api.DTOs
         public DateTime InstallationDate { get; set; }
         public string? StaticProperties { get; set; }  // JSON string with additional properties
         public bool IsActive { get; set; }
+        public bool SimulationEnabled { get; set; }
+        public SimulationProfileDto? SimulationProfile { get; set; }
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;
         public Guid FactoryHallId { get; set; }

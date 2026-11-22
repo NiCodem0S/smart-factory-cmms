@@ -101,6 +101,9 @@ namespace SmartFactoryCMMS.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("AutomaticRepairAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -135,6 +138,11 @@ namespace SmartFactoryCMMS.Api.Migrations
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SimulationEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("StaticProperties")
                         .HasColumnType("nvarchar(max)");
@@ -331,6 +339,169 @@ namespace SmartFactoryCMMS.Api.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SimulationCheckpoint", b =>
+                {
+                    b.Property<Guid>("MachineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CycleProgressSeconds")
+                        .HasColumnType("float");
+
+                    b.Property<string>("FaultMode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsOverheating")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsOvervibrating")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("LastTickAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MachineStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<double>("PowerLoadKw")
+                        .HasColumnType("float");
+
+                    b.Property<long>("ProfileVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTimeOffset>("SavedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Temperature")
+                        .HasColumnType("float");
+
+                    b.Property<long>("TickNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TotalProduced")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Vibration")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Wear")
+                        .HasColumnType("float");
+
+                    b.HasKey("MachineId");
+
+                    b.ToTable("SimulationCheckpoints", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SimulationCheckpoints_FaultMode", "[FaultMode] IN ('None', 'Overheating', 'ExcessVibration', 'Generic')");
+
+                            t.HasCheckConstraint("CK_SimulationCheckpoints_State", "[Temperature] BETWEEN -273.15 AND 1000000 AND [Vibration] >= 0 AND [PowerLoadKw] >= 0 AND [CycleProgressSeconds] >= 0 AND [Wear] BETWEEN 0 AND 1 AND [TotalProduced] >= 0");
+
+                            t.HasCheckConstraint("CK_SimulationCheckpoints_Status", "[MachineStatus] IN ('Running', 'Warning', 'Error', 'Maintenance', 'Offline')");
+
+                            t.HasCheckConstraint("CK_SimulationCheckpoints_Versions", "[SchemaVersion] >= 1 AND [ProfileVersion] >= 1 AND [TickNumber] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SimulationProfile", b =>
+                {
+                    b.Property<Guid>("MachineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AmbientTemperature")
+                        .HasColumnType("float");
+
+                    b.Property<double>("BaseVibration")
+                        .HasColumnType("float");
+
+                    b.Property<double>("CoolingDegreesPerSecond")
+                        .HasColumnType("float");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("ExcessVibrationAmplitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("ExcessVibrationProbabilityPerHour")
+                        .HasColumnType("float");
+
+                    b.Property<double>("FailureProbabilityPerHour")
+                        .HasColumnType("float");
+
+                    b.Property<double>("IdlePowerKw")
+                        .HasColumnType("float");
+
+                    b.Property<double>("NormalPowerKw")
+                        .HasColumnType("float");
+
+                    b.Property<double>("NormalTemperature")
+                        .HasColumnType("float");
+
+                    b.Property<double>("OverheatingDegreesPerSecond")
+                        .HasColumnType("float");
+
+                    b.Property<double>("OverheatingProbabilityPerHour")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PowerNoiseAmplitudeKw")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Preset")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<double>("TemperatureNoiseAmplitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("TemperatureResponsePerSecond")
+                        .HasColumnType("float");
+
+                    b.Property<int>("TickIntervalMs")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("VibrationNoiseAmplitude")
+                        .HasColumnType("float");
+
+                    b.Property<double>("WearPerHour")
+                        .HasColumnType("float");
+
+                    b.HasKey("MachineId");
+
+                    b.ToTable("SimulationProfiles", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SimulationProfiles_Preset", "[Preset] IN ('Stable', 'WearAndTear', 'Chaos', 'Custom')");
+
+                            t.HasCheckConstraint("CK_SimulationProfiles_Probabilities", "[OverheatingProbabilityPerHour] BETWEEN 0 AND 1 AND [ExcessVibrationProbabilityPerHour] BETWEEN 0 AND 1 AND [FailureProbabilityPerHour] BETWEEN 0 AND 1 AND [WearPerHour] BETWEEN 0 AND 1");
+
+                            t.HasCheckConstraint("CK_SimulationProfiles_Thermal", "[AmbientTemperature] BETWEEN -273.15 AND 2000 AND [NormalTemperature] BETWEEN -273.15 AND 2000 AND [TemperatureNoiseAmplitude] BETWEEN 0 AND 2000 AND [TemperatureResponsePerSecond] BETWEEN 0 AND 100 AND [OverheatingDegreesPerSecond] BETWEEN 0.001 AND 2000 AND [CoolingDegreesPerSecond] BETWEEN 0.001 AND 2000");
+
+                            t.HasCheckConstraint("CK_SimulationProfiles_Tick", "[TickIntervalMs] BETWEEN 100 AND 60000");
+
+                            t.HasCheckConstraint("CK_SimulationProfiles_Version", "[Version] >= 1");
+
+                            t.HasCheckConstraint("CK_SimulationProfiles_VibrationAndPower", "[BaseVibration] BETWEEN 0 AND 1000000 AND [VibrationNoiseAmplitude] BETWEEN 0 AND 1000000 AND [ExcessVibrationAmplitude] BETWEEN 0 AND 1000000 AND [NormalPowerKw] BETWEEN 0 AND 1000000 AND [PowerNoiseAmplitudeKw] BETWEEN 0 AND 1000000 AND [IdlePowerKw] BETWEEN 0 AND [NormalPowerKw]");
+                        });
+                });
+
             modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SystemSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -349,6 +520,9 @@ namespace SmartFactoryCMMS.Api.Migrations
 
                     b.Property<int>("RawTelemetryRetentionDays")
                         .HasColumnType("int");
+
+                    b.Property<bool?>("SimulationAutomationEnabled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("SiteName")
                         .IsRequired()
@@ -395,7 +569,9 @@ namespace SmartFactoryCMMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MachineId");
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("MachineId", "Timestamp");
 
                     b.ToTable("TelemetryRead");
                 });
@@ -609,6 +785,28 @@ namespace SmartFactoryCMMS.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SimulationCheckpoint", b =>
+                {
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
+                        .WithOne("SimulationCheckpoint")
+                        .HasForeignKey("SmartFactoryCMMS.Api.Models.SimulationCheckpoint", "MachineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+                });
+
+            modelBuilder.Entity("SmartFactoryCMMS.Api.Models.SimulationProfile", b =>
+                {
+                    b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
+                        .WithOne("SimulationProfile")
+                        .HasForeignKey("SmartFactoryCMMS.Api.Models.SimulationProfile", "MachineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
+                });
+
             modelBuilder.Entity("SmartFactoryCMMS.Api.Models.TelemetryRead", b =>
                 {
                     b.HasOne("SmartFactoryCMMS.Api.Models.Machine", "Machine")
@@ -661,6 +859,10 @@ namespace SmartFactoryCMMS.Api.Migrations
                     b.Navigation("AlertThresholds");
 
                     b.Navigation("Incidents");
+
+                    b.Navigation("SimulationCheckpoint");
+
+                    b.Navigation("SimulationProfile");
 
                     b.Navigation("TelemetryReads");
 

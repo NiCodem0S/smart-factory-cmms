@@ -1,19 +1,30 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 using SmartFactoryCMMS.Api.Models;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Options;
+using SmartFactoryCMMS.Api.Configuration;
+using SmartFactoryCMMS.Api.Simulation;
 
 namespace SmartFactoryCMMS.Api.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
+        private readonly SimulationOptions _simulationOptions;
 
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IOptions<SimulationOptions>? simulationOptions = null) : base(options)
+        {
+            _simulationOptions = simulationOptions?.Value ?? new SimulationOptions();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        modelBuilder.Entity<Machine>().Property(m => m.SimulationEnabled).HasDefaultValue(false);
+        modelBuilder.Entity<TelemetryRead>().HasIndex(t => new { t.MachineId, t.Timestamp });
+        modelBuilder.Entity<TelemetryRead>().HasIndex(t => t.Timestamp);
 
         modelBuilder.Entity<Machine>()
         .Property(m => m.Status)
@@ -69,5 +80,60 @@ namespace SmartFactoryCMMS.Api.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductionLine> ProductionLines { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<SimulationProfile> SimulationProfiles { get; set; }
+        public DbSet<SimulationCheckpoint> SimulationCheckpoints { get; set; }
+
+        public SimulationProfile CreateDefaultSimulationProfile(Machine machine) =>
+            SimulationProfileFactory.CreateStable(machine, _simulationOptions.DefaultTickIntervalMs);
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            PrepareSimulationEntities();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            PrepareSimulationEntities();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void PrepareSimulationEntities()
+        {
+            // Covers API creation and the legacy seeder in both sync and async saves.
+            foreach (var entry in ChangeTracker.Entries<Machine>().Where(e => e.State == EntityState.Added).ToList())
+            {
+                entry.Entity.SimulationEnabled = false;
+                if (entry.Entity.IsActive && entry.Entity.SimulationProfile is null)
+                {
+                    entry.Entity.SimulationProfile = CreateDefaultSimulationProfile(entry.Entity);
+                }
+            }
+
+            foreach (var entry in ChangeTracker.Entries<SimulationProfile>()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified).ToList())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.Version = 1;
+                    entry.Entity.CreatedAtUtc = DateTimeOffset.UtcNow;
+                }
+                else
+                {
+                    entry.Entity.Version = checked(entry.Property(p => p.Version).OriginalValue + 1);
+                    entry.Entity.CreatedAtUtc = entry.Property(p => p.CreatedAtUtc).OriginalValue;
+                    entry.Property(p => p.CreatedAtUtc).IsModified = false;
+                }
+
+                entry.Entity.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                Validator.ValidateObject(entry.Entity, new ValidationContext(entry.Entity), validateAllProperties: true);
+            }
+
+            foreach (var entry in ChangeTracker.Entries<SimulationCheckpoint>()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified))
+            {
+                Validator.ValidateObject(entry.Entity, new ValidationContext(entry.Entity), validateAllProperties: true);
+            }
+        }
     }
 }

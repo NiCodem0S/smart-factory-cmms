@@ -31,7 +31,6 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
             label: hall.name,
         }))
 
-    console.log("🔍 HEADER DEBUG:", { role: user?.role, isSuperAdmin, hallOptions: hallOptions.length, disabled: isLoadingHalls || !isSuperAdmin });
 
     return (
         <header className="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0 z-100">
@@ -48,9 +47,9 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
                 {leftContent || children}
             </div>
 
-            {/* Prawa strona nagłówka - zawsze renderowana */}
+            {/* Right side of the header */}
             <div className="flex items-center gap-3">
-                {/* Przełącznik Hal */}
+                {/* Factory hall selector */}
                 {showHallSelector && (
                     <Select
                         value={selectedHallId}
@@ -61,10 +60,9 @@ export default function Header({ onMenuClick, leftContent, rightContent, childre
                         headerTitle="Select Factory Hall"
                     />)}
 
-                {/* Opcjonalna zawartość przekazana z widoku (np. przycisk Add Machine) */}
+                {/* Optional content supplied by the current view */}
                 {rightContent}
             </div>
         </header>
     );
 }
-

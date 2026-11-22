@@ -9,8 +9,8 @@ export default function useProductionLinesByHallsId(id?: string | null) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadLines = useCallback(async (signal?: AbortSignal) => {
-        setIsLoading(true)
+    const loadLines = useCallback(async (signal?: AbortSignal, background = false) => {
+        if (!background) setIsLoading(true)
         setError(null)
 
         try {
@@ -32,9 +32,11 @@ export default function useProductionLinesByHallsId(id?: string | null) {
         const controller = new AbortController()
 
         loadLines(controller.signal)
+        const timer = setInterval(() => void loadLines(controller.signal, true), 5000)
 
         return () => {
             controller.abort()
+            clearInterval(timer)
         }
 
     }, [loadLines])
@@ -47,7 +49,7 @@ export function useMachinesByProductionHallId(id?: string | null) {
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
 
-    const loadMachines = useCallback(async (signal?: AbortSignal) => {
+    const loadMachines = useCallback(async (signal?: AbortSignal, background = false) => {
 
         if (!id) {
             setMachines([])
@@ -55,7 +57,7 @@ export function useMachinesByProductionHallId(id?: string | null) {
             return
         }
 
-        setIsLoading(true)
+        if (!background) setIsLoading(true)
         setError(null)
 
         try {
@@ -77,9 +79,11 @@ export function useMachinesByProductionHallId(id?: string | null) {
         const controller = new AbortController()
 
         loadMachines(controller.signal)
+        const timer = setInterval(() => void loadMachines(controller.signal, true), 5000)
 
         return () => {
             controller.abort()
+            clearInterval(timer)
         }
 
     }, [loadMachines])

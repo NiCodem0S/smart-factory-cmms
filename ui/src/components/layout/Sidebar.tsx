@@ -1,4 +1,5 @@
 import { X, LayoutDashboard, Factory, Cpu, AlertTriangle, Wrench, BarChart3, Zap, Settings, LogOut } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -9,6 +10,18 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const { user, logout } = useAuth();
+    const close = () => setIsOpen(false);
+    const closeButton = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const trigger = document.activeElement;
+        closeButton.current?.focus();
+        return () => {
+            if (trigger instanceof HTMLElement) trigger.focus();
+        };
+    }, [isOpen]);
 
     const getInitials = (name: string) => {
         if (!name) return 'U';
@@ -30,37 +43,40 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <>
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
-                    onClick={() => setIsOpen(false)}
+                    className="fixed inset-0 z-110 bg-black/50 md:hidden"
+                    onClick={close}
                 />
             )}
-            <aside className={`
-                fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-300 flex flex-col
+            <aside id="app-sidebar" onKeyDown={event => {
+                if (isOpen && event.key === 'Escape') close();
+            }} className={`
+                fixed inset-y-0 left-0 z-120 w-64 bg-slate-900 text-slate-300 flex flex-col
                 transform transition-transform duration-300 ease-in-out
-                ${isOpen ? "translate-x-0" : "-translate-x-full"}
-                md:relative md:translate-x-0 shrink-0
+                ${isOpen ? "translate-x-0" : "invisible -translate-x-full"}
+                md:visible md:relative md:z-30 md:translate-x-0 shrink-0
             `}>
                 {/* Logo & Brand Header */}
                 <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 shrink-0">
-                    <Link to="/machines" className="flex items-center gap-2.5 ">
+                    <Link to="/dashboard" onClick={close} className="flex items-center gap-2.5 ">
                         <img src="/logo.png" alt="Smart Factory Logo" className="w-[33px] h-[33px] object-contain" />
                         <span className="text-[19px] font-bold text-white tracking-wider">
                             Smart<span className="text-blue-500">Factory</span>
                         </span>
                     </Link>
-                    <button onClick={() => setIsOpen(false)} className="md:hidden text-slate-400 hover:text-white">
+                    <button ref={closeButton} type="button" onClick={close} aria-label="Close navigation" className="md:hidden text-slate-400 hover:text-white">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
 
                 {/* Navigation Groups */}
-                <nav className="flex-1 py-6 space-y-1 overflow-y-auto">
+                <nav className="sidebar-navigation flex-1 py-6 space-y-1 overflow-y-auto">
                     {/* SECTION 1: OPERATIONS */}
                     <div className="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                         OPERATIONS
                     </div>
                     <NavLink
                         to="/dashboard"
+                        onClick={close}
                         className={({ isActive }) =>
                             `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
                                 isActive
@@ -74,6 +90,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </NavLink>
                     <NavLink
                         to="/production"
+                        onClick={close}
                         className={({ isActive }) =>
                             `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
                                 isActive
@@ -87,6 +104,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </NavLink>
                     <NavLink
                         to="/machines"
+                        onClick={close}
                         className={({ isActive }) =>
                             `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
                                 isActive
@@ -98,7 +116,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <Cpu className="w-4 h-4 mr-3 shrink-0" />
                         <span>Machine Fleet</span>
                     </NavLink>
-                    <NavLink to="/simulation" className={({ isActive }) => `flex items-center px-6 py-2.5 text-sm font-semibold ${isActive ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+                    <NavLink to="/simulation" onClick={close} className={({ isActive }) => `flex items-center px-6 py-2.5 text-sm font-semibold ${isActive ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
                         <Zap className="w-4 h-4 mr-3 shrink-0" />
                         <span>Machine Simulation</span>
                     </NavLink>

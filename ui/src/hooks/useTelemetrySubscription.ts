@@ -11,11 +11,16 @@ export function useTelemetrySubscription(
     callback.current = onState
     const reconnect = useRef(options.onReconnect)
     reconnect.current = options.onReconnect
-    const [connectionStatus, setConnectionStatus] = useState('Connecting…')
+    const [connection, setConnection] = useState<{ key: string, status: string } | null>(null)
     const hallKey = [...(options.hallIds ?? [])].sort().join(',')
     const machineId = options.machineId
+    const subscriptionKey = machineId ? `machine/${machineId}` : hallKey ? `halls/${hallKey}` : null
 
     useEffect(() => {
+        if (!subscriptionKey) return
+        const key = subscriptionKey
+        const setConnectionStatus = (status: string) => setConnection({ key, status })
+        setConnectionStatus('Connecting…')
         let disposed = false
         let retry: ReturnType<typeof setTimeout> | undefined
         const configured = String(import.meta.env.VITE_API_BASE_URL)
@@ -34,6 +39,7 @@ export function useTelemetrySubscription(
                 await connection.invoke('JoinMachine', machineId)
             } else {
                 for (const hallId of hallKey.split(',').filter(Boolean)) {
+                    if (disposed) return
                     await connection.invoke('JoinHall', hallId)
                 }
             }
@@ -96,7 +102,7 @@ export function useTelemetrySubscription(
             clearTimeout(retry)
             void connection.stop()
         }
-    }, [machineId, hallKey])
+    }, [machineId, hallKey, subscriptionKey])
 
-    return connectionStatus
+    return connection?.key === subscriptionKey ? connection.status : 'Connecting…'
 }

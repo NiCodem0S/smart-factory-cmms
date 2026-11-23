@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+.sidebar-navigation { scrollbar-width: none; }
+.sidebar-navigation::-webkit-scrollbar { display: none; }
+
 .simulation-drawer[open] { animation: simulation-slide-in 180ms ease-out; }
 .simulation-drawer::backdrop { background: rgb(15 23 42 / 35%); backdrop-filter: blur(3px); }
 @keyframes simulation-slide-in { from { transform: translateX(100%); opacity: .7; } to { transform: translateX(0); opacity: 1; } }

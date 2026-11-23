@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:telemetry": "node --test ../tests/ui/telemetrySeries.test.mjs",
+    "test:telemetry": "node --test ../tests/ui/telemetrySeries.test.mjs ../tests/ui/dashboardTelemetry.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

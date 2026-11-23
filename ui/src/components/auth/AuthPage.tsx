@@ -17,7 +17,7 @@ export const AuthPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/machines';
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
     // Form fields
     const [email, setEmail] = useState('');

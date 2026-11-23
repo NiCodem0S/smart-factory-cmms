@@ -1,3 +1,5 @@
+import type { MachineProductionLineDto } from './machine'
+
 export interface ProductionLineDto {
     id: string
     name: string
@@ -6,6 +8,7 @@ export interface ProductionLineDto {
     lastStatusChangedAt: string | null
     factoryHallId: string
     currentProductId?: string | null;
+    machines?: MachineProductionLineDto[];
 }
 
 export interface CreateProductionLineDto {

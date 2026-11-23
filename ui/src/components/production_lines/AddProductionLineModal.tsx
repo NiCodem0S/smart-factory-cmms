@@ -45,8 +45,11 @@ export default function AddProductionLineModal({
 
     const selectedHallId = watch("factoryHallId");
 
-    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls();
-    const { lines = [], isLoading: isLoadingLines } = useProductionLinesByHallsId(selectedHallId || null);
+    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls(isOpen);
+    const { lines = [], isLoading: isLoadingLines } = useProductionLinesByHallsId(selectedHallId || null, {
+        enabled: isOpen,
+        pollIntervalMs: 0,
+    });
     const { execute, isLoading: isCreating, error: createError } = useCreateProductionLine();
 
     useEffect(() => {

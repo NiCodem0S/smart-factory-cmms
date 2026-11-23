@@ -185,10 +185,46 @@ export function findThreshold(
     machineId: string,
     metric: 'Temperature' | 'Vibration' | 'PowerLoadKw',
 ): { warn: number | null; crit: number | null } {
-    const hit = thresholds.find(
-        t => t.machineId === machineId && t.metricType.toLowerCase() === metric.toLowerCase(),
-    )
+    const hit = thresholds.find(t => {
+        if (t.machineId !== machineId) return false
+        const key = t.metricType.toLowerCase()
+        if (metric === 'PowerLoadKw') return key === 'powerloadkw' || key === 'power'
+        return key === metric.toLowerCase()
+    })
     return hit ? { warn: hit.warningValue, crit: hit.criticalValue } : { warn: null, crit: null }
+}
+
+export function getThermalLoadRatio(machine: DashboardMachine, thresholds: DashboardThreshold[]): number | null {
+    const temp = machine.latestTelemetry?.temperature
+    if (temp === null || temp === undefined || !Number.isFinite(temp)) return null
+    const thresh = findThreshold(thresholds, machine.id, 'Temperature')
+    const crit = thresh.crit && thresh.crit > 0 ? thresh.crit : 85
+    return temp / crit
+}
+
+export function getVibrationLoadRatio(machine: DashboardMachine, thresholds: DashboardThreshold[]): number | null {
+    const vib = machine.latestTelemetry?.vibration
+    if (vib === null || vib === undefined || !Number.isFinite(vib)) return null
+    const thresh = findThreshold(thresholds, machine.id, 'Vibration')
+    const crit = thresh.crit && thresh.crit > 0 ? thresh.crit : 6
+    return vib / crit
+}
+
+export function getPowerLoadRatio(machine: DashboardMachine, thresholds: DashboardThreshold[]): number | null {
+    const power = machine.latestTelemetry?.powerLoadKw
+    if (power === null || power === undefined || !Number.isFinite(power)) return null
+    const thresh = findThreshold(thresholds, machine.id, 'PowerLoadKw')
+    if (!thresh.crit || thresh.crit <= 0) return null
+    return power / thresh.crit
+}
+
+export function getMachineStressScore(machine: DashboardMachine, thresholds: DashboardThreshold[]): number {
+    if (machine.status === 'Offline' || machine.status === 'Maintenance') return 0
+    const tRatio = getThermalLoadRatio(machine, thresholds) ?? 0
+    const vRatio = getVibrationLoadRatio(machine, thresholds) ?? 0
+    const pRatio = getPowerLoadRatio(machine, thresholds) ?? 0
+    const peak = Math.max(tRatio, vRatio, pRatio * 0.92)
+    return Math.min(125, Math.round(peak * 100))
 }
 
 export function statusColorToken(status: MachineStatus): string {

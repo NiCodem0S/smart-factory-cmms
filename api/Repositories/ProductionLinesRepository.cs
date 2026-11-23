@@ -21,14 +21,48 @@ public class ProductionLinesRepository(ApplicationDbContext db, IMapper mapper, 
             hallsId = user.FactoryHallId;
             if (!hallsId.HasValue) return new();
         }
-        var query = db.ProductionLines.AsQueryable();
+        var query = db.ProductionLines.AsNoTracking();
         if (hallsId.HasValue)
         {
-            if (await halls.GetFactoryHallByIdAsync(hallsId.Value, ct) is null) return null;
-            query = query.Where(l => l.FactoryHallId == hallsId);
+            var hallExists = await db.FactoryHalls.AsNoTracking().AnyAsync(h => h.Id == hallsId.Value, ct);
+            if (!hallExists) return null;
+            query = query.Where(l => l.FactoryHallId == hallsId.Value);
         }
-        return await query.OrderBy(l => l.OrderInHall ?? int.MaxValue).ThenBy(l => l.Name)
-            .ProjectTo<ProductionLineDto>(mapper.ConfigurationProvider).ToListAsync(ct);
+        return await query
+            .OrderBy(l => l.OrderInHall ?? int.MaxValue)
+            .ThenBy(l => l.Name)
+            .Select(l => new ProductionLineDto
+            {
+                Id = l.Id,
+                Name = l.Name,
+                Status = l.Status,
+                OrderInHall = l.OrderInHall,
+                LastStatusChangedAt = l.LastStatusChangedAt,
+                CurrentProductId = l.CurrentProductId,
+                FactoryHallId = l.FactoryHallId,
+                Machines = l.Machines
+                    .Where(m => m.IsActive)
+                    .OrderBy(m => m.OrderInLine)
+                    .Select(m => new MachineProductionLineDto
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Category = m.Category,
+                        SerialNumber = m.SerialNumber ?? string.Empty,
+                        Status = m.Status,
+                        InstallationDate = m.InstallationDate,
+                        StaticProperties = m.StaticProperties,
+                        IsActive = m.IsActive,
+                        TotalOperatingHours = m.TotalOperatingHours,
+                        LastStatusChangedAt = m.LastStatusChangedAt,
+                        Icon = m.Icon,
+                        TotalProduced = m.TotalProduced,
+                        CycleTimeSeconds = m.CycleTimeSeconds,
+                        OrderInLine = m.OrderInLine
+                    })
+                    .ToList()
+            })
+            .ToListAsync(ct);
     }
 
     public async Task<ProductionLineDto> CreateProductionLineAsync(CreateProductionLineDto dto, CancellationToken ct = default)

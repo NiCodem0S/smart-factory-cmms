@@ -23,6 +23,7 @@ export interface DashboardMachine {
     latestTelemetry: DashboardTelemetry | null
     totalOperatingHours?: number
     cycleTimeSeconds?: number
+    icon?: string | null
 }
 
 export interface DashboardIncident {

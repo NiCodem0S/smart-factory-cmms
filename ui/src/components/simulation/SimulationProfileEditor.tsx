@@ -64,10 +64,10 @@ export default function SimulationProfileEditor({ machineId, serverVersion, onCh
     <p className="mt-3 text-xs leading-relaxed text-slate-500">Tune machine behaviour or start with a preset. Changes apply to the running simulation.</p>
     {error && <p role="alert" className="my-3 text-sm text-red-700">{error}</p>}
     {form && <>
-      <div className="my-5 grid grid-cols-3 gap-2">
+      <div className="my-5 grid grid-cols-3 gap-3">
         {presets.map(p => <button key={p.value} disabled={busy} onClick={() => void submit(p.value)} aria-pressed={form.preset === p.value}
-          className={`rounded-xl border px-2 py-3 text-left transition hover:-translate-y-0.5 disabled:opacity-50 motion-reduce:transform-none ${p.tone} ${form.preset === p.value ? 'ring-1 ring-current' : ''}`}>
-          <span className="block text-xs font-bold">{p.label}</span><span className="mt-1 block text-[10px] leading-relaxed opacity-70">{p.hint}</span>
+          className={`rounded-xl border px-3.5 py-3.5 text-left transition hover:-translate-y-0.5 disabled:opacity-50 motion-reduce:transform-none ${p.tone} ${form.preset === p.value ? 'ring-1 ring-current' : ''}`}>
+          <span className="block text-sm font-bold">{p.label}</span><span className="mt-1 block text-xs leading-relaxed opacity-75">{p.hint}</span>
         </button>)}
       </div>
       <p className="mb-5 flex items-center justify-between text-[11px] text-slate-400"><span>Active preset <strong className="ml-1 text-violet-600">{form.preset}</strong></span><span className="font-mono">v{form.version}</span></p>

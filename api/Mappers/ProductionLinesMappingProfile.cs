@@ -8,7 +8,9 @@ namespace SmartFactoryCMMS.Api.Mappers
     {
         public ProductionLinesMappingProfile()
         {
-            CreateMap<ProductionLine, ProductionLineDto>();
+            CreateMap<ProductionLine, ProductionLineDto>()
+                .ForMember(dest => dest.Machines, opt => opt.MapFrom(src =>
+                    src.Machines.Where(m => m.IsActive).OrderBy(m => m.OrderInLine)));
             CreateMap<CreateProductionLineDto, ProductionLine>();
         }
     }

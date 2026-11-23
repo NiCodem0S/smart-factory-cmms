@@ -4,9 +4,16 @@ import { fetchLinesByHallId, haltLineById, startLineById } from "../services/pro
 import { MachineProductionLineDto } from "../types/machine"
 import { fetchMachinesByProdLineId } from "../services/machineService"
 
-export default function useProductionLinesByHallsId(id?: string | null) {
+export interface ProductionLinesHookOptions {
+    enabled?: boolean
+    pollIntervalMs?: number
+}
+
+export default function useProductionLinesByHallsId(id?: string | null, options?: ProductionLinesHookOptions) {
+    const enabled = options?.enabled ?? true
+    const pollIntervalMs = options?.pollIntervalMs ?? 5000
     const [lines, setLines] = useState<ProductionLineDto[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [isLoading, setIsLoading] = useState<boolean>(enabled)
     const [error, setError] = useState<string | null>(null)
 
     const loadLines = useCallback(async (signal?: AbortSignal, background = false) => {
@@ -29,24 +36,33 @@ export default function useProductionLinesByHallsId(id?: string | null) {
     }, [id])
 
     useEffect(() => {
+        if (!enabled) {
+            setIsLoading(false)
+            return
+        }
+
         const controller = new AbortController()
 
         loadLines(controller.signal)
-        const timer = setInterval(() => void loadLines(controller.signal, true), 5000)
+        const timer = pollIntervalMs > 0
+            ? setInterval(() => void loadLines(controller.signal, true), pollIntervalMs)
+            : null
 
         return () => {
             controller.abort()
-            clearInterval(timer)
+            if (timer !== null) clearInterval(timer)
         }
 
-    }, [loadLines])
+    }, [loadLines, enabled, pollIntervalMs])
 
     return { lines, isLoading, error, refetch: loadLines }
 }
 
-export function useMachinesByProductionHallId(id?: string | null) {
+export function useMachinesByProductionHallId(id?: string | null, options?: ProductionLinesHookOptions) {
+    const enabled = options?.enabled ?? true
+    const pollIntervalMs = options?.pollIntervalMs ?? 5000
     const [machines, setMachines] = useState<MachineProductionLineDto[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [isLoading, setIsLoading] = useState<boolean>(enabled && Boolean(id))
     const [error, setError] = useState<string | null>(null)
 
     const loadMachines = useCallback(async (signal?: AbortSignal, background = false) => {
@@ -76,17 +92,24 @@ export function useMachinesByProductionHallId(id?: string | null) {
     }, [id])
 
     useEffect(() => {
+        if (!enabled) {
+            setIsLoading(false)
+            return
+        }
+
         const controller = new AbortController()
 
         loadMachines(controller.signal)
-        const timer = setInterval(() => void loadMachines(controller.signal, true), 5000)
+        const timer = pollIntervalMs > 0 && id
+            ? setInterval(() => void loadMachines(controller.signal, true), pollIntervalMs)
+            : null
 
         return () => {
             controller.abort()
-            clearInterval(timer)
+            if (timer !== null) clearInterval(timer)
         }
 
-    }, [loadMachines])
+    }, [loadMachines, enabled, pollIntervalMs, id])
 
     return { machines, isLoading, error, refetch: loadMachines }
 }

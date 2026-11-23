@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import FactoryDashboard from './components/live_dashboard/FactoryDashboard'
 import OperationsDashboard from './components/live_dashboard/operations/OperationsDashboard'
-import MachineFleet from './components/machine_fleet/MachineFleet'
+import MachineFleetPage from './components/machine_fleet/explorer/MachineFleetPage'
 import MachineDetails from './components/machine_fleet/MachineDetails'
 import SimulationPage from './components/simulation/SimulationPage'
 import ProductionLines from './components/production_lines/ProductionLines'
@@ -26,7 +26,7 @@ function App() {
 									<AppLayout>
 										<Routes>
 											<Route path="/" element={<Navigate to="/dashboard" replace />} />
-											<Route path="/machines" element={<MachineFleet />} />
+											<Route path="/machines" element={<MachineFleetPage />} />
 											<Route path="/machines/:id" element={<MachineDetails />} />
 											<Route path="/simulation" element={<SimulationPage />} />
 											<Route path="/dashboard" element={<OperationsDashboard />} />

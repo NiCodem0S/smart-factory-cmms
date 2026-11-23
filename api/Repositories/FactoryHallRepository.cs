@@ -24,7 +24,7 @@ namespace SmartFactoryCMMS.Api.Repositories
 
         public async Task<List<FactoryHallDto>> GetFactoryHallsAsync(CancellationToken ct = default)
         {
-            IQueryable<FactoryHall> query = _context.FactoryHalls;
+            IQueryable<FactoryHall> query = _context.FactoryHalls.AsNoTracking();
 
             if (!_userContext.IsSuperAdmin)
             {
@@ -47,7 +47,8 @@ namespace SmartFactoryCMMS.Api.Repositories
                 return null;
             }
 
-            var factoryHall = await _context.FactoryHalls.FindAsync(id, ct);
+            var factoryHall = await _context.FactoryHalls.AsNoTracking()
+                .SingleOrDefaultAsync(h => h.Id == id, ct);
 
             if (factoryHall == null) return null;
 

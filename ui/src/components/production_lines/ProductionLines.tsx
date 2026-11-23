@@ -66,7 +66,11 @@ export default function ProductionLines() {
                 {/*Production lines component section*/}
                 {!isLoading && !error && lines && (
                     lines.map((line) => (
-                        <ProductionLineCard key={line.id} line={line} onStatusChange={refetch} />
+                        <ProductionLineCard
+                            key={line.id}
+                            line={line}
+                            onStatusChange={() => void refetch(undefined, true)}
+                        />
                     ))
                 )}
             </div>
@@ -77,7 +81,7 @@ export default function ProductionLines() {
                 initialHallId={selectedHallId}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {
-                    refetch();
+                    void refetch(undefined, true);
                     setSuccessMessage("Production line created successfully!");
                 }}
             />

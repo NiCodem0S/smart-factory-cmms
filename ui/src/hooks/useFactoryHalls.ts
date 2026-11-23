@@ -4,13 +4,18 @@ import { fetchHalls } from "../services/factoryHallsService"
 import { useAuth } from "../context/AuthContext";
 
 
-export function useFactoryHalls() {
+export function useFactoryHalls(enabled = true) {
     const { user } = useAuth();
     const [data, setData] = useState<FactoryHallDto[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [isLoading, setIsLoading] = useState<boolean>(enabled)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
+
+        if (!enabled) {
+            setIsLoading(false);
+            return;
+        }
 
         if (!user) {
             setData([]);
@@ -44,7 +49,7 @@ export function useFactoryHalls() {
         return () => {
             controller.abort()
         }
-    }, [user?.id, user?.role])
+    }, [user?.id, user?.role, enabled])
 
     return { data, isLoading, error }
 }

@@ -6,6 +6,7 @@ import { useMachinesByProductionHallId, useProductionLineActions } from '../../h
 import MachineIcon from '../common/MachineIcon';
 import { useAuth } from '../../context/AuthContext';
 import { MachineProductionLineDto } from '../../types/machine';
+import './production-lines.css';
 
 interface ProductionLineCardProps {
     line: ProductionLineDto
@@ -182,13 +183,22 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
     const { user } = useAuth();
     const canManage = user?.role === 'SuperAdmin' || user?.role === 'HallAdmin';
 
-    const { machines, isLoading: isLoadingMachines, error: errorMachines, refetch: reloadMachines } = useMachinesByProductionHallId(line.id)
+    const hasEmbeddedMachines = Array.isArray(line.machines);
+    const {
+        machines: fetchedMachines,
+        isLoading: isLoadingFetchedMachines,
+        error: errorFetchedMachines,
+        refetch: reloadMachines,
+    } = useMachinesByProductionHallId(line.id, { enabled: !hasEmbeddedMachines });
+    const machines = hasEmbeddedMachines ? (line.machines ?? []) : fetchedMachines;
+    const isLoadingMachines = hasEmbeddedMachines ? false : isLoadingFetchedMachines;
+    const errorMachines = hasEmbeddedMachines ? null : errorFetchedMachines;
     const { haltLine, startLine, isActionLoading, actionError, clearStatus } = useProductionLineActions()
 
     const handleHalt = async () => {
         const ok = await haltLine(line.id);
         if (ok) {
-            await reloadMachines();
+            if (!hasEmbeddedMachines) await reloadMachines(undefined, true);
             onStatusChange?.();
         }
     };
@@ -197,7 +207,7 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
 
         const ok = await startLine(line.id);
         if (ok) {
-            await reloadMachines();
+            if (!hasEmbeddedMachines) await reloadMachines(undefined, true);
             onStatusChange?.();
         }
     };
@@ -366,71 +376,6 @@ export default function ProductionLineCard({ line, onStatusChange }: ProductionL
                             </div>
                         )}
                     </div>
-                    {/* Keyframes for Particle Travel, Conveyor Belt & Diamond Port Glow Animations */}
-                    <style dangerouslySetInnerHTML={{
-                        __html: `
-                        .conveyor-belt {
-                        background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
-                        animation: moveConveyor 2s linear infinite;
-                        }
-                        @keyframes moveConveyor {
-                        0% { background-position: 0 0; }
-                        100% { background-position: 28px 0; }
-                        }
-                        .conveyor-halted {
-                        background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px);
-                        background-color: #fee2e2;
-                        animation: pulse-danger 2s ease-in-out infinite;
-                        }
-                        @keyframes pulse-danger {
-                        0% { background-color: #fee2e2; }
-                        50% { background-color: #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.4); }
-                        100% { background-color: #fee2e2; }
-                        }
-
-                        @keyframes diamondGlow {
-                        0% {
-                            filter: drop-shadow(0 0 0px transparent);
-                            box-shadow: 0 0 0 0 transparent;
-                        }
-                        20% {
-                            filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.7));
-                            box-shadow: 0 0 5px 1.5px rgba(96, 165, 250, 0.6);
-                        }
-                        100% {
-                            filter: drop-shadow(0 0 0px transparent);
-                            box-shadow: 0 0 0 0 transparent;
-                        }
-                        }
-
-                        .animate-diamond-glow {
-                        animation: diamondGlow 0.55s ease-out;
-                        }
-
-                        @keyframes particleFly {
-                        0% {
-                            left: 0%;
-                            opacity: 0.2;
-                            transform: translateY(-50%) scale(0.6);
-                        }
-                        10% {
-                            opacity: 1;
-                            transform: translateY(-50%) scale(1);
-                        }
-                        90% {
-                            opacity: 1;
-                            transform: translateY(-50%) scale(1);
-                        }
-                        100% {
-                            left: 100%;
-                            opacity: 0.2;
-                            transform: translateY(-50%) scale(0.6);
-                        }
-                        }
-                        .animate-particle-fly {
-                        animation: particleFly 2.5s linear forwards;
-                        }
-                    `}} />
                 </div>
             )}
         </>

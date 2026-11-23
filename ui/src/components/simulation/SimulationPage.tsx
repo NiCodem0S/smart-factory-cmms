@@ -150,18 +150,18 @@ export default function SimulationPage() {
                 )}
                 {data && (
                     <>
-                        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                             {stats.map(({ label, value, icon: Icon, tone }) => (
                                 <div
                                     key={label}
-                                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                                    className="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
                                 >
-                                    <span className={`rounded-xl p-2.5 ${tone}`}>
-                                        <Icon className="h-4 w-4" />
+                                    <span className={`rounded-xl p-3 ${tone}`}>
+                                        <Icon className="h-5 w-5" />
                                     </span>
                                     <div>
-                                        <p className="text-[10px] font-medium text-slate-400">{label}</p>
-                                        <p className="mt-1 text-base font-bold tabular-nums text-slate-800">
+                                        <p className="text-xs font-semibold text-slate-500">{label}</p>
+                                        <p className="mt-1 text-lg font-bold tabular-nums text-slate-800">
                                             {value}
                                         </p>
                                     </div>

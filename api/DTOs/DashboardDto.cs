@@ -30,7 +30,8 @@ public sealed record DashboardMachineDto(
     int TotalProduced,
     DashboardTelemetryDto? LatestTelemetry,
     double TotalOperatingHours = 0,
-    double CycleTimeSeconds = 5.0);
+    double CycleTimeSeconds = 5.0,
+    string? Icon = null);
 
 public sealed record DashboardTelemetryDto(
     DateTime TimestampUtc,

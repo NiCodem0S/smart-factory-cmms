@@ -52,7 +52,7 @@ public class MachineRepository(ApplicationDbContext db, IMapper mapper, IUserCon
         var line = await db.ProductionLines.AsNoTracking().SingleOrDefaultAsync(l => l.Id == id, ct);
         if (line is null || !SimulationActor.From(user).CanRead(line.FactoryHallId))
             throw new SimulationRequestException(404, "Production line not found.");
-        return await AccessibleMachines.Where(m => m.ProductionLineId == id).OrderBy(m => m.OrderInLine)
+        return await AccessibleMachines.AsNoTracking().Where(m => m.ProductionLineId == id).OrderBy(m => m.OrderInLine)
             .ProjectTo<MachineProductionLineDto>(mapper.ConfigurationProvider).ToListAsync(ct);
     }
 

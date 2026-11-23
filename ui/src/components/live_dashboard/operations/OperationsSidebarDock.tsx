@@ -10,6 +10,7 @@ import {
     RotateCcw,
     Send,
     Wrench,
+    X,
 } from 'lucide-react'
 import type {
     DashboardIncident,
@@ -54,6 +55,7 @@ interface OperationsSidebarDockProps {
     connectionStatus: string
     canManageMachines: boolean
     busyAction: string | null
+    onClose?: () => void
     onTabChange: (tab: OperationsDockTab) => void
     onSelectMachine: (machineId: string) => void
     onDispatchTech: (machine: DashboardMachine) => void
@@ -217,6 +219,7 @@ export default function OperationsSidebarDock({
     connectionStatus,
     canManageMachines,
     busyAction,
+    onClose,
     onTabChange,
     onSelectMachine,
     onDispatchTech,
@@ -381,6 +384,18 @@ export default function OperationsSidebarDock({
                             />
                         </span>
                     </div>
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="p-1.5 rounded-lg border cursor-pointer transition-colors hover:opacity-80"
+                            style={{ borderColor: 'var(--sf-border)', color: 'var(--sf-muted)' }}
+                            aria-label="Close inspector drawer"
+                            title="Close inspector"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
             )}
 

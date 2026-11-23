@@ -122,9 +122,15 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
     const selectedIconObj = AVAILABLE_ICONS.find(i => i.name === selectedIconName) || AVAILABLE_ICONS[0];
 
     const { execute, isLoading: isCreating, error } = useCreateMachine();
-    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls();
-    const { lines: lines = [], isLoading: isLoadingLines, error: linesError } = useProductionLinesByHallsId(selectedHallId)
-    const { machines: lineMachines = [], } = useMachinesByProductionHallId(selectedLineId || '');
+    const { data: halls = [], isLoading: isLoadingHalls, error: hallsError } = useFactoryHalls(isOpen);
+    const { lines: lines = [], isLoading: isLoadingLines, error: linesError } = useProductionLinesByHallsId(selectedHallId, {
+        enabled: isOpen,
+        pollIntervalMs: 0,
+    });
+    const { machines: lineMachines = [], } = useMachinesByProductionHallId(selectedLineId || '', {
+        enabled: isOpen,
+        pollIntervalMs: 0,
+    });
 
     // Icon Picker Modal state
     const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -289,7 +295,6 @@ export default function AddMachineModal({ isOpen, onClose, onSuccess, initialDat
                                     <option value="Maintenance">Maintenance</option>
                                     <option value="Offline">Offline</option>
                                 </select>
-                                <p className="mt-1 text-xs text-slate-500">Start, shutdown and maintenance actions are available in the simulation panel.</p>
                             </div>
 
                             <div>

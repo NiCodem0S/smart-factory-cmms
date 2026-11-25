@@ -57,3 +57,18 @@ yarn-error.log*
 Thumbs.db
 .agents/
 .github/
+
+# =========================
+# Lokalne notatki, diagramy i prototypy
+# =========================
+docs/SIMULATION_GUIDE.md
+docs/SYMULACJA_*.md
+docs/TELEMETRIA_*.md
+docs/diagramy-uml/
+docs/**/*.drawio
+docs/**/*.pdf
+ui/public/dashboard-concepts.html
+ui/src/**/mockup/
+ui/src/**/mockup_*/
+ui/src/**/*Mockup*
+

@@ -13,6 +13,14 @@ namespace SmartFactoryCMMS.Api.DTOs
         public string? StaticProperties { get; set; }  // JSON string with additional properties
         public bool IsActive { get; set; }
         public bool SimulationEnabled { get; set; }
+        public TelemetrySource TelemetrySource { get; set; } = TelemetrySource.Simulated;
+        public string? ExternalDeviceId { get; set; }
+        public string? DeviceKeyPrefix { get; set; }
+        /// Populated once on RealDevice creation; never returned on subsequent GET requests.
+        public string? DeviceKey { get; set; }
+        public int ExpectedIntervalSeconds { get; set; } = 5;
+        public int OfflineTimeoutSeconds { get; set; } = 30;
+        public string? SupportedMetrics { get; set; }
         public SimulationProfileDto? SimulationProfile { get; set; }
         public double TotalOperatingHours { get; set; } = 0;
         public DateTime? LastStatusChangedAt { get; set; } = DateTime.UtcNow;

@@ -64,11 +64,29 @@ namespace SmartFactoryCMMS.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<MachineDetailDto>> CreateMachine([FromBody] CreateMachineDto dto)
         {
-            var machine = _mapper.Map<Machine>(dto);     
-            var createdMachine = await _machineRepository.CreateMachineAsync(machine);       
+            var machine = _mapper.Map<Machine>(dto);
+            string? rawDeviceKey = null;
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                var (raw, hash, prefix) = DeviceKeyService.Generate();
+                rawDeviceKey = raw;
+                machine.DeviceKeyHash = hash;
+                machine.DeviceKeyPrefix = prefix;
+            }
+
+            var createdMachine = await _machineRepository.CreateMachineAsync(machine);
             var machineDetailDto = _mapper.Map<MachineDetailDto>(createdMachine);
-            
+            machineDetailDto.DeviceKey = rawDeviceKey;
+
             return CreatedAtAction(nameof(GetMachineDetails), new { id = machine.Id }, machineDetailDto);
+        }
+
+        [Authorize(Roles = "SuperAdmin,HallAdmin")]
+        [HttpPost("{id:guid}/device-key/rotate")]
+        public async Task<ActionResult<DeviceKeyResponseDto>> RotateDeviceKey(Guid id, CancellationToken ct)
+        {
+            var (rawKey, prefix) = await _simulation.RotateDeviceKeyAsync(id, SimulationActor.From(_user), ct);
+            return Ok(new DeviceKeyResponseDto(id, rawKey, prefix, "/api/telemetry/ingest"));
         }
 
         [Authorize(Roles = "SuperAdmin,HallAdmin")]

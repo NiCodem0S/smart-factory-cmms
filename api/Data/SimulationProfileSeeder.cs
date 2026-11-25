@@ -8,7 +8,7 @@ public static class SimulationProfileSeeder
     public static int Seed(ApplicationDbContext context)
     {
         var machines = context.Machines
-            .Where(m => m.IsActive && m.SimulationProfile == null)
+            .Where(m => m.IsActive && m.TelemetrySource == Helpers.Enums.TelemetrySource.Simulated && m.SimulationProfile == null)
             .ToList();
 
         foreach (var machine in machines)

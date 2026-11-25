@@ -30,6 +30,17 @@ namespace SmartFactoryCMMS.Api.Data
         .Property(m => m.Status)
         .HasConversion<string>(); // Saves "Running" instead of 0 in SQL Server
 
+        modelBuilder.Entity<Machine>()
+            .Property(m => m.TelemetrySource)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .HasDefaultValue(Helpers.Enums.TelemetrySource.Simulated);
+
+        modelBuilder.Entity<Machine>()
+            .HasIndex(m => m.DeviceKeyHash)
+            .IsUnique()
+            .HasFilter("[DeviceKeyHash] IS NOT NULL");
+
         modelBuilder.Entity<ProductionLine>()
             .HasOne(pl => pl.CurrentProduct)
             .WithMany(p => p.ProductionLines)
@@ -104,7 +115,7 @@ namespace SmartFactoryCMMS.Api.Data
             foreach (var entry in ChangeTracker.Entries<Machine>().Where(e => e.State == EntityState.Added).ToList())
             {
                 entry.Entity.SimulationEnabled = false;
-                if (entry.Entity.IsActive && entry.Entity.SimulationProfile is null)
+                if (entry.Entity.IsActive && entry.Entity.TelemetrySource == Helpers.Enums.TelemetrySource.Simulated && entry.Entity.SimulationProfile is null)
                 {
                     entry.Entity.SimulationProfile = CreateDefaultSimulationProfile(entry.Entity);
                 }

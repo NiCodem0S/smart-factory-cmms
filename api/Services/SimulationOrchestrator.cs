@@ -8,6 +8,7 @@ using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Hubs;
 using SmartFactoryCMMS.Api.Models;
+using SmartFactoryCMMS.Api.Services.Abstract;
 using SmartFactoryCMMS.Api.Simulation;
 
 namespace SmartFactoryCMMS.Api.Services;
@@ -16,7 +17,8 @@ namespace SmartFactoryCMMS.Api.Services;
 public sealed partial class SimulationOrchestrator(
     IServiceScopeFactory scopes, ISimulationStateStore stateStore, TelemetryChannel history,
     IHubContext<TelemetryHub> hub, IOptions<SimulationOptions> options,
-    SimulationDiagnostics diagnostics, ILogger<SimulationOrchestrator> logger) : BackgroundService
+    SimulationDiagnostics diagnostics, ILogger<SimulationOrchestrator> logger,
+    ITelemetryHistoryQueue? streamQueue = null) : BackgroundService
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly ConcurrentDictionary<Guid, Worker> _workers = new();
@@ -89,6 +91,14 @@ public sealed partial class SimulationOrchestrator(
 
     private bool IsReadyForProduction(Guid machineId) =>
         _workers.TryGetValue(machineId, out var worker) && worker.Running && ProductionLinePolicy.CanProduce(worker.State.MachineStatus);
+
+    private bool IsMachineReadyForProduction(Machine machine) =>
+        machine.TelemetrySource == TelemetrySource.RealDevice
+            ? ProductionLinePolicy.CanProduce(machine.Status)
+            : IsReadyForProduction(machine.Id);
+
+    private ValueTask EnqueueHistoryAsync(TelemetryRead sample, CancellationToken ct) =>
+        streamQueue is not null ? streamQueue.EnqueueAsync(sample, ct) : history.AddTelemetryAsync(sample, ct);
 
     private static WorkerConfiguration Configuration(Machine machine)
     {
@@ -282,7 +292,7 @@ public sealed partial class SimulationOrchestrator(
 
         if ((now - worker.LastHistory).TotalSeconds >= _options.HistorySampleIntervalSeconds)
         {
-            await history.AddTelemetryAsync(ToTelemetry(worker.State), ct);
+            await EnqueueHistoryAsync(ToTelemetry(worker.State), ct);
             worker.LastHistory = now;
         }
 
@@ -476,7 +486,8 @@ public sealed partial class SimulationOrchestrator(
                 return;
             }
         }
-        var allowed = machine.IsActive && machine.SimulationEnabled &&
+        var allowed = machine.IsActive && machine.TelemetrySource == TelemetrySource.Simulated &&
+            machine.SimulationEnabled &&
             machine.Status is not (MachineStatus.Offline or MachineStatus.Maintenance);
         if (!allowed)
         {

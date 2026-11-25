@@ -15,6 +15,12 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(dest => dest.SimulationEnabled, opt => opt.Ignore())
                 .ForMember(dest => dest.SimulationProfile, opt => opt.Ignore())
                 .ForMember(dest => dest.SimulationCheckpoint, opt => opt.Ignore())
+                .ForMember(dest => dest.TelemetrySource, opt => opt.Ignore())
+                .ForMember(dest => dest.DeviceKeyHash, opt => opt.Ignore())
+                .ForMember(dest => dest.DeviceKeyPrefix, opt => opt.Ignore())
+                .ForMember(dest => dest.ExpectedIntervalSeconds, opt => opt.Ignore())
+                .ForMember(dest => dest.OfflineTimeoutSeconds, opt => opt.Ignore())
+                .ForMember(dest => dest.SupportedMetrics, opt => opt.Ignore())
                 .ForMember(dest => dest.AlertThresholds, opt => opt.Ignore())
                 .ForMember(dest => dest.StaticProperties, opt => opt.Ignore())
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom((src, dest) =>
@@ -27,6 +33,7 @@ namespace SmartFactoryCMMS.Api.Mappers
 
             // Machine → MachineDetailDto (for details page)
             CreateMap<Machine, MachineDetailDto>()
+                .ForMember(props => props.DeviceKey, confg => confg.Ignore())
                 .ForMember(props => props.TotalWorkOrders,
                     confg => confg.MapFrom(src => src.WorkOrders.Count))
                 .ForMember(props => props.OpenWorkOrders,
@@ -48,6 +55,12 @@ namespace SmartFactoryCMMS.Api.Mappers
                 .ForMember(dest => dest.SimulationEnabled, opt => opt.Ignore())
                 .ForMember(dest => dest.SimulationProfile, opt => opt.Ignore())
                 .ForMember(dest => dest.SimulationCheckpoint, opt => opt.Ignore())
+                .ForMember(dest => dest.DeviceKeyHash, opt => opt.Ignore())
+                .ForMember(dest => dest.DeviceKeyPrefix, opt => opt.Ignore())
+                .ForMember(dest => dest.SupportedMetrics, opt => opt.MapFrom((src, dest) =>
+                    src.SupportedMetrics != null && src.SupportedMetrics.Count > 0
+                        ? JsonSerializer.Serialize(src.SupportedMetrics)
+                        : null))
                 .ForMember(dest => dest.StaticProperties, opt => opt.MapFrom((src, dest) => 
                     JsonSerializer.Serialize(new { src.NormTemp, src.BaseVib, src.NormPower})))
                 .ForMember(dest => dest.Icon, opt => opt.MapFrom(src =>

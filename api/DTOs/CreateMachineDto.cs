@@ -41,6 +41,19 @@ namespace SmartFactoryCMMS.Api.DTOs
         [FiniteRange(0, 1000000)]
         public double NormPower { get; set; } = 15.0;
 
+        public TelemetrySource TelemetrySource { get; set; } = TelemetrySource.Simulated;
+
+        [StringLength(127)]
+        public string? ExternalDeviceId { get; set; }
+
+        [Range(1, 86400)]
+        public int ExpectedIntervalSeconds { get; set; } = 5;
+
+        [Range(5, 86400)]
+        public int OfflineTimeoutSeconds { get; set; } = 30;
+
+        public List<string>? SupportedMetrics { get; set; }
+
         public List<CreateAlertThresholdDto> AlertThresholds { get; set; } = new();
     }
 }

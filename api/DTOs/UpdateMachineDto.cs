@@ -43,6 +43,17 @@ namespace SmartFactoryCMMS.Api.DTOs
         [Range(1, long.MaxValue)]
         public long? SimulationProfileVersion { get; set; }
 
+        [StringLength(127)]
+        public string? ExternalDeviceId { get; set; }
+
+        [Range(1, 86400)]
+        public int? ExpectedIntervalSeconds { get; set; }
+
+        [Range(5, 86400)]
+        public int? OfflineTimeoutSeconds { get; set; }
+
+        public List<string>? SupportedMetrics { get; set; }
+
         public List<CreateAlertThresholdDto> AlertThresholds { get; set; } = new();
     }
 }

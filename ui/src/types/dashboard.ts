@@ -1,4 +1,4 @@
-import type { MachineStatus } from './machine'
+import type { MachineStatus, TelemetrySource } from './machine'
 
 export interface DashboardTelemetry {
     timestampUtc: string
@@ -24,6 +24,7 @@ export interface DashboardMachine {
     totalOperatingHours?: number
     cycleTimeSeconds?: number
     icon?: string | null
+    telemetrySource?: TelemetrySource
 }
 
 export interface DashboardIncident {

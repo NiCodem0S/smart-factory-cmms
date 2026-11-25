@@ -143,6 +143,8 @@ builder.Services.AddHealthChecks().AddCheck<RedisHealthCheck>("simulation-redis"
 builder.Services.AddSingleton<ISimulationStateStore, RedisSimulationStateStore>();
 builder.Services.AddSingleton<SimulationDiagnostics>();
 builder.Services.AddSingleton<TelemetryChannel>();
+builder.Services.AddSingleton<ITelemetryHistoryQueue, RedisTelemetryStreamQueue>();
+builder.Services.AddSingleton<TelemetryIngestionService>();
 builder.Services.AddScoped<ISimulationCheckpointStore, SimulationCheckpointStore>();
 builder.Services.AddSignalR().AddJsonProtocol(o =>
     o.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -152,6 +154,7 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<SimulationOrchestr
 builder.Services.AddHostedService<SimulationAutomationService>();
 builder.Services.AddHostedService<SimulationCheckpointService>();
 builder.Services.AddHostedService<TelemetryRetentionService>();
+builder.Services.AddHostedService<DeviceWatchdogService>();
 builder.Services.AddOptions<SmartFactoryCMMS.Api.Configuration.SimulationOptions>()
     .Bind(builder.Configuration.GetSection(SmartFactoryCMMS.Api.Configuration.SimulationOptions.SectionName))
     .ValidateDataAnnotations()

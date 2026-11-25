@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using SmartFactoryCMMS.Api.Helpers.Enums;
 
 namespace SmartFactoryCMMS.Api.Models
@@ -31,6 +32,16 @@ namespace SmartFactoryCMMS.Api.Models
         public bool IsActive { get; set; } = true;
         // Persisted request to run the simulation, not the actual worker state.
         public bool SimulationEnabled { get; set; } = false;
+        public TelemetrySource TelemetrySource { get; set; } = TelemetrySource.Simulated;
+        [MaxLength(127)]
+        public string? ExternalDeviceId { get; set; }
+        [MaxLength(64)]
+        public string? DeviceKeyHash { get; set; }
+        [MaxLength(24)]
+        public string? DeviceKeyPrefix { get; set; }
+        public int ExpectedIntervalSeconds { get; set; } = 5;
+        public int OfflineTimeoutSeconds { get; set; } = 30;
+        public string? SupportedMetrics { get; set; } // JSON array of enabled metric channels
         public DateTimeOffset? AutomaticRepairAtUtc { get; set; }
         public SimulationProfile? SimulationProfile { get; set; }
         public SimulationCheckpoint? SimulationCheckpoint { get; set; }

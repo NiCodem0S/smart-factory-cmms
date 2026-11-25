@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.DTOs;
+using SmartFactoryCMMS.Api.Helpers.Enums;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Services;
 using SmartFactoryCMMS.Api.Services.Abstract;
@@ -16,12 +17,12 @@ namespace SmartFactoryCMMS.Api.Controllers;
 [Route("api/simulation")]
 public class SimulationController(ApplicationDbContext db, IUserContext user, IMapper mapper,
     SimulationOrchestrator runtime, ISimulationStateStore stateStore, SimulationDiagnostics diagnostics,
-    TelemetryChannel history) : ControllerBase
+    TelemetryChannel history, ITelemetryHistoryQueue? streamQueue = null) : ControllerBase
 {
     private IQueryable<Machine> Accessible()
     {
         var query = db.Machines.AsNoTracking()
-            .Where(m => m.IsActive)
+            .Where(m => m.IsActive && m.TelemetrySource == TelemetrySource.Simulated)
             .Include(m => m.SimulationProfile)
             .Include(m => m.ProductionLine)
             .AsQueryable();
@@ -81,9 +82,13 @@ public class SimulationController(ApplicationDbContext db, IUserContext user, IM
             result.Add(await Describe(machine, available, ct));
         }
 
+        var queueLength = streamQueue is not null
+            ? (int)Math.Min(int.MaxValue, await streamQueue.GetApproximateLengthAsync(ct))
+            : history.Count;
+
         return Ok(new SimulationListDto(available,
                     user.IsTechnician ? (runtime.ServiceError is null ? null : "Simulation service is unavailable.") : runtime.ServiceError,
-                    result, diagnostics.Dropped, diagnostics.Persisted, diagnostics.PersistenceErrors, history.Count,
+                    result, diagnostics.Dropped, diagnostics.Persisted, diagnostics.PersistenceErrors, queueLength,
                     diagnostics.LastHistoryWriteAtUtc, user.IsTechnician && diagnostics.LastHistoryError is not null ? "History persistence is unavailable." : diagnostics.LastHistoryError,
                     runtime.AutomationStatus(machines)));
     }

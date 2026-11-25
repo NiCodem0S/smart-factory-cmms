@@ -192,6 +192,12 @@ export default function OperationsDashboard() {
         })
 
     const recoverMachineToRunning = async (machine: DashboardMachine) => {
+        if (machine.telemetrySource === 'RealDevice') {
+            if (machine.status === 'Maintenance') {
+                await simulationService.action(machine.id, 'repair', true)
+            }
+            return
+        }
         if (machine.status === 'Error' || machine.status === 'Warning') {
             await simulationService.action(machine.id, 'maintenance', true)
             await simulationService.action(machine.id, 'repair', true)
@@ -206,6 +212,10 @@ export default function OperationsDashboard() {
 
     const handleRecoverUnit = (machine: DashboardMachine) =>
         void runAction(`recover-${machine.id}`, async () => {
+            if (machine.telemetrySource === 'RealDevice') {
+                await recoverMachineToRunning(machine)
+                return `${machineCode(machine)} maintenance cleared — awaiting device telemetry`
+            }
             const wasOffline = machine.status === 'Offline'
             await recoverMachineToRunning(machine)
             return wasOffline
@@ -258,9 +268,9 @@ export default function OperationsDashboard() {
 
     const handleTestFault = () =>
         void runAction('fault', async () => {
-            const running = machines.filter(m => m.status === 'Running')
+            const running = machines.filter(m => m.status === 'Running' && m.telemetrySource !== 'RealDevice')
             if (!running.length) {
-                return 'No running machines available to fault'
+                return 'No running simulated machines available to fault'
             }
             const target = running[Math.floor(Math.random() * running.length)]
             await simulationService.action(target.id, 'start', true)
@@ -282,11 +292,16 @@ export default function OperationsDashboard() {
                 const stations = machines.filter(m => m.productionLineId === line.id)
                 if (deriveLineState(line, stations) === 'Halted') {
                     for (const station of stations) {
-                        if (station.status === 'Offline' || station.status === 'Running') {
+                        if (station.telemetrySource !== 'RealDevice' && (station.status === 'Offline' || station.status === 'Running')) {
                             await simulationService.action(station.id, 'start', true)
                         }
                     }
-                    await startLineById(line.id)
+                    const hasOfflineRealDevice = stations.some(
+                        s => s.telemetrySource === 'RealDevice' && (s.status === 'Offline' || s.status === 'Error' || s.status === 'Maintenance')
+                    )
+                    if (!hasOfflineRealDevice) {
+                        await startLineById(line.id)
+                    }
                 }
             }
             return 'Recovery commands sent for all faulted units & halted lines'

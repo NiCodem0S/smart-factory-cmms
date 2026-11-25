@@ -24,7 +24,7 @@ public static class DashboardQuery
                            machine.OrderInLine, machine.Status, machine.TotalProduced,
                            latest == null ? null : new DashboardTelemetryDto(latest.Timestamp, latest.Temperature, latest.Vibration,
                                latest.PowerLoadKw, latest.NetworkLatencyMs),
-                           machine.TotalOperatingHours, machine.CycleTimeSeconds, machine.Icon);
+                           machine.TotalOperatingHours, machine.CycleTimeSeconds, machine.Icon, machine.TelemetrySource);
         return machines;
     }
 }

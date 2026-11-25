@@ -8,6 +8,15 @@ export const machineStatuses = [
 
 export type MachineStatus = typeof machineStatuses[number];
 
+export type TelemetrySource = 'Simulated' | 'RealDevice';
+
+export interface DeviceKeyResponseDto {
+	machineId: string;
+	deviceKey: string;
+	deviceKeyPrefix: string;
+	ingestEndpoint: string;
+}
+
 export interface MachineListDto {
 	id: string
 	name: string
@@ -37,6 +46,15 @@ export interface MachineDetailDto {
 	cycleTimeSeconds: number
 	orderInLine: number
 
+	// Telemetry source & IoT device metadata
+	telemetrySource: TelemetrySource
+	externalDeviceId: string | null
+	deviceKeyPrefix: string | null
+	deviceKey?: string | null
+	expectedIntervalSeconds: number
+	offlineTimeoutSeconds: number
+	supportedMetrics: string | null
+
 	// Aggregated data
 	totalWorkOrders: number
 	openWorkOrders: number
@@ -64,6 +82,9 @@ export interface MachineProductionLineDto {
 	cycleTimeSeconds: number
 	orderInLine: number
 
+	// Telemetry source & IoT device metadata
+	telemetrySource?: TelemetrySource
+
 	// Aggregated data
 	activeAlerts: AlertDto[]
 }
@@ -81,6 +102,11 @@ export interface CreateMachineDto {
 	normTemp: number
 	baseVib: number
 	normPower: number
+	telemetrySource?: TelemetrySource
+	externalDeviceId?: string | null
+	expectedIntervalSeconds?: number
+	offlineTimeoutSeconds?: number
+	supportedMetrics?: string[] | null
 	alertThresholds: {
 		metricType: string;
 		warningValue: number;
@@ -144,5 +170,9 @@ export interface UpdateMachineDto {
 	normTemp: number
 	baseVib: number
 	normPower: number
+	externalDeviceId?: string | null
+	expectedIntervalSeconds?: number
+	offlineTimeoutSeconds?: number
+	supportedMetrics?: string[] | null
 	alertThresholds?: CreateAlertThresholdsDto[];
 }

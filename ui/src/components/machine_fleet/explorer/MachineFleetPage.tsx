@@ -157,6 +157,12 @@ export default function MachineFleetPage() {
     }
 
     const recoverMachineToRunning = async (machine: DashboardMachine) => {
+        if (machine.telemetrySource === 'RealDevice') {
+            if (machine.status === 'Maintenance') {
+                await simulationService.action(machine.id, 'repair', true)
+            }
+            return
+        }
         if (machine.status === 'Error' || machine.status === 'Warning') {
             await simulationService.action(machine.id, 'maintenance', true)
             await simulationService.action(machine.id, 'repair', true)
@@ -177,6 +183,10 @@ export default function MachineFleetPage() {
 
     const handleRecoverUnit = (machine: DashboardMachine) =>
         void runAction(`recover-${machine.id}`, async () => {
+            if (machine.telemetrySource === 'RealDevice') {
+                await recoverMachineToRunning(machine)
+                return `${machineCode(machine)} maintenance cleared — awaiting device telemetry`
+            }
             const wasOffline = machine.status === 'Offline'
             await recoverMachineToRunning(machine)
             return wasOffline

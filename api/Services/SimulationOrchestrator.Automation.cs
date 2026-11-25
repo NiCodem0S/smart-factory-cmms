@@ -91,7 +91,9 @@ public sealed partial class SimulationOrchestrator
                 _automationWarning = "Automatic recovery is waiting for Redis.";
                 return;
             }
-            var machines = await Machines(db).Where(m => m.IsActive && m.ProductionLineId.HasValue).ToListAsync(ct);
+            var machines = await Machines(db)
+                .Where(m => m.IsActive && m.TelemetrySource == TelemetrySource.Simulated && m.ProductionLineId.HasValue)
+                .ToListAsync(ct);
             foreach (var machine in machines.Where(m => m.Status == MachineStatus.Error && !m.AutomaticRepairAtUtc.HasValue))
             {
                 var seconds = _options.AutomaticRepairMinSeconds + Random.Shared.NextDouble() *

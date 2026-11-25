@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto, MachineProductionLineDto, CreateAlertThresholdsDto } from '../types/machine'
+import { MachineListDto, MachineStatus, MachineDetailDto, CreateMachineDto, UpdateMachineDto, MachineProductionLineDto, CreateAlertThresholdsDto, DeviceKeyResponseDto } from '../types/machine'
 import { PagedResult } from '../types/common'
 
 export async function fetchMachines(
@@ -66,5 +66,12 @@ export async function updateMachineTresholds(
 	tresholds: CreateAlertThresholdsDto[]
 ): Promise<void> {
 	await apiClient.put(`/Machines/${machineId}/tresholds`, tresholds)
+}
+
+export async function rotateMachineDeviceKey(
+	machineId: string
+): Promise<DeviceKeyResponseDto> {
+	const response = await apiClient.post<DeviceKeyResponseDto>(`/Machines/${machineId}/device-key/rotate`)
+	return response.data
 }
 

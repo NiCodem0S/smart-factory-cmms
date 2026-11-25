@@ -111,6 +111,21 @@ namespace SmartFactoryCMMS.Api.Migrations
                     b.Property<double>("CycleTimeSeconds")
                         .HasColumnType("float");
 
+                    b.Property<string>("DeviceKeyHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("DeviceKeyPrefix")
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<int>("ExpectedIntervalSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalDeviceId")
+                        .HasMaxLength(127)
+                        .HasColumnType("nvarchar(127)");
+
                     b.Property<Guid>("FactoryHallId")
                         .HasColumnType("uniqueidentifier");
 
@@ -129,6 +144,9 @@ namespace SmartFactoryCMMS.Api.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OfflineTimeoutSeconds")
+                        .HasColumnType("int");
 
                     b.Property<int>("OrderInLine")
                         .HasColumnType("int");
@@ -151,6 +169,16 @@ namespace SmartFactoryCMMS.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("SupportedMetrics")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TelemetrySource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)")
+                        .HasDefaultValue("Simulated");
+
                     b.Property<double>("TotalOperatingHours")
                         .HasColumnType("float");
 
@@ -158,6 +186,10 @@ namespace SmartFactoryCMMS.Api.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeviceKeyHash")
+                        .IsUnique()
+                        .HasFilter("[DeviceKeyHash] IS NOT NULL");
 
                     b.HasIndex("FactoryHallId");
 

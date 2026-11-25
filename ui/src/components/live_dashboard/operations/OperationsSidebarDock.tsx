@@ -7,6 +7,7 @@ import {
     Clock,
     Cpu,
     Play,
+    Radio,
     RotateCcw,
     Send,
     Wrench,
@@ -813,6 +814,16 @@ export default function OperationsSidebarDock({
                                         <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColorMap.fg }} />
                                         {machine.status}
                                     </span>
+                                    {machine.telemetrySource === 'RealDevice' && (
+                                        <span
+                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                            style={{ background: 'var(--sf-running-bg)', color: 'var(--sf-running)' }}
+                                            title="Physical IoT / PLC device pushing telemetry via API"
+                                        >
+                                            <Radio className="w-2.5 h-2.5" />
+                                            IoT
+                                        </span>
+                                    )}
                                     {machine.serialNumber && (
                                         <span className="sf-ops-num text-[11px]" style={{ color: 'var(--sf-muted)' }}>
                                             {machine.serialNumber}
@@ -915,7 +926,7 @@ export default function OperationsSidebarDock({
                                                     Creates a service work order and assigns the hall technician to this machine.
                                                 </span>
                                             </div>
-                                            {canManageMachines && (
+                                            {canManageMachines && machine.telemetrySource !== 'RealDevice' && (
                                                 <div className="relative group">
                                                     <button
                                                         type="button"
@@ -934,6 +945,18 @@ export default function OperationsSidebarDock({
                                                         Completes repair, clears active fault, and resumes normal machine operation.
                                                     </span>
                                                 </div>
+                                            )}
+                                            {canManageMachines && machine.telemetrySource === 'RealDevice' && (
+                                                <button
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onClick={() => onSetMaintenance(machine)}
+                                                    title="Places this IoT device in planned maintenance and suppresses fault alerts"
+                                                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+                                                >
+                                                    <Wrench className="w-3.5 h-3.5" />
+                                                    <span>{busyAction === `maint-${machine.id}` ? 'Updating…' : 'Maintenance'}</span>
+                                                </button>
                                             )}
                                         </>
                                     )}
@@ -957,17 +980,47 @@ export default function OperationsSidebarDock({
                                             <ArrowUpRight className="w-3.5 h-3.5" />
                                         </Link>
                                     )}
-                                    {(machine.status === 'Maintenance' || machine.status === 'Offline') && canManageMachines && (
-                                        <button
-                                            type="button"
-                                            disabled={isBusy}
-                                            onClick={() => onRecoverUnit(machine)}
-                                            className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
-                                        >
-                                            <Play className="w-4 h-4" />
-                                            <span>{busyAction === `recover-${machine.id}` ? 'Starting…' : 'Bring Station Online'}</span>
-                                        </button>
-                                    )}
+                                    {(machine.status === 'Maintenance' || machine.status === 'Offline') &&
+                                        canManageMachines &&
+                                        (machine.telemetrySource === 'RealDevice' ? (
+                                            machine.status === 'Maintenance' ? (
+                                                <button
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onClick={() => onRecoverUnit(machine)}
+                                                    className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    <span>
+                                                        {busyAction === `recover-${machine.id}` ? 'Completing…' : 'Complete Repair'}
+                                                    </span>
+                                                </button>
+                                            ) : (
+                                                <div
+                                                    className="col-span-2 rounded-lg border px-3 py-2 text-[11px] font-medium flex items-center justify-center gap-1.5"
+                                                    style={{
+                                                        background: 'var(--sf-surface-2)',
+                                                        borderColor: 'var(--sf-border)',
+                                                        color: 'var(--sf-muted)',
+                                                    }}
+                                                >
+                                                    <Radio className="w-3.5 h-3.5 shrink-0" />
+                                                    <span>Waiting for live device telemetry…</span>
+                                                </div>
+                                            )
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                disabled={isBusy}
+                                                onClick={() => onRecoverUnit(machine)}
+                                                className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg text-[13px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+                                            >
+                                                <Play className="w-4 h-4" />
+                                                <span>
+                                                    {busyAction === `recover-${machine.id}` ? 'Starting…' : 'Bring Station Online'}
+                                                </span>
+                                            </button>
+                                        ))}
                                 </div>
                             </div>
                         </>

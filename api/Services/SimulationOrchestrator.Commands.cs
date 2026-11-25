@@ -1,9 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using SmartFactoryCMMS.Api.Data;
 using SmartFactoryCMMS.Api.DTOs;
 using SmartFactoryCMMS.Api.Helpers.Enums;
+using SmartFactoryCMMS.Api.Hubs;
 using SmartFactoryCMMS.Api.Models;
 using SmartFactoryCMMS.Api.Simulation;
 
@@ -15,6 +18,11 @@ public sealed partial class SimulationOrchestrator
         Command(actor, async (services, token) =>
         {
             var machine = await RequireMachine(services.GetRequiredService<ApplicationDbContext>(), id, actor, token);
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                throw new SimulationRequestException(409, "Scenarios cannot be triggered on a RealDevice machine.");
+            }
+
             if (!Enum.IsDefined(scenario))
             {
                 throw new SimulationRequestException(400, "Unknown simulation scenario.");
@@ -37,7 +45,7 @@ public sealed partial class SimulationOrchestrator
                 // Also retain commands without a status transition (e.g. repeated heating or Normal).
                 if (!result.StatusChanges.Any(c => c.NewStatus is MachineStatus.Warning or MachineStatus.Error))
                 {
-                    await history.AddTelemetryAsync(ToTelemetry(worker.State), token);
+                    await EnqueueHistoryAsync(ToTelemetry(worker.State), token);
                 }
 
                 await stateStore.WriteAsync(worker.State, token);
@@ -69,10 +77,36 @@ public sealed partial class SimulationOrchestrator
             }).ToList());
             machine.Status = MachineStatus.Offline;
             machine.SimulationEnabled = false;
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                machine.ExpectedIntervalSeconds = Math.Clamp(machine.ExpectedIntervalSeconds, 1, 86400);
+                machine.OfflineTimeoutSeconds = Math.Clamp(machine.OfflineTimeoutSeconds, 5, 86400);
+                if (string.IsNullOrWhiteSpace(machine.SupportedMetrics))
+                {
+                    machine.SupportedMetrics = JsonSerializer.Serialize(new[] { "Temperature", "Vibration", "PowerLoadKw", "ProductionCounter" });
+                }
+            }
             db.Machines.Add(machine);
             await EvaluateLinesLocked(db, machine.ProductionLineId, token);
             await db.SaveChangesAsync(token);
             return machine;
+        }, ct);
+
+    public Task<(string RawKey, string DisplayPrefix)> RotateDeviceKeyAsync(Guid id, SimulationActor actor, CancellationToken ct = default) =>
+        Command(actor, async (services, token) =>
+        {
+            var db = services.GetRequiredService<ApplicationDbContext>();
+            var machine = await RequireMachine(db, id, actor, token);
+            if (machine.TelemetrySource != TelemetrySource.RealDevice)
+            {
+                throw new SimulationRequestException(409, "Device API keys are only available for RealDevice machines.");
+            }
+
+            var (rawKey, hash, prefix) = DeviceKeyService.Generate();
+            machine.DeviceKeyHash = hash;
+            machine.DeviceKeyPrefix = prefix;
+            await db.SaveChangesAsync(token);
+            return (rawKey, prefix);
         }, ct);
 
     public Task<Machine> StartAsync(Guid id, SimulationActor actor, bool startMachine, CancellationToken ct = default) =>
@@ -80,6 +114,10 @@ public sealed partial class SimulationOrchestrator
         {
             var db = services.GetRequiredService<ApplicationDbContext>();
             var machine = await RequireMachine(db, id, actor, token);
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                throw new SimulationRequestException(409, "RealDevice machines report status via external telemetry and cannot be started by the simulator.");
+            }
             if (_workers.TryGetValue(id, out var dirty) && dirty.Dirty && !dirty.Running)
             {
                 await SaveWorkerLocked(services, dirty, token);
@@ -118,6 +156,11 @@ public sealed partial class SimulationOrchestrator
         Command(actor, async (services, token) =>
         {
             var machine = await RequireMachine(services.GetRequiredService<ApplicationDbContext>(), id, actor, token);
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                throw new SimulationRequestException(409, "RealDevice machines report status via external telemetry and cannot be stopped by the simulator.");
+            }
+
             if (stopMachine && machine.Status is MachineStatus.Error or MachineStatus.Maintenance)
             {
                 throw new SimulationRequestException(409, "Complete the maintenance repair before switching the machine to Offline.");
@@ -215,6 +258,37 @@ public sealed partial class SimulationOrchestrator
                 await ResolveSimulationIncidents(db, id, token);
             }
 
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                var targetStatus = complete ? MachineStatus.Offline : MachineStatus.Maintenance;
+                machine.Status = targetStatus;
+                machine.SimulationEnabled = false;
+                if (machine.ProductionLineId is { } lineId)
+                {
+                    _forcedHalts.Add(lineId);
+                    _lineStatuses[lineId] = ProductionLinePolicy.Halted;
+                }
+                await EvaluateLinesLocked(db, machine.ProductionLineId, token);
+                await db.SaveChangesAsync(token);
+
+                var mirror = new MachineSimState
+                {
+                    MachineId = machine.Id,
+                    LastTickAtUtc = DateTimeOffset.UtcNow,
+                    MachineStatus = targetStatus,
+                    TotalProduced = machine.TotalProduced
+                };
+                try { await stateStore.WriteAsync(mirror, token); } catch { /* Best-effort Redis mirror */ }
+                try
+                {
+                    await hub.Clients
+                        .Groups(TelemetryHub.MachineGroup(machine.FactoryHallId, machine.Id), TelemetryHub.HallGroup(machine.FactoryHallId))
+                        .SendAsync("ReceiveTelemetry", mirror, token);
+                }
+                catch { /* Best-effort broadcast */ }
+                return machine;
+            }
+
             await StopLocked(services, machine, complete ? MachineStatus.Offline : MachineStatus.Maintenance, token, complete);
             return machine;
         }, ct);
@@ -222,7 +296,8 @@ public sealed partial class SimulationOrchestrator
     private static async Task ResolveSimulationIncidents(ApplicationDbContext db, Guid machineId, CancellationToken ct)
     {
         var incidents = await db.Incidents
-            .Where(i => i.MachineId == machineId && i.Status == "Active" && i.Message.StartsWith("Simulation:"))
+            .Where(i => i.MachineId == machineId && i.Status == "Active" &&
+                (i.Message.StartsWith("Simulation:") || i.Message.StartsWith("Telemetry:")))
             .ToListAsync(ct);
         foreach (var incident in incidents)
         {
@@ -241,6 +316,11 @@ public sealed partial class SimulationOrchestrator
         {
             var db = services.GetRequiredService<ApplicationDbContext>();
             var machine = await RequireMachine(db, id, actor, token);
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                throw new SimulationRequestException(409, "RealDevice machines do not use simulation profiles.");
+            }
+
             var profile = machine.SimulationProfile ?? throw new SimulationRequestException(409, "Machine profile is missing.");
             if (profile.Version != expectedVersion)
             {
@@ -290,6 +370,23 @@ public sealed partial class SimulationOrchestrator
                     throw new SimulationRequestException(409, "Use the machine start or maintenance actions to change its operational status.");
                 }
             }
+            if (machine.TelemetrySource == TelemetrySource.RealDevice)
+            {
+                services.GetRequiredService<IMapper>().Map(dto, machine);
+                machine.ExternalDeviceId = string.IsNullOrWhiteSpace(dto.ExternalDeviceId) ? null : dto.ExternalDeviceId.Trim();
+                if (dto.ExpectedIntervalSeconds.HasValue)
+                    machine.ExpectedIntervalSeconds = Math.Clamp(dto.ExpectedIntervalSeconds.Value, 1, 86400);
+                if (dto.OfflineTimeoutSeconds.HasValue)
+                    machine.OfflineTimeoutSeconds = Math.Clamp(dto.OfflineTimeoutSeconds.Value, 5, 86400);
+                if (dto.SupportedMetrics is { Count: > 0 })
+                    machine.SupportedMetrics = JsonSerializer.Serialize(dto.SupportedMetrics);
+                ValidateThresholds(dto.AlertThresholds);
+                ApplyThresholds(db, machine, dto.AlertThresholds);
+                await EvaluateLinesLocked(db, null, token);
+                await db.SaveChangesAsync(token);
+                return machine;
+            }
+
             var profile = machine.SimulationProfile ?? throw new SimulationRequestException(409, "Machine profile is missing.");
             if (dto.NormTemp != profile.NormalTemperature || dto.BaseVib != profile.BaseVibration || dto.NormPower != profile.NormalPowerKw)
             {
@@ -410,14 +507,20 @@ public sealed partial class SimulationOrchestrator
 
                 foreach (var machine in machines)
                 {
-                    if (!IsReadyForProduction(machine.Id))
+                    if (!IsMachineReadyForProduction(machine))
                     {
-                        throw new SimulationRequestException(409, $"Start machine '{machine.Name}' and its simulation before starting the line; resolve any fault first.");
+                        var reason = machine.TelemetrySource == TelemetrySource.RealDevice
+                            ? $"RealDevice '{machine.Name}' must be reporting Running or Warning telemetry before starting the line."
+                            : $"Start machine '{machine.Name}' and its simulation before starting the line; resolve any fault first.";
+                        throw new SimulationRequestException(409, reason);
                     }
                 }
 
                 _forcedHalts.Remove(id);
-                var warning = machines.Any(m => _workers[m.Id].State.MachineStatus == MachineStatus.Warning);
+                var warning = machines.Any(m =>
+                    m.TelemetrySource == TelemetrySource.RealDevice
+                        ? m.Status == MachineStatus.Warning
+                        : _workers[m.Id].State.MachineStatus == MachineStatus.Warning);
                 var status = warning ? ProductionLinePolicy.Warning : ProductionLinePolicy.Running;
                 if (line.Status != status)
                 {

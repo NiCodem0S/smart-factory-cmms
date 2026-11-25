@@ -31,7 +31,8 @@ public sealed record DashboardMachineDto(
     DashboardTelemetryDto? LatestTelemetry,
     double TotalOperatingHours = 0,
     double CycleTimeSeconds = 5.0,
-    string? Icon = null);
+    string? Icon = null,
+    TelemetrySource TelemetrySource = TelemetrySource.Simulated);
 
 public sealed record DashboardTelemetryDto(
     DateTime TimestampUtc,

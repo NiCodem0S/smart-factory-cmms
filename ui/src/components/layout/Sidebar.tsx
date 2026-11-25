@@ -120,10 +120,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         <Zap className="w-4 h-4 mr-3 shrink-0" />
                         <span>Machine Simulation</span>
                     </NavLink>
-                    <a href="#" className="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                        <AlertTriangle className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
+                    <NavLink
+                        to="/incidents"
+                        onClick={close}
+                        className={({ isActive }) =>
+                            `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
+                                isActive
+                                    ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
+                        <AlertTriangle className="w-4 h-4 mr-3 shrink-0" />
                         <span>Incident History</span>
-                    </a>
+                    </NavLink>
 
                     {/* SECTION 2: PLANNING */}
                     <div className="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">

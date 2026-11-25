@@ -5,6 +5,7 @@ import OperationsDashboard from './components/live_dashboard/operations/Operatio
 import MachineFleetPage from './components/machine_fleet/explorer/MachineFleetPage'
 import MachineDetails from './components/machine_fleet/MachineDetails'
 import SimulationPage from './components/simulation/SimulationPage'
+import IncidentHistoryPage from './components/incidents/IncidentHistoryPage'
 import ProductionLines from './components/production_lines/ProductionLines'
 import ProductionLinesMockupV2 from './components/production_lines/ProductionLinesMockupV2'
 import FactoryProvider from './context/FactoryContext'
@@ -29,6 +30,7 @@ function App() {
 											<Route path="/machines" element={<MachineFleetPage />} />
 											<Route path="/machines/:id" element={<MachineDetails />} />
 											<Route path="/simulation" element={<SimulationPage />} />
+											<Route path="/incidents" element={<IncidentHistoryPage />} />
 											<Route path="/dashboard" element={<OperationsDashboard />} />
 											<Route path="/dashboard/backup" element={<FactoryDashboard />} />
 											<Route path="/production" element={<ProductionLines />} />

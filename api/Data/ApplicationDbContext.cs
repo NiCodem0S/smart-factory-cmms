@@ -25,6 +25,12 @@ namespace SmartFactoryCMMS.Api.Data
         modelBuilder.Entity<Machine>().Property(m => m.SimulationEnabled).HasDefaultValue(false);
         modelBuilder.Entity<TelemetryRead>().HasIndex(t => new { t.MachineId, t.Timestamp });
         modelBuilder.Entity<TelemetryRead>().HasIndex(t => t.Timestamp);
+        modelBuilder.Entity<Incident>()
+            .HasIndex(i => new { i.TriggeredAt, i.Id })
+            .IncludeProperties(i => new { i.MachineId, i.Status, i.Severity });
+        modelBuilder.Entity<Incident>()
+            .HasIndex(i => new { i.MachineId, i.TriggeredAt })
+            .IncludeProperties(i => new { i.Status, i.Severity });
 
         modelBuilder.Entity<Machine>()
         .Property(m => m.Status)

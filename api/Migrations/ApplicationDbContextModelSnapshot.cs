@@ -90,7 +90,13 @@ namespace SmartFactoryCMMS.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MachineId");
+                    b.HasIndex("MachineId", "TriggeredAt");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("MachineId", "TriggeredAt"), new[] { "Status", "Severity" });
+
+                    b.HasIndex("TriggeredAt", "Id");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("TriggeredAt", "Id"), new[] { "MachineId", "Status", "Severity" });
 
                     b.ToTable("Incidents");
                 });

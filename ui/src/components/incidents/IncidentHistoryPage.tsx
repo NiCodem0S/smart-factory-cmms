@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom'
 import {
     Activity,
     Building2,
@@ -8,6 +9,7 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    Database,
     Flame,
     Menu,
     Moon,
@@ -102,6 +104,7 @@ export default function IncidentHistoryPage() {
     const [refreshing, setRefreshing] = useState(false)
     const [pulseRefreshing, setPulseRefreshing] = useState(false)
     const [rangeMenuOpen, setRangeMenuOpen] = useState(false)
+    const [allRangeConfirmOpen, setAllRangeConfirmOpen] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const [selectedIncident, setSelectedIncident] = useState<IncidentHistoryItem | null>(null)
@@ -112,6 +115,7 @@ export default function IncidentHistoryPage() {
     const toastTimerRef = useRef<number | null>(null)
     const pulseSpinTimerRef = useRef<number | null>(null)
     const rangeChangeRef = useRef(false)
+    const lastInsightsKeyRef = useRef<string | null>(null)
     const rangeDropdownRef = useRef<HTMLDivElement>(null)
 
     const showToast = (message: string) => {
@@ -170,8 +174,9 @@ export default function IncidentHistoryPage() {
         }
     }, [])
 
-    const handleRangeChange = (nextRange: IncidentRange) => {
+    const applyRangeChange = (nextRange: IncidentRange) => {
         setRangeMenuOpen(false)
+        setAllRangeConfirmOpen(false)
         if (nextRange === range) return
         rangeChangeRef.current = true
         setPulseRefreshing(true)
@@ -179,6 +184,26 @@ export default function IncidentHistoryPage() {
         setRange(nextRange)
         setPage(1)
     }
+
+    const handleRangeChange = (nextRange: IncidentRange) => {
+        setRangeMenuOpen(false)
+        if (nextRange === range) return
+        if (nextRange === 'all') {
+            setAllRangeConfirmOpen(true)
+            return
+        }
+        applyRangeChange(nextRange)
+    }
+
+    // Close All-range confirmation dialog on Escape
+    useEffect(() => {
+        if (!allRangeConfirmOpen) return
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setAllRangeConfirmOpen(false)
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [allRangeConfirmOpen])
 
     // Reset page and machine filter on hall switch
     const handleHallChange = (hallId: string | null) => {
@@ -188,8 +213,11 @@ export default function IncidentHistoryPage() {
     }
 
     const loadHistory = useCallback(
-        async (signal?: AbortSignal, silent = false) => {
+        async (signal?: AbortSignal, silent = false, forceInsights = false) => {
             const startedAt = Date.now()
+            const insightsKey = `${isSuperAdmin ? selectedHallId ?? 'all' : 'scoped'}|${range}`
+            const shouldFetchInsights = forceInsights || lastInsightsKeyRef.current !== insightsKey
+
             if (silent) setRefreshing(true)
             else setLoading(prev => prev || !data)
             try {
@@ -203,11 +231,23 @@ export default function IncidentHistoryPage() {
                         severity: severityFilter,
                         range,
                         search: debouncedSearch,
+                        includeInsights: shouldFetchInsights,
                     },
                     signal,
                 )
                 if (signal?.aborted) return
-                setData(response)
+                if (shouldFetchInsights) {
+                    lastInsightsKeyRef.current = insightsKey
+                }
+                setData(prev =>
+                    shouldFetchInsights || !prev
+                        ? response
+                        : {
+                              ...response,
+                              activity: prev.activity,
+                              hotspots: prev.hotspots,
+                          },
+                )
                 setError(null)
                 setSelectedIncident(curr =>
                     curr ? response.items.data.find(i => i.id === curr.id) ?? curr : null,
@@ -399,7 +439,7 @@ export default function IncidentHistoryPage() {
                     <button
                         type="button"
                         disabled={refreshing}
-                        onClick={() => void loadHistory(undefined, true)}
+                        onClick={() => void loadHistory(undefined, true, true)}
                         className="inline-flex items-center justify-center p-2 rounded-xl border cursor-pointer transition-all disabled:opacity-50"
                         style={{
                             background: 'var(--sf-surface)',
@@ -1164,6 +1204,77 @@ export default function IncidentHistoryPage() {
                 onUpdateStatus={(inc, next) => void handleUpdateStatus(inc, next)}
                 onDispatchTech={inc => void handleDispatchTech(inc)}
             />
+
+            {/* Full Archive Warning Modal (when switching to 'All') */}
+            {allRangeConfirmOpen &&
+                ReactDOM.createPortal(
+                    <div
+                        className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4"
+                        onClick={() => setAllRangeConfirmOpen(false)}
+                    >
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="all-archive-title"
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden"
+                        >
+                            <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+                                        <Database className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h2 id="all-archive-title" className="text-sm font-bold text-slate-800">
+                                            Load Full Incident Archive?
+                                        </h2>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                            Unbounded historical query
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setAllRangeConfirmOpen(false)}
+                                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+                                    aria-label="Close dialog"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="px-6 py-4 space-y-2.5 text-xs text-slate-600 leading-relaxed">
+                                <p>
+                                    Switching to <strong>All time</strong> aggregates the entire incident history across
+                                    the database without a date cutoff. On large datasets this query may take longer to
+                                    complete.
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                    Results remain paginated (15 rows per page) with an extended 60-second query
+                                    timeout. For routine triage, 7-day or 30-day windows respond fastest.
+                                </p>
+                            </div>
+
+                            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setAllRangeConfirmOpen(false)}
+                                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 cursor-pointer transition-colors"
+                                >
+                                    Keep Current Range
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => applyRangeChange('all')}
+                                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors shadow-xs"
+                                >
+                                    Load All History
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body,
+                )}
 
             {/* Toast feedback */}
             {toast && (

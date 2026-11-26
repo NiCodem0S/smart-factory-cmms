@@ -165,5 +165,32 @@ public sealed class IncidentsControllerTests
         var allDto = Assert.IsType<IncidentHistoryResponseDto>(allRes.Value);
         Assert.Equal(4, allDto.Items.TotalCount);
         Assert.Equal(2, allDto.Summary.Resolved);
+
+        // includeInsights=false skips activity & hotspot queries while preserving exact .Skip/.Take pagination and summary
+        for (int i = 0; i < 3; i++)
+        {
+            db.Incidents.Add(new Incident
+            {
+                Id = Guid.NewGuid(),
+                MachineId = machineA,
+                Severity = "Warning",
+                Status = "Resolved",
+                Message = $"Historical event #{i}",
+                TriggeredAt = DateTime.UtcNow.AddDays(-25 - i)
+            });
+        }
+        await db.SaveChangesAsync();
+
+        var page1Res = Assert.IsType<OkObjectResult>((await controller.GetHistory(page: 1, pageSize: 5, factoryHallId: hallA, range: "all", includeInsights: false)).Result);
+        var page1Dto = Assert.IsType<IncidentHistoryResponseDto>(page1Res.Value);
+        Assert.Equal(7, page1Dto.Items.TotalCount);
+        Assert.Equal(5, page1Dto.Items.Data.Count);
+        Assert.Empty(page1Dto.Activity);
+        Assert.Empty(page1Dto.Hotspots);
+
+        var page2Res = Assert.IsType<OkObjectResult>((await controller.GetHistory(page: 2, pageSize: 5, factoryHallId: hallA, range: "all", includeInsights: false)).Result);
+        var page2Dto = Assert.IsType<IncidentHistoryResponseDto>(page2Res.Value);
+        Assert.Equal(7, page2Dto.Items.TotalCount);
+        Assert.Equal(2, page2Dto.Items.Data.Count);
     }
 }

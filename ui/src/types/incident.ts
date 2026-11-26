@@ -64,4 +64,5 @@ export interface FetchIncidentsParams {
     severity?: IncidentSeverity | 'All'
     range?: IncidentRange
     search?: string
+    includeInsights?: boolean
 }

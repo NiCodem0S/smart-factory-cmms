@@ -139,10 +139,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <div className="px-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-6 mb-2">
                         PLANNING
                     </div>
-                    <a href="#" className="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
-                        <Wrench className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
+                    <NavLink
+                        to="/maintenance"
+                        onClick={close}
+                        className={({ isActive }) =>
+                            `flex items-center px-6 py-2.5 text-sm font-semibold transition-colors ${
+                                isActive
+                                    ? 'bg-blue-600/10 text-blue-400 border-r-4 border-blue-500'
+                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`
+                        }
+                    >
+                        <Wrench className="w-4 h-4 mr-3 shrink-0" />
                         <span>Maintenance</span>
-                    </a>
+                    </NavLink>
                     <a href="#" className="flex items-center px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium">
                         <BarChart3 className="w-4 h-4 mr-3 shrink-0 text-slate-400" />
                         <span>Analytics & Reports</span>
